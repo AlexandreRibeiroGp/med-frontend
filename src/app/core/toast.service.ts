@@ -7,6 +7,14 @@ export interface ToastMessage {
   message: string;
 }
 
+function generateToastId(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ToastService {
   private readonly messagesState = signal<ToastMessage[]>([]);
@@ -14,7 +22,7 @@ export class ToastService {
   readonly messages = this.messagesState.asReadonly();
 
   show(toast: Omit<ToastMessage, 'id'>, durationMs = 4000): void {
-    const id = crypto.randomUUID();
+    const id = generateToastId();
     this.messagesState.update((messages) => [...messages, { ...toast, id }]);
     window.setTimeout(() => this.dismiss(id), durationMs);
   }

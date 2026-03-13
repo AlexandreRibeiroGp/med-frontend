@@ -15,10 +15,18 @@ export interface RoomState {
   participants: string[];
 }
 
+function generateClientId(): string {
+  if (globalThis.crypto?.randomUUID) {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
 @Injectable({ providedIn: 'root' })
 export class CallSignalingService {
   private client: Client | null = null;
-  private readonly selfId = `client-${crypto.randomUUID()}`;
+  private readonly selfId = `client-${generateClientId()}`;
   private activeAppointmentId = signal<number | null>(null);
   private connectionState = signal<'disconnected' | 'connecting' | 'connected'>('disconnected');
   private eventsState = signal<CallEvent[]>([]);
