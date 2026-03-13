@@ -1,4 +1,4 @@
-import { computed, effect, Injectable, signal } from '@angular/core';
+﻿import { computed, effect, Injectable, signal } from '@angular/core';
 import { CallEvent, CallSignalingService } from './call-signaling.service';
 import { ToastService } from './toast.service';
 
@@ -69,7 +69,7 @@ export class WebRtcCallService {
         this.handledIds.add(event.id);
         void this.handleRemoteEvent(event).catch(() => {
           this.state.set('failed');
-          this.toast.error('Falha na sala', 'Nao foi possivel processar um evento da videochamada.');
+          this.toast.error('Falha na sala', 'Não foi possível processar um evento da videochamada.');
         });
       }
     });
@@ -183,14 +183,14 @@ export class WebRtcCallService {
       if (peer.connectionState === 'connected') {
         this.state.set('connected');
         this.reconnectAttempts = 0;
-        this.toast.success('Chamada conectada', 'Os dois participantes estao na mesma sala.', 2500);
+        this.toast.success('Chamada conectada', 'Os dois participantes estão na mesma sala.', 2500);
       } else if (peer.connectionState === 'disconnected') {
         this.state.set('reconnecting');
-        this.toast.info('Reconectando chamada', 'A conexao caiu e sera renegociada.');
+        this.toast.info('Reconectando chamada', 'A conexão caiu e será renegociada.');
         void this.tryAutoReconnect();
       } else if (peer.connectionState === 'failed') {
         this.state.set('failed');
-        this.toast.error('Falha na chamada', 'Nao foi possivel manter a conexao.');
+        this.toast.error('Falha na chamada', 'Não foi possível manter a conexão.');
       }
     };
 
@@ -212,7 +212,7 @@ export class WebRtcCallService {
     if (event.type === 'room-limit') {
       const payload = this.parsePayload<{ rejectedParticipant?: string }>(event.payload);
       if (payload?.rejectedParticipant === this.signaling.clientId) {
-        this.toast.error('Sala lotada', 'Esta consulta ja possui dois participantes ativos.');
+        this.toast.error('Sala lotada', 'Esta consulta já possui dois participantes ativos.');
         this.signaling.disconnect(false);
         await this.disconnect();
       }
@@ -313,3 +313,4 @@ export class WebRtcCallService {
     this.remoteParticipantId = null;
   }
 }
+

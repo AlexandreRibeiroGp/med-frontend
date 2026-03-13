@@ -17,20 +17,20 @@ import { RouterLink } from '@angular/router';
           </div>
           <div class="actions">
             <a routerLink="/auth" class="ghost">Entrar</a>
-            <a routerLink="/auth" class="solid">Comecar</a>
+            <a routerLink="/auth" class="solid">Começar</a>
           </div>
         </nav>
 
         <section class="hero-copy">
           <p class="eyebrow">Angular + Spring Boot</p>
-          <h1>Painel clinico para pacientes e medicos no mesmo fluxo.</h1>
+          <h1>Painel clínico para pacientes e médicos no mesmo fluxo.</h1>
           <p class="lead">
-            Cadastro, autenticacao JWT, agenda, consultas, prontuario e preparacao para videochamada
-            conectados ao backend que voce ja tem em localhost:8080.
+            Cadastro, autenticação JWT, agenda, consultas, prontuário e preparação para videochamada
+            conectados ao backend que você já tem em localhost:8080.
           </p>
           <div class="hero-actions">
             <a routerLink="/auth" class="solid">Acessar portal</a>
-            <a routerLink="/dashboard" class="ghost">Ver dashboard</a>
+            <a routerLink="/dashboard" class="ghost">Ver painel</a>
           </div>
         </section>
       </header>
@@ -39,12 +39,12 @@ import { RouterLink } from '@angular/router';
         <article>
           <span>01</span>
           <h2>Portal do paciente</h2>
-          <p>Busca por especialidade, visualizacao de slots, agendamento e historico clinico.</p>
+          <p>Busca por especialidade, visualização de horários, agendamento e histórico clínico.</p>
         </article>
         <article>
           <span>02</span>
-          <h2>Portal do medico</h2>
-          <p>Cadastro de disponibilidade, consultas recebidas e emissao de prontuario.</p>
+          <h2>Portal do médico</h2>
+          <p>Cadastro de disponibilidade, consultas recebidas e emissão de prontuário.</p>
         </article>
         <article>
           <span>03</span>

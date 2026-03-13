@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -13,32 +13,32 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <div class="page">
       <header>
         <div>
-          <p class="eyebrow">Administracao</p>
-          <h1>Visao operacional</h1>
-          <p>Usuarios, medicos e especialidades expostos pelo backend atual.</p>
+          <p class="eyebrow">Administração</p>
+          <h1>Visão operacional</h1>
+          <p>Usuários, médicos e especialidades expostos pelo backend atual.</p>
         </div>
-        <a routerLink="/dashboard">Voltar ao dashboard</a>
+        <a routerLink="/dashboard">Voltar ao painel</a>
       </header>
 
       <p *ngIf="error()" class="error">{{ error() }}</p>
 
       <section class="grid">
         <article class="card">
-          <h2>Usuarios</h2>
+          <h2>Usuários</h2>
           <div class="list">
             <div *ngFor="let user of users()" class="row">
               <strong>{{ user.fullName }}</strong>
-              <span>{{ user.email }} � {{ user.role }}</span>
+              <span>{{ user.email }} · {{ user.role }}</span>
             </div>
           </div>
         </article>
 
         <article class="card">
-          <h2>Medicos</h2>
+          <h2>Médicos</h2>
           <div class="list">
             <div *ngFor="let doctor of doctors()" class="row">
               <strong>{{ doctor.user.fullName }}</strong>
-              <span>{{ doctor.specialty }} � {{ doctor.crm }}</span>
+              <span>{{ doctor.specialty }} · {{ doctor.crm }}</span>
             </div>
           </div>
         </article>
@@ -163,7 +163,8 @@ export class AdminPageComponent {
           this.doctors.set(doctors);
           this.specialties.set(specialties);
         },
-        error: () => this.error.set('Nao foi possivel carregar os dados administrativos.')
+        error: () => this.error.set('Não foi possível carregar os dados administrativos.')
       });
   }
 }
+

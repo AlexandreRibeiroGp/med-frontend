@@ -19,7 +19,7 @@ import { AuthService } from '../core/auth.service';
 
         <nav class="nav" *ngIf="auth.isAuthenticated(); else guestActions">
           <a routerLink="/dashboard" routerLinkActive="active">Painel</a>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin" routerLinkActive="active">Admin</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin" routerLinkActive="active">Administração</a>
           <button type="button" (click)="logout()">Sair</button>
         </nav>
 
@@ -32,7 +32,7 @@ import { AuthService } from '../core/auth.service';
 
       <section class="context" *ngIf="auth.isAuthenticated()">
         <div>
-          <p class="eyebrow">Sessao ativa</p>
+          <p class="eyebrow">Sessão ativa</p>
           <strong>{{ auth.user()?.fullName }}</strong>
         </div>
         <span>{{ roleLabel() }}</span>
@@ -164,7 +164,7 @@ export class AppShellComponent {
       return 'Administrador';
     }
     if (role === 'DOCTOR') {
-      return 'Medico';
+      return 'Médico';
     }
     if (role === 'PATIENT') {
       return 'Paciente';

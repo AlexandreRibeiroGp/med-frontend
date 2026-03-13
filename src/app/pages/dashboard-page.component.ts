@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,13 +37,13 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
     <div class="dashboard">
       <aside class="sidebar">
         <div>
-          <p class="label">Sessao ativa</p>
+          <p class="label">SessÃ£o ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
         </div>
 
         <div class="sidebar-block">
-          <p class="label">Navegacao</p>
+          <p class="label">NavegaÃ§Ã£o</p>
           <button type="button" [class.active]="section() === primarySection()" (click)="section.set(primarySection())">
             {{ primarySectionLabel() }}
           </button>
@@ -51,17 +51,17 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             Sala de atendimento
           </button>
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
-            Historico clinico
+            HistÃ³rico clÃ­nico
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para admin</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administraÃ§Ã£o</a>
         </div>
 
         <div class="sidebar-block">
-          <p class="label">Backend</p>
+          <p class="label">Servidor da API</p>
           <strong>http://localhost:8080</strong>
           <span class="muted">JWT + REST + WebSocket</span>
-          <small class="muted">status chamada: {{ callService.status() }}</small>
-          <small class="muted">atualizacao automatica: 15s</small>
+          <small class="muted">status da chamada: {{ callService.status() }}</small>
+          <small class="muted">atualizaÃ§Ã£o automÃ¡tica: 15s</small>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -70,7 +70,7 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">Operacao assistida</p>
+            <p class="eyebrow">OperaÃ§Ã£o assistida</p>
             <h1>{{ headline() }}</h1>
             <p>{{ subheadline() }}</p>
           </div>
@@ -81,11 +81,11 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             </div>
             <div>
               <strong>{{ medicalRecords().length }}</strong>
-              <span>Prontuarios</span>
+              <span>ProntuÃ¡rios</span>
             </div>
             <div>
               <strong>{{ auth.role() === 'DOCTOR' ? availability().length : doctors().length }}</strong>
-              <span>{{ auth.role() === 'DOCTOR' ? 'Slots' : 'Medicos' }}</span>
+              <span>{{ auth.role() === 'DOCTOR' ? 'HorÃ¡rios' : 'MÃ©dicos' }}</span>
             </div>
             <div>
               <strong>{{ callService.events().length }}</strong>
@@ -265,7 +265,7 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-      return 'Medico';
+      return 'Médico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
@@ -273,16 +273,16 @@ export class DashboardPageComponent {
     return 'Paciente';
   });
   readonly headline = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento medico' : 'Painel de jornada do paciente'
+    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento médico' : 'Painel de jornada do paciente'
   );
   readonly subheadline = computed(() =>
     this.auth.role() === 'DOCTOR'
-      ? 'Cadastre horarios, acompanhe consultas e publique prontuarios.'
-      : 'Busque especialistas, reserve horarios e acompanhe seu historico clinico.'
+      ? 'Cadastre horários, acompanhe consultas e publique prontuários.'
+      : 'Busque especialistas, reserve horários e acompanhe seu histórico clínico.'
   );
   readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
   readonly primarySectionLabel = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Agenda do medico' : 'Descobrir medicos'
+    this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : 'Descobrir médicos'
   );
   constructor() {
     this.section.set(this.primarySection());
@@ -326,7 +326,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (doctors) => this.doctors.set(doctors),
-        error: () => this.handleError('Nao foi possivel carregar os medicos.')
+        error: () => this.handleError('Não foi possível carregar os médicos.')
       });
   }
 
@@ -337,7 +337,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (slots) => this.selectedDoctorSlots.set(slots),
-        error: () => this.handleError('Nao foi possivel carregar os horarios deste medico.')
+        error: () => this.handleError('Não foi possível carregar os horários deste médico.')
       });
   }
 
@@ -358,13 +358,13 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.feedback.set('Consulta agendada com sucesso.');
-          this.toast.success('Consulta criada', 'O horario foi reservado. O medico recebe e-mail quando o SMTP estiver configurado.');
+          this.toast.success('Consulta criada', 'O horário foi reservado. O médico recebe e-mail quando o SMTP estiver configurado.');
           this.section.set('history');
           this.selectDoctor(doctor);
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel agendar a consulta.');
+          this.handleError(error.error?.message ?? 'Não foi possível agendar a consulta.');
         }
       });
   }
@@ -384,13 +384,13 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Slot criado com sucesso.');
-          this.toast.success('Agenda atualizada', 'O novo horario ja esta disponivel para agendamento.');
+          this.feedback.set('Horário criado com sucesso.');
+          this.toast.success('Agenda atualizada', 'O novo horário já está disponível para agendamento.');
           this.availabilityForm.reset();
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o slot.');
+          this.handleError(error.error?.message ?? 'Não foi possível salvar o horário.');
         }
       });
   }
@@ -413,28 +413,28 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Prontuario salvo com sucesso.');
-          this.toast.success('Prontuario salvo', 'O registro clinico foi publicado com sucesso.');
+          this.feedback.set('Prontuário salvo com sucesso.');
+          this.toast.success('Prontuário salvo', 'O registro clínico foi publicado com sucesso.');
           this.recordForm.reset({ appointmentId: '', symptoms: '', diagnosis: '', prescription: '', clinicalNotes: '' });
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o prontuario.');
+          this.handleError(error.error?.message ?? 'Não foi possível salvar o prontuário.');
         }
       });
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
     if (!this.canJoinAppointment(appointment)) {
-      const message = 'A sala sera liberada 15 minutos antes da consulta e segue disponivel ate 2 horas depois.';
+      const message = 'A sala será liberada 15 minutos antes da consulta e segue disponível até 2 horas depois.';
       this.feedback.set(message);
-      this.toast.info('Sala indisponivel', message);
+      this.toast.info('Sala indisponível', message);
       return;
     }
 
     this.activeAppointment.set(appointment);
     this.section.set('calls');
-    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conexao.`);
+    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conexão.`);
   }
 
   private loadBaseData(): void {
@@ -456,7 +456,7 @@ export class DashboardPageComponent {
             this.activeAppointment.set(appointments.find((item) => item.id === activeId) ?? null);
           }
         },
-        error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
+        error: () => this.handleError('Não foi possível carregar o painel com os dados atuais.')
       });
   }
 
@@ -468,7 +468,7 @@ export class DashboardPageComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (profile) => this.patientProfile.set(profile),
-          error: () => this.handleError('Nao foi possivel carregar o perfil do paciente.')
+          error: () => this.handleError('Não foi possível carregar o perfil do paciente.')
         });
     }
 
@@ -480,7 +480,7 @@ export class DashboardPageComponent {
           next: (doctors) => {
             const currentDoctor = doctors.find((doctor) => doctor.user.id === this.auth.user()?.id);
             if (!currentDoctor) {
-              this.handleError('Nao foi possivel localizar o perfil do medico.');
+              this.handleError('Não foi possível localizar o perfil do médico.');
               return;
             }
 
@@ -489,16 +489,17 @@ export class DashboardPageComponent {
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: (slots) => this.availability.set(slots),
-                error: () => this.handleError('Nao foi possivel carregar sua agenda.')
+                error: () => this.handleError('Não foi possível carregar sua agenda.')
               });
           },
-          error: () => this.handleError('Nao foi possivel localizar os dados do medico.')
+          error: () => this.handleError('Não foi possível localizar os dados do médico.')
         });
     }
   }
 
   private handleError(message: string): void {
     this.error.set(message);
-    this.toast.error('Falha na operacao', message);
+    this.toast.error('Falha na operação', message);
   }
 }
+

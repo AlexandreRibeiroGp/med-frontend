@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+﻿import { CommonModule, DatePipe } from '@angular/common';
 import { Component, input } from '@angular/core';
 import { AppointmentResponse, MedicalRecordResponse, Role } from '../../core/models';
 
@@ -14,19 +14,19 @@ import { AppointmentResponse, MedicalRecordResponse, Role } from '../../core/mod
             <strong>{{ appointment.scheduledAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
             <span>
               {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
-              � {{ appointment.status }} � sala {{ appointment.meetingRoomCode || 'a definir' }}
+              · {{ appointment.status }} · sala {{ appointment.meetingRoomCode || 'a definir' }}
             </span>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h3>Prontuarios</h3>
+        <h3>Prontuários</h3>
         <div class="timeline">
           <div *ngFor="let record of medicalRecords()" class="timeline-item">
             <strong>{{ record.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
-            <span>{{ record.diagnosis || 'Sem diagnostico' }}</span>
-            <code>{{ record.prescription || 'Sem prescricao' }}</code>
+            <span>{{ record.diagnosis || 'Sem diagnóstico' }}</span>
+            <code>{{ record.prescription || 'Sem prescrição' }}</code>
           </div>
         </div>
       </article>
@@ -65,3 +65,4 @@ export class HistoryPanelComponent {
   readonly medicalRecords = input<MedicalRecordResponse[]>([]);
   readonly role = input<Role | null>(null);
 }
+

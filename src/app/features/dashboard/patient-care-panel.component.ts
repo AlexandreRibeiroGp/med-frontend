@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+﻿import { CommonModule, DatePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from '../../core/models';
@@ -10,13 +10,13 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     <section class="board patient-board">
       <article class="card">
         <h3>Meu perfil</h3>
-        <p *ngIf="patientProfile() as profile">Convenio: {{ profile.healthInsurance || 'Nao informado' }}</p>
-        <p *ngIf="patientProfile() as profile">Documento: {{ profile.documentNumber || 'Nao informado' }}</p>
-        <p *ngIf="patientProfile() as profile">Nascimento: {{ profile.birthDate || 'Nao informado' }}</p>
+        <p *ngIf="patientProfile() as profile">Convênio: {{ profile.healthInsurance || 'Não informado' }}</p>
+        <p *ngIf="patientProfile() as profile">Documento: {{ profile.documentNumber || 'Não informado' }}</p>
+        <p *ngIf="patientProfile() as profile">Nascimento: {{ profile.birthDate || 'Não informado' }}</p>
       </article>
 
       <article class="card">
-        <h3>Buscar medicos</h3>
+        <h3>Buscar médicos</h3>
         <div class="toolbar">
           <select [formControl]="specialtyFilter()">
             <option value="">Todas as especialidades</option>
@@ -37,7 +37,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         <p class="muted">{{ doctor.biography || 'Sem biografia cadastrada.' }}</p>
         <div class="list slots">
           <button type="button" *ngFor="let slot of selectedDoctorSlots()" (click)="slotBooked.emit(slot)">
-            {{ slot.startAt | date: 'dd/MM HH:mm' }} - {{ slot.endAt | date: 'HH:mm' }}
+            {{ slot.startAt | date: 'dd/MM HH:mm' }} às {{ slot.endAt | date: 'HH:mm' }}
           </button>
         </div>
       </article>
@@ -97,3 +97,4 @@ export class PatientCarePanelComponent {
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
 }
+

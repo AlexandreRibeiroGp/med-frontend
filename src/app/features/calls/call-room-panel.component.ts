@@ -252,7 +252,7 @@ export class CallRoomPanelComponent {
       if (!this.signaling.roomLimitReached()) {
         return;
       }
-      this.toast.error('Sala indisponivel', 'A consulta ja esta com dois participantes conectados.');
+      this.toast.error('Sala indisponível', 'A consulta já está com dois participantes conectados.');
     });
 
     this.destroyRef.onDestroy(() => {
@@ -265,9 +265,9 @@ export class CallRoomPanelComponent {
     try {
       this.connectRoom();
       await this.rtc.prepareMedia();
-      this.toast.success('Dispositivos prontos', 'Camera e microfone preparados para a chamada.', 2500);
+      this.toast.success('Dispositivos prontos', 'Câmera e microfone preparados para a chamada.', 2500);
     } catch {
-      this.toast.error('Falha de dispositivo', 'Nao foi possivel acessar camera e microfone.');
+      this.toast.error('Falha de dispositivo', 'Não foi possível acessar câmera e microfone.');
     }
   }
 
@@ -276,7 +276,7 @@ export class CallRoomPanelComponent {
       this.connectRoom();
       await this.rtc.startCall();
     } catch {
-      this.toast.error('Falha na conexao', 'Nao foi possivel iniciar a chamada agora.');
+      this.toast.error('Falha na conexão', 'Não foi possível iniciar a chamada agora.');
     }
   }
 
@@ -285,7 +285,7 @@ export class CallRoomPanelComponent {
       this.connectRoom();
       await this.rtc.reconnect();
     } catch {
-      this.toast.error('Reconexao falhou', 'Tente encerrar e entrar novamente na sala.');
+      this.toast.error('Reconexão falhou', 'Tente encerrar e entrar novamente na sala.');
     }
   }
 
@@ -296,7 +296,7 @@ export class CallRoomPanelComponent {
   leaveRoom(): void {
     this.signaling.disconnect();
     void this.rtc.disconnect();
-    this.toast.info('Sala encerrada', 'A conexao local foi finalizada.', 2500);
+    this.toast.info('Sala encerrada', 'A conexão local foi finalizada.', 2500);
   }
 
   sendCustomSignal(): void {
@@ -337,10 +337,10 @@ export class CallRoomPanelComponent {
       .subscribe({
         next: () => {
           if (status === 'CONFIRMED') {
-            this.toast.info('Consulta confirmada', 'A sala foi aberta e o atendimento esta pronto para iniciar.', 2500);
+            this.toast.info('Consulta confirmada', 'A sala foi aberta e o atendimento está pronto para iniciar.', 2500);
           }
           if (status === 'IN_PROGRESS') {
-            this.toast.success('Atendimento em andamento', 'A consulta entrou em execucao.', 2500);
+            this.toast.success('Atendimento em andamento', 'A consulta entrou em execução.', 2500);
           }
           if (status === 'COMPLETED') {
             this.toast.success('Consulta encerrada', 'O atendimento foi finalizado.', 2500);
@@ -351,9 +351,10 @@ export class CallRoomPanelComponent {
         },
         error: () => {
           this.syncedStatus.set(null);
-          this.toast.error('Falha ao atualizar consulta', `Nao foi possivel mover a consulta para ${status}.`);
+          this.toast.error('Falha ao atualizar consulta', `Não foi possível mover a consulta para ${status}.`);
         }
       });
   }
 }
+
 
