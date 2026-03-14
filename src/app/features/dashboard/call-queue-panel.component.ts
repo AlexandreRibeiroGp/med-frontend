@@ -10,11 +10,8 @@ import { AppointmentResponse, Role } from '../../core/models';
       <h3>Consultas com sala</h3>
       <div class="timeline">
         <div *ngFor="let appointment of appointments()" class="timeline-item appointment-line">
-          <strong>#{{ appointment.id }} · {{ appointment.scheduledAt | date: 'dd/MM HH:mm' }}</strong>
-          <span>
-            {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
-            · {{ appointment.meetingRoomCode || 'sem código' }}
-          </span>
+          <strong>{{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}</strong>
+          <span>{{ appointment.scheduledAt | date: 'dd/MM HH:mm' }}</span>
           <button type="button" class="call-link" [disabled]="!canJoinAppointment()(appointment)" (click)="joinRequested.emit(appointment)">
             {{ canJoinAppointment()(appointment) ? 'Entrar na sala' : joinAvailabilityLabel()(appointment) }}
           </button>

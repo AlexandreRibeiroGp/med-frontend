@@ -1,4 +1,4 @@
-Ôªøimport { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -37,13 +37,13 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
     <div class="dashboard">
       <aside class="sidebar">
         <div>
-          <p class="label">Sess√£o ativa</p>
+          <p class="label">Sess„o ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
         </div>
 
         <div class="sidebar-block">
-          <p class="label">Navega√ß√£o</p>
+          <p class="label">NavegaÁ„o</p>
           <button type="button" [class.active]="section() === primarySection()" (click)="section.set(primarySection())">
             {{ primarySectionLabel() }}
           </button>
@@ -51,17 +51,9 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             Sala de atendimento
           </button>
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
-            Hist√≥rico cl√≠nico
+            HistÛrico clÌnico
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administra√ß√£o</a>
-        </div>
-
-        <div class="sidebar-block">
-          <p class="label">Servidor da API</p>
-          <strong>{{ apiBaseLabel }}</strong>
-          <span class="muted">JWT + REST + WebSocket</span>
-          <small class="muted">status da chamada: {{ callConnectionLabel() }}</small>
-          <small class="muted">atualiza√ß√£o autom√°tica: 15s</small>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administraÁ„o</a>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -70,7 +62,7 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">Opera√ß√£o assistida</p>
+            <p class="eyebrow">OperaÁ„o assistida</p>
             <h1>{{ headline() }}</h1>
             <p>{{ subheadline() }}</p>
           </div>
@@ -81,11 +73,11 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             </div>
             <div>
               <strong>{{ medicalRecords().length }}</strong>
-              <span>Prontu√°rios</span>
+              <span>Prontu·rios</span>
             </div>
             <div>
               <strong>{{ auth.role() === 'DOCTOR' ? availability().length : doctors().length }}</strong>
-              <span>{{ auth.role() === 'DOCTOR' ? 'Hor√°rios' : 'M√©dicos' }}</span>
+              <span>{{ auth.role() === 'DOCTOR' ? 'Hor·rios' : 'MÈdicos' }}</span>
             </div>
             <div>
               <strong>{{ callService.events().length }}</strong>
@@ -147,7 +139,12 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       color: #112027;
       font-family: 'Segoe UI', sans-serif;
     }
-    .dashboard { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+    .dashboard {
+      display: grid;
+      grid-template-columns: minmax(260px, 280px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
     .sidebar {
       padding: 28px;
       border-radius: 28px;
@@ -159,6 +156,8 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       height: fit-content;
       position: sticky;
       top: 96px;
+      min-width: 0;
+      box-sizing: border-box;
     }
     .label, .eyebrow {
       text-transform: uppercase;
@@ -185,10 +184,17 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       background: rgba(255, 255, 255, 0.08);
       cursor: pointer;
       text-decoration: none;
+      width: 100%;
+      box-sizing: border-box;
+      overflow-wrap: anywhere;
     }
     .sidebar-block button.active { background: linear-gradient(135deg, rgba(255, 142, 84, 0.95), rgba(217, 79, 4, 0.95)); }
     .muted { color: #667980; }
     .sidebar .muted { color: rgba(255, 255, 255, 0.66); }
+    .sidebar h2 {
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
     .logout {
       border: 0;
       border-radius: 16px;
@@ -198,8 +204,10 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       cursor: pointer;
       background: linear-gradient(135deg, #ff8e54, #d94f04);
       color: white;
+      width: 100%;
+      box-sizing: border-box;
     }
-    .content { display: grid; gap: 18px; }
+    .content { display: grid; gap: 18px; min-width: 0; }
     .hero-card {
       border-radius: 28px;
       background: rgba(255, 253, 249, 0.86);
@@ -215,7 +223,7 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
     .stats { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; min-width: 260px; }
     .stats div { background: #f6f1e8; border-radius: 20px; padding: 18px; }
     .stats strong { display: block; font-size: 1.8rem; }
-    .calls-board { display: grid; grid-template-columns: 360px 1fr; gap: 18px; }
+    .calls-board { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; }
     .feedback, .error { margin: 0; padding: 14px 16px; border-radius: 18px; }
     .feedback { background: #e6f6f2; color: #0f684f; }
     .error { background: #ffe9e3; color: #a33b19; }
@@ -234,7 +242,6 @@ export class DashboardPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
-  readonly apiBaseLabel = window.location.origin;
 
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history'>('history');
   readonly error = signal('');
@@ -266,7 +273,7 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-      return 'M√©dico';
+      return 'MÈdico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
@@ -274,27 +281,17 @@ export class DashboardPageComponent {
     return 'Paciente';
   });
   readonly headline = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento m√©dico' : 'Painel de jornada do paciente'
+    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento mÈdico' : 'Painel de jornada do paciente'
   );
   readonly subheadline = computed(() =>
     this.auth.role() === 'DOCTOR'
-      ? 'Cadastre hor√°rios, acompanhe consultas e publique prontu√°rios.'
-      : 'Busque especialistas, reserve hor√°rios e acompanhe seu hist√≥rico cl√≠nico.'
+      ? 'Cadastre hor·rios, acompanhe consultas e publique prontu·rios.'
+      : 'Busque especialistas, reserve hor·rios e acompanhe seu histÛrico clÌnico.'
   );
   readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
   readonly primarySectionLabel = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Agenda do m√©dico' : 'Descobrir m√©dicos'
+    this.auth.role() === 'DOCTOR' ? 'Agenda do mÈdico' : 'Descobrir mÈdicos'
   );
-  readonly callConnectionLabel = computed(() => {
-    switch (this.callService.status()) {
-      case 'connected':
-        return 'conectada';
-      case 'connecting':
-        return 'conectando';
-      default:
-        return 'desconectada';
-    }
-  });
   constructor() {
     this.section.set(this.primarySection());
     this.destroyRef.onDestroy(() => this.callService.disconnect());
@@ -337,7 +334,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (doctors) => this.doctors.set(doctors),
-        error: () => this.handleError('N√£o foi poss√≠vel carregar os m√©dicos.')
+        error: () => this.handleError('N„o foi possÌvel carregar os mÈdicos.')
       });
   }
 
@@ -348,7 +345,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (slots) => this.selectedDoctorSlots.set(slots),
-        error: () => this.handleError('N√£o foi poss√≠vel carregar os hor√°rios deste m√©dico.')
+        error: () => this.handleError('N„o foi possÌvel carregar os hor·rios deste mÈdico.')
       });
   }
 
@@ -369,13 +366,13 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.feedback.set('Consulta agendada com sucesso.');
-          this.toast.success('Consulta criada', 'O hor√°rio foi reservado. O m√©dico recebe e-mail quando o SMTP estiver configurado.');
+          this.toast.success('Consulta criada', 'O hor·rio foi reservado. O mÈdico recebe e-mail quando o SMTP estiver configurado.');
           this.section.set('history');
           this.selectDoctor(doctor);
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'N√£o foi poss√≠vel agendar a consulta.');
+          this.handleError(error.error?.message ?? 'N„o foi possÌvel agendar a consulta.');
         }
       });
   }
@@ -395,13 +392,13 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Hor√°rios gerados com sucesso em blocos de 15 minutos.');
-          this.toast.success('Agenda atualizada', 'Os hor√°rios do intervalo j√° est√£o dispon√≠veis para agendamento.');
+          this.feedback.set('Hor·rios gerados com sucesso em blocos de 15 minutos.');
+          this.toast.success('Agenda atualizada', 'Os hor·rios do intervalo j· est„o disponÌveis para agendamento.');
           this.availabilityForm.reset();
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'N√£o foi poss√≠vel gerar os hor√°rios.');
+          this.handleError(error.error?.message ?? 'N„o foi possÌvel gerar os hor·rios.');
         }
       });
   }
@@ -424,28 +421,28 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Prontu√°rio salvo com sucesso.');
-          this.toast.success('Prontu√°rio salvo', 'O registro cl√≠nico foi publicado com sucesso.');
+          this.feedback.set('Prontu·rio salvo com sucesso.');
+          this.toast.success('Prontu·rio salvo', 'O registro clÌnico foi publicado com sucesso.');
           this.recordForm.reset({ appointmentId: '', symptoms: '', diagnosis: '', prescription: '', clinicalNotes: '' });
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'N√£o foi poss√≠vel salvar o prontu√°rio.');
+          this.handleError(error.error?.message ?? 'N„o foi possÌvel salvar o prontu·rio.');
         }
       });
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
     if (!this.canJoinAppointment(appointment)) {
-      const message = 'A sala ser√° liberada 15 minutos antes da consulta e segue dispon√≠vel at√© 2 horas depois.';
+      const message = 'A sala ser· liberada 15 minutos antes da consulta e segue disponÌvel atÈ 2 horas depois.';
       this.feedback.set(message);
-      this.toast.info('Sala indispon√≠vel', message);
+      this.toast.info('Sala indisponÌvel', message);
       return;
     }
 
     this.activeAppointment.set(appointment);
     this.section.set('calls');
-    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conex√£o.`);
+    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conex„o.`);
   }
 
   private loadBaseData(): void {
@@ -467,7 +464,7 @@ export class DashboardPageComponent {
             this.activeAppointment.set(appointments.find((item) => item.id === activeId) ?? null);
           }
         },
-        error: () => this.handleError('N√£o foi poss√≠vel carregar o painel com os dados atuais.')
+        error: () => this.handleError('N„o foi possÌvel carregar o painel com os dados atuais.')
       });
   }
 
@@ -479,7 +476,7 @@ export class DashboardPageComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (profile) => this.patientProfile.set(profile),
-          error: () => this.handleError('N√£o foi poss√≠vel carregar o perfil do paciente.')
+          error: () => this.handleError('N„o foi possÌvel carregar o perfil do paciente.')
         });
     }
 
@@ -491,7 +488,7 @@ export class DashboardPageComponent {
           next: (doctors) => {
             const currentDoctor = doctors.find((doctor) => doctor.user.id === this.auth.user()?.id);
             if (!currentDoctor) {
-              this.handleError('N√£o foi poss√≠vel localizar o perfil do m√©dico.');
+              this.handleError('N„o foi possÌvel localizar o perfil do mÈdico.');
               return;
             }
 
@@ -500,17 +497,16 @@ export class DashboardPageComponent {
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: (slots) => this.availability.set(slots),
-                error: () => this.handleError('N√£o foi poss√≠vel carregar sua agenda.')
+                error: () => this.handleError('N„o foi possÌvel carregar sua agenda.')
               });
           },
-          error: () => this.handleError('N√£o foi poss√≠vel localizar os dados do m√©dico.')
+          error: () => this.handleError('N„o foi possÌvel localizar os dados do mÈdico.')
         });
     }
   }
 
   private handleError(message: string): void {
     this.error.set(message);
-    this.toast.error('Falha na opera√ß√£o', message);
+    this.toast.error('Falha na operaÁ„o', message);
   }
 }
-
