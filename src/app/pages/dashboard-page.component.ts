@@ -21,6 +21,24 @@ import { DoctorAgendaPanelComponent } from '../features/dashboard/doctor-agenda-
 import { HistoryPanelComponent } from '../features/dashboard/history-panel.component';
 import { PatientCarePanelComponent } from '../features/dashboard/patient-care-panel.component';
 
+function toOffsetIso(localDateTime: string): string {
+  const [datePart, timePart] = localDateTime.split('T');
+  const [year, month, day] = datePart.split('-').map(Number);
+  const [hour, minute] = timePart.split(':').map(Number);
+  const local = new Date(year, month - 1, day, hour, minute);
+  const offsetMinutes = -local.getTimezoneOffset();
+  const sign = offsetMinutes >= 0 ? '+' : '-';
+  const absoluteOffset = Math.abs(offsetMinutes);
+  const offsetHours = String(Math.floor(absoluteOffset / 60)).padStart(2, '0');
+  const offsetRemainingMinutes = String(absoluteOffset % 60).padStart(2, '0');
+  const yearValue = String(year).padStart(4, '0');
+  const monthValue = String(month).padStart(2, '0');
+  const dayValue = String(day).padStart(2, '0');
+  const hourValue = String(hour).padStart(2, '0');
+  const minuteValue = String(minute).padStart(2, '0');
+  return `${yearValue}-${monthValue}-${dayValue}T${hourValue}:${minuteValue}:00${sign}${offsetHours}:${offsetRemainingMinutes}`;
+}
+
 @Component({
   selector: 'app-dashboard-page',
   imports: [
@@ -37,13 +55,13 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
     <div class="dashboard">
       <aside class="sidebar">
         <div>
-          <p class="label">Sessão ativa</p>
+          <p class="label">Sessao ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
         </div>
 
         <div class="sidebar-block">
-          <p class="label">Navegação</p>
+          <p class="label">Navegacao</p>
           <button type="button" [class.active]="section() === primarySection()" (click)="section.set(primarySection())">
             {{ primarySectionLabel() }}
           </button>
@@ -51,9 +69,9 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             Sala de atendimento
           </button>
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
-            Histórico clínico
+            Historico clinico
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administracao</a>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -62,7 +80,7 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">Operação assistida</p>
+            <p class="eyebrow">Operacao assistida</p>
             <h1>{{ headline() }}</h1>
             <p>{{ subheadline() }}</p>
           </div>
@@ -73,11 +91,11 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             </div>
             <div>
               <strong>{{ medicalRecords().length }}</strong>
-              <span>Prontuários</span>
+              <span>Prontuarios</span>
             </div>
             <div>
               <strong>{{ auth.role() === 'DOCTOR' ? availability().length : doctors().length }}</strong>
-              <span>{{ auth.role() === 'DOCTOR' ? 'Horários' : 'Médicos' }}</span>
+              <span>{{ auth.role() === 'DOCTOR' ? 'Horarios' : 'Medicos' }}</span>
             </div>
             <div>
               <strong>{{ callService.events().length }}</strong>
@@ -273,7 +291,7 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-      return 'Médico';
+      return 'Medico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
@@ -281,16 +299,16 @@ export class DashboardPageComponent {
     return 'Paciente';
   });
   readonly headline = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento médico' : 'Painel de jornada do paciente'
+    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento medico' : 'Painel de jornada do paciente'
   );
   readonly subheadline = computed(() =>
     this.auth.role() === 'DOCTOR'
-      ? 'Cadastre horários, acompanhe consultas e publique prontuários.'
-      : 'Busque especialistas, reserve horários e acompanhe seu histórico clínico.'
+      ? 'Cadastre horarios, acompanhe consultas e publique prontuarios.'
+      : 'Busque especialistas, reserve horarios e acompanhe seu historico clinico.'
   );
   readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
   readonly primarySectionLabel = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : 'Descobrir médicos'
+    this.auth.role() === 'DOCTOR' ? 'Agenda do medico' : 'Descobrir medicos'
   );
   constructor() {
     this.section.set(this.primarySection());
@@ -334,7 +352,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (doctors) => this.doctors.set(doctors),
-        error: () => this.handleError('Não foi possível carregar os médicos.')
+        error: () => this.handleError('Nao foi possivel carregar os medicos.')
       });
   }
 
@@ -345,7 +363,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (slots) => this.selectedDoctorSlots.set(slots),
-        error: () => this.handleError('Não foi possível carregar os horários deste médico.')
+        error: () => this.handleError('Nao foi possivel carregar os horarios deste medico.')
       });
   }
 
@@ -366,13 +384,13 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.feedback.set('Consulta agendada com sucesso.');
-          this.toast.success('Consulta criada', 'O horário foi reservado. O médico recebe e-mail quando o SMTP estiver configurado.');
+          this.toast.success('Consulta criada', 'O horario foi reservado. O medico recebe e-mail quando o SMTP estiver configurado.');
           this.section.set('history');
           this.selectDoctor(doctor);
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível agendar a consulta.');
+          this.handleError(error.error?.message ?? 'Nao foi possivel agendar a consulta.');
         }
       });
   }
@@ -386,19 +404,19 @@ export class DashboardPageComponent {
     const raw = this.availabilityForm.getRawValue();
     this.api
       .createAvailabilitySlot({
-        startAt: new Date(raw.startAt).toISOString(),
-        endAt: new Date(raw.endAt).toISOString()
+        startAt: toOffsetIso(raw.startAt),
+        endAt: toOffsetIso(raw.endAt)
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Horários gerados com sucesso em blocos de 15 minutos.');
-          this.toast.success('Agenda atualizada', 'Os horários do intervalo já estão disponíveis para agendamento.');
+          this.feedback.set('Horarios gerados com sucesso em blocos de 15 minutos.');
+          this.toast.success('Agenda atualizada', 'Os horarios do intervalo ja estao disponiveis para agendamento.');
           this.availabilityForm.reset();
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível gerar os horários.');
+          this.handleError(error.error?.message ?? 'Nao foi possivel gerar os horarios.');
         }
       });
   }
@@ -421,28 +439,28 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Prontuário salvo com sucesso.');
-          this.toast.success('Prontuário salvo', 'O registro clínico foi publicado com sucesso.');
+          this.feedback.set('Prontuario salvo com sucesso.');
+          this.toast.success('Prontuario salvo', 'O registro clinico foi publicado com sucesso.');
           this.recordForm.reset({ appointmentId: '', symptoms: '', diagnosis: '', prescription: '', clinicalNotes: '' });
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível salvar o prontuário.');
+          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o prontuario.');
         }
       });
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
     if (!this.canJoinAppointment(appointment)) {
-      const message = 'A sala será liberada 15 minutos antes da consulta e segue disponível até 2 horas depois.';
+      const message = 'A sala sera liberada 15 minutos antes da consulta e segue disponivel ate 2 horas depois.';
       this.feedback.set(message);
-      this.toast.info('Sala indisponível', message);
+      this.toast.info('Sala indisponivel', message);
       return;
     }
 
     this.activeAppointment.set(appointment);
     this.section.set('calls');
-    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conexão.`);
+    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conexao.`);
   }
 
   private loadBaseData(): void {
@@ -464,7 +482,7 @@ export class DashboardPageComponent {
             this.activeAppointment.set(appointments.find((item) => item.id === activeId) ?? null);
           }
         },
-        error: () => this.handleError('Não foi possível carregar o painel com os dados atuais.')
+        error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
       });
   }
 
@@ -476,7 +494,7 @@ export class DashboardPageComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (profile) => this.patientProfile.set(profile),
-          error: () => this.handleError('Não foi possível carregar o perfil do paciente.')
+          error: () => this.handleError('Nao foi possivel carregar o perfil do paciente.')
         });
     }
 
@@ -488,7 +506,7 @@ export class DashboardPageComponent {
           next: (doctors) => {
             const currentDoctor = doctors.find((doctor) => doctor.user.id === this.auth.user()?.id);
             if (!currentDoctor) {
-              this.handleError('Não foi possível localizar o perfil do médico.');
+              this.handleError('Nao foi possivel localizar o perfil do medico.');
               return;
             }
 
@@ -497,16 +515,16 @@ export class DashboardPageComponent {
               .pipe(takeUntilDestroyed(this.destroyRef))
               .subscribe({
                 next: (slots) => this.availability.set(slots),
-                error: () => this.handleError('Não foi possível carregar sua agenda.')
+                error: () => this.handleError('Nao foi possivel carregar sua agenda.')
               });
           },
-          error: () => this.handleError('Não foi possível localizar os dados do médico.')
+          error: () => this.handleError('Nao foi possivel localizar os dados do medico.')
         });
     }
   }
 
   private handleError(message: string): void {
     this.error.set(message);
-    this.toast.error('Falha na operação', message);
+    this.toast.error('Falha na operacao', message);
   }
 }

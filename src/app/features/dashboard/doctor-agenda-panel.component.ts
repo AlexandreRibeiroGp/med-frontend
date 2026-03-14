@@ -9,12 +9,12 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
   template: `
     <section class="board">
       <article class="card">
-        <h3>Gerar horários do dia</h3>
+        <h3>Gerar horarios do dia</h3>
         <form [formGroup]="availabilityForm()" (ngSubmit)="createAvailability.emit()">
           <input formControlName="startAt" type="datetime-local" />
           <input formControlName="endAt" type="datetime-local" />
-          <p class="helper">O sistema divide o intervalo em horários de 15 minutos para os pacientes.</p>
-          <button type="submit">Gerar horários</button>
+          <p class="helper">O sistema divide o intervalo em horarios de 15 minutos para os pacientes.</p>
+          <button type="submit">Gerar horarios</button>
         </form>
       </article>
 
@@ -23,13 +23,13 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
         <div class="timeline compact">
           <div *ngFor="let slot of availability()" class="timeline-item">
             <strong>{{ slot.startAt | date: 'dd/MM HH:mm' }}</strong>
-            <span>até {{ slot.endAt | date: 'HH:mm' }}</span>
+            <span>ate {{ slot.endAt | date: 'HH:mm' }}</span>
           </div>
         </div>
       </article>
 
       <article class="card wide">
-        <h3>Emitir prontuário</h3>
+        <h3>Emitir prontuario</h3>
         <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
           <select formControlName="appointmentId">
             <option value="">Selecione a consulta</option>
@@ -38,10 +38,10 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
             </option>
           </select>
           <textarea formControlName="symptoms" placeholder="Sintomas"></textarea>
-          <textarea formControlName="diagnosis" placeholder="Diagnóstico"></textarea>
-          <textarea formControlName="prescription" placeholder="Prescrição"></textarea>
-          <textarea formControlName="clinicalNotes" placeholder="Notas clínicas"></textarea>
-          <button type="submit">Salvar prontuário</button>
+          <textarea formControlName="diagnosis" placeholder="Diagnostico"></textarea>
+          <textarea formControlName="prescription" placeholder="Prescricao"></textarea>
+          <textarea formControlName="clinicalNotes" placeholder="Notas clinicas"></textarea>
+          <button type="submit">Salvar prontuario</button>
         </form>
       </article>
     </section>
