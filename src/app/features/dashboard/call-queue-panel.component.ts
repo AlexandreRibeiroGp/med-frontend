@@ -13,7 +13,7 @@ import { AppointmentResponse, Role } from '../../core/models';
           <strong>#{{ appointment.id }} · {{ appointment.scheduledAt | date: 'dd/MM HH:mm' }}</strong>
           <span>
             {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
-            · {{ appointment.meetingRoomCode || 'sem codigo' }}
+            · {{ appointment.meetingRoomCode || 'sem código' }}
           </span>
           <button type="button" class="call-link" [disabled]="!canJoinAppointment()(appointment)" (click)="joinRequested.emit(appointment)">
             {{ canJoinAppointment()(appointment) ? 'Entrar na sala' : joinAvailabilityLabel()(appointment) }}

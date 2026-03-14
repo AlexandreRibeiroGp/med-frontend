@@ -17,16 +17,16 @@ import { RouterLink } from '@angular/router';
           </div>
           <div class="actions">
             <a routerLink="/auth" class="ghost">Entrar</a>
-            <a routerLink="/auth" class="solid">Come√ßar</a>
+            <a routerLink="/auth" class="solid">ComeÁar</a>
           </div>
         </nav>
 
         <section class="hero-copy">
           <p class="eyebrow">Angular + Spring Boot</p>
-          <h1>Painel cl√≠nico para pacientes e m√©dicos no mesmo fluxo.</h1>
+          <h1>Painel clÌnico para pacientes e mÈdicos no mesmo fluxo.</h1>
           <p class="lead">
-            Cadastro, autentica√ß√£o JWT, agenda, consultas, prontu√°rio e prepara√ß√£o para videochamada
-            conectados ao backend que voc√™ j√° tem em localhost:8080.
+            Cadastro, autenticaÁ„o JWT, agenda, consultas, prontu·rio e preparaÁ„o para videochamada
+            conectados ao backend disponÌvel em {{ apiBaseLabel }}.
           </p>
           <div class="hero-actions">
             <a routerLink="/auth" class="solid">Acessar portal</a>
@@ -39,17 +39,17 @@ import { RouterLink } from '@angular/router';
         <article>
           <span>01</span>
           <h2>Portal do paciente</h2>
-          <p>Busca por especialidade, visualiza√ß√£o de hor√°rios, agendamento e hist√≥rico cl√≠nico.</p>
+          <p>Busca por especialidade, visualizaÁ„o de hor·rios, agendamento e histÛrico clÌnico.</p>
         </article>
         <article>
           <span>02</span>
-          <h2>Portal do m√©dico</h2>
-          <p>Cadastro de disponibilidade, consultas recebidas e emiss√£o de prontu√°rio.</p>
+          <h2>Portal do mÈdico</h2>
+          <p>Cadastro de disponibilidade, consultas recebidas e emiss„o de prontu·rio.</p>
         </article>
         <article>
           <span>03</span>
           <h2>Base para chamadas</h2>
-          <p>Rota preparada para STOMP/WebSocket e exibicao de sala no contexto da consulta.</p>
+          <p>Rota preparada para STOMP/WebSocket e exibiÁ„o de sala no contexto da consulta.</p>
         </article>
       </section>
     </div>
@@ -193,4 +193,6 @@ import { RouterLink } from '@angular/router';
     }
   `
 })
-export class HomePageComponent {}
+export class HomePageComponent {
+  readonly apiBaseLabel = window.location.origin;
+}

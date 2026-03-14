@@ -65,7 +65,7 @@ export class CallSignalingService {
       onConnect: () => {
         this.connectionState.set('connected');
         client.subscribe(`/topic/calls/${appointmentId}`, (message) => this.handleMessage(message));
-        this.publish('join', JSON.stringify({ message: 'participant joined', clientId: this.selfId }));
+        this.publish('join', JSON.stringify({ message: 'participante entrou', clientId: this.selfId }));
       },
       onStompError: () => {
         this.connectionState.set('disconnected');
@@ -102,7 +102,7 @@ export class CallSignalingService {
 
   disconnect(sendLeave = true): void {
     if (sendLeave && this.client?.connected) {
-      this.publish('leave', JSON.stringify({ message: 'participant left', clientId: this.selfId }));
+      this.publish('leave', JSON.stringify({ message: 'participante saiu', clientId: this.selfId }));
     }
     if (this.client) {
       this.client.deactivate();

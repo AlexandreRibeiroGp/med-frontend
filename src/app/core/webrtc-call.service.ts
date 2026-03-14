@@ -23,7 +23,7 @@ export class WebRtcCallService {
   );
   readonly connectivityLabel = computed(() => {
     if (this.signaling.status() !== 'connected') {
-      return 'Sinalizacao offline';
+      return 'Sinalização offline';
     }
     if (!this.localStream()) {
       return 'Dispositivos pendentes';
@@ -32,15 +32,15 @@ export class WebRtcCallService {
       return 'Aguardando outro participante';
     }
     if (this.state() === 'connected') {
-      return 'Midia conectada';
+      return 'Mídia conectada';
     }
     if (this.state() === 'reconnecting') {
-      return 'Reconectando midia';
+      return 'Reconectando mídia';
     }
     if (this.state() === 'failed') {
-      return 'Falha na midia';
+      return 'Falha na mídia';
     }
-    return 'Negociando conexao';
+    return 'Negociando conexão';
   });
 
   constructor(

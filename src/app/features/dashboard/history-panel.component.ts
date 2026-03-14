@@ -14,7 +14,7 @@ import { AppointmentResponse, MedicalRecordResponse, Role } from '../../core/mod
             <strong>{{ appointment.scheduledAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
             <span>
               {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
-              · {{ appointment.status }} · sala {{ appointment.meetingRoomCode || 'a definir' }}
+              · {{ appointmentStatusLabel(appointment.status) }} · sala {{ appointment.meetingRoomCode || 'a definir' }}
             </span>
           </div>
         </div>
@@ -64,5 +64,22 @@ export class HistoryPanelComponent {
   readonly appointments = input<AppointmentResponse[]>([]);
   readonly medicalRecords = input<MedicalRecordResponse[]>([]);
   readonly role = input<Role | null>(null);
+
+  readonly appointmentStatusLabel = (status: string) => {
+    switch (status) {
+      case 'SCHEDULED':
+        return 'agendada';
+      case 'CONFIRMED':
+        return 'confirmada';
+      case 'IN_PROGRESS':
+        return 'em andamento';
+      case 'COMPLETED':
+        return 'encerrada';
+      case 'CANCELLED':
+        return 'cancelada';
+      default:
+        return status;
+    }
+  };
 }
 

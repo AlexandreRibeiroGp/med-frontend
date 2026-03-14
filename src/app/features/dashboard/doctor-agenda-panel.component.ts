@@ -9,11 +9,12 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
   template: `
     <section class="board">
       <article class="card">
-        <h3>Novo horario</h3>
+        <h3>Gerar horários do dia</h3>
         <form [formGroup]="availabilityForm()" (ngSubmit)="createAvailability.emit()">
           <input formControlName="startAt" type="datetime-local" />
           <input formControlName="endAt" type="datetime-local" />
-          <button type="submit">Salvar slot</button>
+          <p class="helper">O sistema divide o intervalo em horários de 15 minutos para os pacientes.</p>
+          <button type="submit">Gerar horários</button>
         </form>
       </article>
 
@@ -22,13 +23,13 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
         <div class="timeline compact">
           <div *ngFor="let slot of availability()" class="timeline-item">
             <strong>{{ slot.startAt | date: 'dd/MM HH:mm' }}</strong>
-            <span>ate {{ slot.endAt | date: 'HH:mm' }}</span>
+            <span>até {{ slot.endAt | date: 'HH:mm' }}</span>
           </div>
         </div>
       </article>
 
       <article class="card wide">
-        <h3>Emitir prontuario</h3>
+        <h3>Emitir prontuário</h3>
         <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
           <select formControlName="appointmentId">
             <option value="">Selecione a consulta</option>
@@ -37,10 +38,10 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
             </option>
           </select>
           <textarea formControlName="symptoms" placeholder="Sintomas"></textarea>
-          <textarea formControlName="diagnosis" placeholder="Diagnostico"></textarea>
-          <textarea formControlName="prescription" placeholder="Prescricao"></textarea>
-          <textarea formControlName="clinicalNotes" placeholder="Notas clinicas"></textarea>
-          <button type="submit">Salvar prontuario</button>
+          <textarea formControlName="diagnosis" placeholder="Diagnóstico"></textarea>
+          <textarea formControlName="prescription" placeholder="Prescrição"></textarea>
+          <textarea formControlName="clinicalNotes" placeholder="Notas clínicas"></textarea>
+          <button type="submit">Salvar prontuário</button>
         </form>
       </article>
     </section>
@@ -60,6 +61,7 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
     }
     .wide { grid-column: 1 / -1; }
     .timeline, form { display: grid; gap: 12px; }
+    .helper { margin: 0; color: #516268; font-size: 0.95rem; }
     .timeline-item { padding: 14px 0; border-bottom: 1px solid rgba(17, 32, 39, 0.08); display: grid; gap: 6px; }
     .compact { max-height: 360px; overflow: auto; }
     input, select, textarea {

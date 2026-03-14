@@ -37,13 +37,13 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
     <div class="dashboard">
       <aside class="sidebar">
         <div>
-          <p class="label">SessÃ£o ativa</p>
+          <p class="label">Sessão ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
         </div>
 
         <div class="sidebar-block">
-          <p class="label">NavegaÃ§Ã£o</p>
+          <p class="label">Navegação</p>
           <button type="button" [class.active]="section() === primarySection()" (click)="section.set(primarySection())">
             {{ primarySectionLabel() }}
           </button>
@@ -51,17 +51,17 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             Sala de atendimento
           </button>
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
-            HistÃ³rico clÃ­nico
+            Histórico clínico
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administraÃ§Ã£o</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
         </div>
 
         <div class="sidebar-block">
           <p class="label">Servidor da API</p>
-          <strong>http://localhost:8080</strong>
+          <strong>{{ apiBaseLabel }}</strong>
           <span class="muted">JWT + REST + WebSocket</span>
-          <small class="muted">status da chamada: {{ callService.status() }}</small>
-          <small class="muted">atualizaÃ§Ã£o automÃ¡tica: 15s</small>
+          <small class="muted">status da chamada: {{ callConnectionLabel() }}</small>
+          <small class="muted">atualização automática: 15s</small>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -70,7 +70,7 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">OperaÃ§Ã£o assistida</p>
+            <p class="eyebrow">Operação assistida</p>
             <h1>{{ headline() }}</h1>
             <p>{{ subheadline() }}</p>
           </div>
@@ -81,11 +81,11 @@ import { PatientCarePanelComponent } from '../features/dashboard/patient-care-pa
             </div>
             <div>
               <strong>{{ medicalRecords().length }}</strong>
-              <span>ProntuÃ¡rios</span>
+              <span>Prontuários</span>
             </div>
             <div>
               <strong>{{ auth.role() === 'DOCTOR' ? availability().length : doctors().length }}</strong>
-              <span>{{ auth.role() === 'DOCTOR' ? 'HorÃ¡rios' : 'MÃ©dicos' }}</span>
+              <span>{{ auth.role() === 'DOCTOR' ? 'Horários' : 'Médicos' }}</span>
             </div>
             <div>
               <strong>{{ callService.events().length }}</strong>
@@ -234,6 +234,7 @@ export class DashboardPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  readonly apiBaseLabel = window.location.origin;
 
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history'>('history');
   readonly error = signal('');
@@ -284,6 +285,16 @@ export class DashboardPageComponent {
   readonly primarySectionLabel = computed(() =>
     this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : 'Descobrir médicos'
   );
+  readonly callConnectionLabel = computed(() => {
+    switch (this.callService.status()) {
+      case 'connected':
+        return 'conectada';
+      case 'connecting':
+        return 'conectando';
+      default:
+        return 'desconectada';
+    }
+  });
   constructor() {
     this.section.set(this.primarySection());
     this.destroyRef.onDestroy(() => this.callService.disconnect());
@@ -384,13 +395,13 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Horário criado com sucesso.');
-          this.toast.success('Agenda atualizada', 'O novo horário já está disponível para agendamento.');
+          this.feedback.set('Horários gerados com sucesso em blocos de 15 minutos.');
+          this.toast.success('Agenda atualizada', 'Os horários do intervalo já estão disponíveis para agendamento.');
           this.availabilityForm.reset();
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível salvar o horário.');
+          this.handleError(error.error?.message ?? 'Não foi possível gerar os horários.');
         }
       });
   }

@@ -49,7 +49,7 @@ export class TelemedApiService {
   }
 
   createAvailabilitySlot(payload: { startAt: string; endAt: string }) {
-    return this.http.post<AvailabilitySlotResponse>(`${API_URL}/doctors/availability`, payload);
+    return this.http.post<AvailabilitySlotResponse[]>(`${API_URL}/doctors/availability`, payload);
   }
 
   createAppointment(payload: {

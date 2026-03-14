@@ -15,8 +15,8 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
     <article class="card" *ngIf="appointment(); else emptyState">
       <div class="call-header">
         <div>
-          <h3>Sala {{ appointment()?.meetingRoomCode || 'sem codigo' }}</h3>
-          <p class="muted">Consulta #{{ appointment()?.id }} · estado {{ appointment()?.status }}</p>
+          <h3>Sala {{ appointment()?.meetingRoomCode || 'sem código' }}</h3>
+          <p class="muted">Consulta #{{ appointment()?.id }} · estado {{ appointmentStatusLabel(appointment()?.status) }}</p>
           <p class="muted">Conectividade: {{ rtc.connectivityLabel() }}</p>
           <p class="presence" [class.online]="rtc.remoteParticipantPresent()">
             {{ rtc.remoteParticipantPresent() ? 'Outro participante na sala' : 'Aguardando outro participante' }}
@@ -29,7 +29,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
           <button type="button" (click)="prepareDevices()">Preparar dispositivos</button>
           <button type="button" [disabled]="!rtc.remoteParticipantPresent() || signaling.roomLimitReached()" (click)="startCall()">Conectar</button>
           <button type="button" (click)="rtc.toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
-          <button type="button" (click)="rtc.toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
+          <button type="button" (click)="rtc.toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar câmera' : 'Ligar câmera' }}</button>
           <button type="button" class="secondary" (click)="reconnect()">Reconectar</button>
           <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
           <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
@@ -39,11 +39,11 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       <div class="call-status-grid">
         <article>
           <strong>WebSocket</strong>
-          <span>{{ signaling.status() }}</span>
+          <span>{{ signalingStatusLabel() }}</span>
         </article>
         <article>
           <strong>WebRTC</strong>
-          <span>{{ rtc.state() }}</span>
+          <span>{{ rtcStateLabel() }}</span>
         </article>
         <article>
           <strong>Participantes</strong>
@@ -54,14 +54,14 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
           <span>{{ rtc.micEnabled() ? 'ativo' : 'mutado' }}</span>
         </article>
         <article>
-          <strong>Camera</strong>
+          <strong>Câmera</strong>
           <span>{{ rtc.cameraEnabled() ? 'ativa' : 'desligada' }}</span>
         </article>
       </div>
 
       <div class="videos">
         <figure>
-          <figcaption>Voce</figcaption>
+          <figcaption>Você</figcaption>
           <video #localVideo playsinline autoplay muted></video>
         </figure>
         <figure>
@@ -71,7 +71,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       </div>
 
       <details>
-        <summary>Sinalizacao manual</summary>
+        <summary>Sinalização manual</summary>
         <form class="signal-form" [formGroup]="signalForm" (ngSubmit)="sendCustomSignal()">
           <input formControlName="type" placeholder="Tipo do sinal" />
           <textarea formControlName="payload" placeholder='JSON ou texto do sinal WebRTC'></textarea>
@@ -81,7 +81,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
 
       <div class="timeline compact">
         <div *ngFor="let event of signaling.events()" class="timeline-item">
-          <strong>{{ event.type }}</strong>
+          <strong>{{ eventTypeLabel(event.type) }}</strong>
           <span>{{ event.sentAt | date: 'dd/MM HH:mm:ss' }} · {{ event.sender || 'sem remetente' }}</span>
           <code>{{ event.payload }}</code>
         </div>
@@ -91,7 +91,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
     <ng-template #emptyState>
       <article class="card empty">
         <h3>Sala de atendimento</h3>
-        <p>Selecione uma consulta liberada no horario para iniciar a chamada.</p>
+        <p>Selecione uma consulta liberada no horário para iniciar a chamada.</p>
       </article>
     </ng-template>
   `,
@@ -208,6 +208,74 @@ export class CallRoomPanelComponent {
     type: ['offer', Validators.required],
     payload: ['{"sdp":"example"}', Validators.required]
   });
+
+  readonly signalingStatusLabel = () => {
+    switch (this.signaling.status()) {
+      case 'connected':
+        return 'conectado';
+      case 'connecting':
+        return 'conectando';
+      default:
+        return 'desconectado';
+    }
+  };
+
+  readonly rtcStateLabel = () => {
+    switch (this.rtc.state()) {
+      case 'idle':
+        return 'inativo';
+      case 'preparing':
+        return 'preparando';
+      case 'ready':
+        return 'pronto';
+      case 'connecting':
+        return 'conectando';
+      case 'connected':
+        return 'conectado';
+      case 'reconnecting':
+        return 'reconectando';
+      case 'failed':
+        return 'falhou';
+    }
+  };
+
+  readonly appointmentStatusLabel = (status: AppointmentStatus | undefined) => {
+    switch (status) {
+      case 'SCHEDULED':
+        return 'agendada';
+      case 'CONFIRMED':
+        return 'confirmada';
+      case 'IN_PROGRESS':
+        return 'em andamento';
+      case 'COMPLETED':
+        return 'encerrada';
+      case 'CANCELLED':
+        return 'cancelada';
+      default:
+        return 'desconhecido';
+    }
+  };
+
+  readonly eventTypeLabel = (type: string) => {
+    switch (type) {
+      case 'join':
+        return 'entrada na sala';
+      case 'leave':
+        return 'saída da sala';
+      case 'offer':
+        return 'oferta WebRTC';
+      case 'answer':
+        return 'resposta WebRTC';
+      case 'candidate':
+        return 'candidato ICE';
+      case 'room-state':
+        return 'estado da sala';
+      case 'room-limit':
+        return 'limite da sala';
+      default:
+        return type;
+    }
+  };
 
   constructor() {
     effect(() => {
