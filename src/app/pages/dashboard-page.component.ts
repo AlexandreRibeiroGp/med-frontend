@@ -15,7 +15,6 @@ import {
 } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 import { ToastService } from '../core/toast.service';
-import { CallRoomPanelComponent } from '../features/calls/call-room-panel.component';
 import { CallQueuePanelComponent } from '../features/dashboard/call-queue-panel.component';
 import { DoctorAgendaPanelComponent } from '../features/dashboard/doctor-agenda-panel.component';
 import { HistoryPanelComponent } from '../features/dashboard/history-panel.component';
@@ -45,7 +44,6 @@ function toOffsetIso(localDateTime: string): string {
     CommonModule,
     ReactiveFormsModule,
     RouterLink,
-    CallRoomPanelComponent,
     CallQueuePanelComponent,
     DoctorAgendaPanelComponent,
     HistoryPanelComponent,
@@ -138,8 +136,6 @@ function toOffsetIso(localDateTime: string): string {
             [joinAvailabilityLabel]="joinAvailabilityLabel"
             (joinRequested)="openCallRoom($event)"
           />
-
-          <app-call-room-panel [appointment]="activeAppointment()" />
         </section>
 
         <app-history-panel
@@ -241,7 +237,7 @@ function toOffsetIso(localDateTime: string): string {
     .stats { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; min-width: 260px; }
     .stats div { background: #f6f1e8; border-radius: 20px; padding: 18px; }
     .stats strong { display: block; font-size: 1.8rem; }
-    .calls-board { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 18px; }
+    .calls-board { display: grid; grid-template-columns: minmax(0, 460px); gap: 18px; }
     .feedback, .error { margin: 0; padding: 14px 16px; border-radius: 18px; }
     .feedback { background: #e6f6f2; color: #0f684f; }
     .error { background: #ffe9e3; color: #a33b19; }
@@ -272,7 +268,6 @@ export class DashboardPageComponent {
   readonly appointments = signal<AppointmentResponse[]>([]);
   readonly medicalRecords = signal<MedicalRecordResponse[]>([]);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
-  readonly activeAppointment = signal<AppointmentResponse | null>(null);
   readonly currentTime = signal(Date.now());
 
   readonly specialtyFilter = this.fb.nonNullable.control('');
@@ -458,9 +453,9 @@ export class DashboardPageComponent {
       return;
     }
 
-    this.activeAppointment.set(appointment);
-    this.section.set('calls');
-    this.toast.info('Sala aberta', `Consulta #${appointment.id} pronta para conexao.`);
+    void this.router.navigate(['/calls', appointment.id], {
+      state: { appointment }
+    });
   }
 
   private loadBaseData(): void {
@@ -477,10 +472,6 @@ export class DashboardPageComponent {
           this.medicalRecords.set(medicalRecords);
           this.specialties.set(specialties);
           this.loadRoleSpecificData();
-          const activeId = this.activeAppointment()?.id;
-          if (activeId) {
-            this.activeAppointment.set(appointments.find((item) => item.id === activeId) ?? null);
-          }
         },
         error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
       });

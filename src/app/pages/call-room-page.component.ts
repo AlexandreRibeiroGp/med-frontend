@@ -1,0 +1,135 @@
+import { CommonModule } from '@angular/common';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { timeout } from 'rxjs';
+import { AppointmentResponse } from '../core/models';
+import { TelemedApiService } from '../core/telemed-api.service';
+import { CallRoomPanelComponent } from '../features/calls/call-room-panel.component';
+
+@Component({
+  selector: 'app-call-room-page',
+  imports: [CommonModule, RouterLink, CallRoomPanelComponent],
+  template: `
+    <div class="room-page">
+      <header class="topbar">
+        <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
+        <div class="title-block">
+          <p class="eyebrow">Sala de atendimento</p>
+          <h1>{{ appointment()?.meetingRoomCode || 'Carregando sala' }}</h1>
+        </div>
+      </header>
+
+      <p *ngIf="error()" class="error">{{ error() }}</p>
+
+      <app-call-room-panel [appointment]="appointment()" />
+    </div>
+  `,
+  styles: `
+    :host {
+      display: block;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255, 142, 84, 0.16), transparent 24%),
+        radial-gradient(circle at top right, rgba(14, 123, 131, 0.18), transparent 22%),
+        linear-gradient(180deg, #f5f2ea 0%, #ebe6db 100%);
+      color: #112027;
+      font-family: 'Segoe UI', sans-serif;
+    }
+    .room-page {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+      display: grid;
+      gap: 18px;
+    }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: end;
+      flex-wrap: wrap;
+    }
+    .back-link {
+      text-decoration: none;
+      color: #112027;
+      background: rgba(255, 255, 255, 0.76);
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      border-radius: 999px;
+      padding: 12px 18px;
+      font-weight: 700;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.72rem;
+      color: #5a6a71;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 4vw, 3.2rem);
+      line-height: 1;
+    }
+    .error {
+      margin: 0;
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: #ffe9e3;
+      color: #a33b19;
+    }
+  `
+})
+export class CallRoomPageComponent {
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
+  private readonly api = inject(TelemedApiService);
+  private readonly destroyRef = inject(DestroyRef);
+
+  readonly appointment = signal<AppointmentResponse | null>(null);
+  readonly error = signal('');
+
+  constructor() {
+    const navigationState = this.router.getCurrentNavigation()?.extras.state as { appointment?: AppointmentResponse } | undefined;
+    const historyState = history.state as { appointment?: AppointmentResponse } | undefined;
+    const preloadedAppointment = navigationState?.appointment ?? historyState?.appointment ?? null;
+    if (preloadedAppointment?.id) {
+      this.appointment.set(preloadedAppointment);
+    }
+
+    this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const appointmentId = Number(params.get('appointmentId'));
+      if (!appointmentId) {
+        this.error.set('Consulta invalida.');
+        void this.router.navigateByUrl('/dashboard');
+        return;
+      }
+
+      if (this.appointment()?.id === appointmentId) {
+        this.error.set('');
+        return;
+      }
+
+      this.api
+        .getAppointments()
+        .pipe(timeout(10000))
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (appointments) => {
+            const appointment = appointments.find((item) => item.id === appointmentId) ?? null;
+            if (!appointment) {
+              this.error.set('Nao foi possivel localizar a consulta informada.');
+              void this.router.navigateByUrl('/dashboard');
+              return;
+            }
+
+            this.error.set('');
+            this.appointment.set(appointment);
+          },
+          error: () => {
+            this.error.set('Nao foi possivel carregar os dados da consulta. Volte ao painel e tente novamente.');
+          }
+        });
+    });
+  }
+}
