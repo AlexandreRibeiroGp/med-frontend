@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
+import { SessionTimeoutService } from './core/session-timeout.service';
 import { ToastStackComponent } from './shared/toast-stack.component';
 
 @Component({
@@ -8,4 +9,8 @@ import { ToastStackComponent } from './shared/toast-stack.component';
   templateUrl: './app.html',
   styleUrl: './app.scss'
 })
-export class App {}
+export class App {
+  constructor() {
+    inject(SessionTimeoutService);
+  }
+}

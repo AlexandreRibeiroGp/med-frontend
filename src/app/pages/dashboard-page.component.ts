@@ -88,18 +88,6 @@ function toOffsetIso(localDateTime: string): string {
               <strong>{{ appointments().length }}</strong>
               <span>Consultas</span>
             </div>
-            <div>
-              <strong>{{ medicalRecords().length }}</strong>
-              <span>Prontuarios</span>
-            </div>
-            <div>
-              <strong>{{ auth.role() === 'DOCTOR' ? visibleAvailability().length : doctors().length }}</strong>
-              <span>{{ auth.role() === 'DOCTOR' ? 'Horarios' : 'Medicos' }}</span>
-            </div>
-            <div>
-              <strong>{{ callService.events().length }}</strong>
-              <span>Sinais na sala</span>
-            </div>
           </div>
         </header>
 
@@ -254,7 +242,7 @@ function toOffsetIso(localDateTime: string): string {
       flex-wrap: wrap;
     }
     h1 { margin: 0 0 10px; font-size: clamp(1.9rem, 4vw, 3.6rem); line-height: 0.98; }
-    .stats { display: grid; grid-template-columns: repeat(2, minmax(120px, 1fr)); gap: 12px; min-width: 260px; }
+    .stats { display: grid; grid-template-columns: minmax(120px, 140px); gap: 12px; min-width: 140px; }
     .stats div { background: #f6f1e8; border-radius: 20px; padding: 18px; }
     .stats strong { display: block; font-size: 1.8rem; }
     .calls-board { display: grid; grid-template-columns: minmax(0, 460px); gap: 18px; }
