@@ -55,6 +55,10 @@ export class TelemedApiService {
     return this.http.post<AvailabilitySlotResponse[]>(`${API_URL}/doctors/availability`, payload);
   }
 
+  deleteAvailabilitySlot(slotId: number) {
+    return this.http.delete<void>(`${API_URL}/doctors/availability/${slotId}`);
+  }
+
   createAppointment(payload: {
     doctorProfileId: number;
     availabilitySlotId?: number | null;

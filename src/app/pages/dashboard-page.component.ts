@@ -145,6 +145,7 @@ function toOffsetIso(localDateTime: string): string {
           [appointments]="appointments()"
           (createAvailability)="createAvailability()"
           (createRecord)="createMedicalRecord()"
+          (removeAvailability)="removeAvailability($event)"
         />
 
         <section *ngIf="section() === 'calls'" class="calls-board">
@@ -513,6 +514,22 @@ export class DashboardPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.handleError(error.error?.message ?? 'Nao foi possivel gerar os horarios.');
+        }
+      });
+  }
+
+  removeAvailability(slotId: number): void {
+    this.api
+      .deleteAvailabilitySlot(slotId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.feedback.set('Horario removido com sucesso.');
+          this.toast.success('Agenda atualizada', 'O horario foi excluido da sua agenda.');
+          this.loadBaseData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel excluir o horario.');
         }
       });
   }

@@ -34,8 +34,11 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
         <h3>Minha agenda aberta</h3>
         <div class="timeline compact">
           <div *ngFor="let slot of availability()" class="timeline-item">
-            <strong>{{ slot.startAt | date: 'dd/MM HH:mm' }}</strong>
-            <span>ate {{ slot.endAt | date: 'HH:mm' }}</span>
+            <div class="timeline-main">
+              <strong>{{ slot.startAt | date: 'dd/MM HH:mm' }}</strong>
+              <span>ate {{ slot.endAt | date: 'HH:mm' }}</span>
+            </div>
+            <button type="button" class="danger" (click)="removeAvailability.emit(slot.id)">Excluir</button>
           </div>
         </div>
       </article>
@@ -88,7 +91,18 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       font-weight: 700;
     }
     .helper { margin: 0; color: #516268; font-size: 0.95rem; }
-    .timeline-item { padding: 14px 0; border-bottom: 1px solid rgba(17, 32, 39, 0.08); display: grid; gap: 6px; }
+    .timeline-item {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(17, 32, 39, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .timeline-main {
+      display: grid;
+      gap: 4px;
+    }
     .compact { max-height: 360px; overflow: auto; }
     input, select, textarea {
       width: 100%;
@@ -109,6 +123,13 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       background: linear-gradient(135deg, #0e7b83, #0a5d65);
       color: white;
     }
+    .danger {
+      width: auto;
+      background: #ffe9e3;
+      color: #a33b19;
+      padding: 10px 14px;
+      flex: 0 0 auto;
+    }
     span { color: #516268; }
     @media (max-width: 900px) {
       .board { grid-template-columns: 1fr; }
@@ -124,4 +145,5 @@ export class DoctorAgendaPanelComponent {
 
   readonly createAvailability = output<void>();
   readonly createRecord = output<void>();
+  readonly removeAvailability = output<number>();
 }
