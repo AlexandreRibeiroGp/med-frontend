@@ -287,7 +287,7 @@ export class CallRoomPanelComponent {
         })
       : '';
 
-    return `${appointment.doctorName} · ${scheduleLabel}`;
+    return `${appointment.doctorName} ï¿½ ${scheduleLabel}`;
   }
 
   async enterCall(): Promise<void> {
