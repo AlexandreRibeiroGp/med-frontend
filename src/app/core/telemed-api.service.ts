@@ -2,12 +2,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import {
+  AppointmentCheckoutResponse,
   AppointmentResponse,
   AppointmentStatus,
   AvailabilitySlotResponse,
   DoctorResponse,
   MedicalRecordResponse,
+  PaymentResponse,
   PatientProfileResponse,
+  PaymentMethod,
   RegisterDoctorRequest,
   RegisterPatientRequest,
   UserResponse
@@ -62,8 +65,23 @@ export class TelemedApiService {
     return this.http.post<AppointmentResponse>(`${API_URL}/appointments`, payload);
   }
 
+  checkoutAppointment(payload: {
+    doctorProfileId: number;
+    availabilitySlotId?: number | null;
+    scheduledAt?: string | null;
+    appointmentType: 'VIDEO' | 'IN_PERSON';
+    notes?: string | null;
+    paymentMethod: PaymentMethod;
+  }) {
+    return this.http.post<AppointmentCheckoutResponse>(`${API_URL}/appointments/checkout`, payload);
+  }
+
   getAppointments(): Observable<AppointmentResponse[]> {
     return this.http.get<AppointmentResponse[]>(`${API_URL}/appointments`);
+  }
+
+  getPayments(): Observable<PaymentResponse[]> {
+    return this.http.get<PaymentResponse[]>(`${API_URL}/payments`);
   }
 
   updateAppointmentStatus(appointmentId: number, status: AppointmentStatus): Observable<AppointmentResponse> {

@@ -11,8 +11,20 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       <article class="card">
         <h3>Gerar horarios do dia</h3>
         <form [formGroup]="availabilityForm()" (ngSubmit)="createAvailability.emit()">
-          <input formControlName="startAt" type="datetime-local" />
-          <input formControlName="endAt" type="datetime-local" />
+          <div class="availability-grid">
+            <label>
+              <span>Dia</span>
+              <input formControlName="date" type="date" />
+            </label>
+            <label>
+              <span>Hora inicial</span>
+              <input formControlName="startTime" type="time" step="900" />
+            </label>
+            <label>
+              <span>Hora final</span>
+              <input formControlName="endTime" type="time" step="900" />
+            </label>
+          </div>
           <p class="helper">O sistema divide o intervalo em horarios de 15 minutos para os pacientes.</p>
           <button type="submit">Gerar horarios</button>
         </form>
@@ -61,6 +73,20 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
     }
     .wide { grid-column: 1 / -1; }
     .timeline, form { display: grid; gap: 12px; }
+    .availability-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    label {
+      display: grid;
+      gap: 8px;
+    }
+    label span {
+      color: #516268;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
     .helper { margin: 0; color: #516268; font-size: 0.95rem; }
     .timeline-item { padding: 14px 0; border-bottom: 1px solid rgba(17, 32, 39, 0.08); display: grid; gap: 6px; }
     .compact { max-height: 360px; overflow: auto; }
@@ -84,7 +110,10 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       color: white;
     }
     span { color: #516268; }
-    @media (max-width: 900px) { .board { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) {
+      .board { grid-template-columns: 1fr; }
+      .availability-grid { grid-template-columns: 1fr; }
+    }
   `
 })
 export class DoctorAgendaPanelComponent {

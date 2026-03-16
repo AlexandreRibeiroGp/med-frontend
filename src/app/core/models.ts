@@ -1,5 +1,7 @@
 export type Role = 'ADMIN' | 'PATIENT' | 'DOCTOR';
-export type AppointmentStatus = 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED';
+export type AppointmentStatus = 'PENDING_PAYMENT' | 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED';
+export type PaymentMethod = 'PIX' | 'CARD';
+export type PaymentStatus = 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
 
 export interface UserResponse {
   id: number;
@@ -67,6 +69,26 @@ export interface AppointmentResponse {
   appointmentType: 'VIDEO' | 'IN_PERSON';
   meetingRoomCode: string | null;
   notes: string | null;
+  paymentStatus: PaymentStatus | null;
+}
+
+export interface PaymentResponse {
+  id: number;
+  appointmentId: number;
+  appointmentStatus: AppointmentStatus;
+  paymentMethod: PaymentMethod;
+  paymentStatus: PaymentStatus;
+  amount: number;
+  providerReference: string;
+  checkoutUrl: string | null;
+  pixCode: string | null;
+  expiresAt: string | null;
+  confirmedAt: string | null;
+}
+
+export interface AppointmentCheckoutResponse {
+  appointment: AppointmentResponse;
+  payment: PaymentResponse;
 }
 
 export interface MedicalRecordResponse {

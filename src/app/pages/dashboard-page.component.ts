@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { forkJoin, timer } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { CallSignalingService } from '../core/call-signaling.service';
@@ -11,6 +11,7 @@ import {
   AvailabilitySlotResponse,
   DoctorResponse,
   MedicalRecordResponse,
+  PaymentMethod,
   PatientProfileResponse
 } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
@@ -82,7 +83,7 @@ function toOffsetIso(localDateTime: string): string {
             <h1>{{ headline() }}</h1>
             <p>{{ subheadline() }}</p>
           </div>
-          <div class="stats">
+          <div class="stats" *ngIf="auth.role() !== 'PATIENT'">
             <div>
               <strong>{{ appointments().length }}</strong>
               <span>Consultas</span>
@@ -92,7 +93,7 @@ function toOffsetIso(localDateTime: string): string {
               <span>Prontuarios</span>
             </div>
             <div>
-              <strong>{{ auth.role() === 'DOCTOR' ? availability().length : doctors().length }}</strong>
+              <strong>{{ auth.role() === 'DOCTOR' ? visibleAvailability().length : doctors().length }}</strong>
               <span>{{ auth.role() === 'DOCTOR' ? 'Horarios' : 'Medicos' }}</span>
             </div>
             <div>
@@ -111,18 +112,36 @@ function toOffsetIso(localDateTime: string): string {
           [specialties]="specialties()"
           [doctors]="doctors()"
           [selectedDoctor]="selectedDoctor()"
-          [selectedDoctorSlots]="selectedDoctorSlots()"
+          [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
           [specialtyFilter]="specialtyFilter"
           (refreshDoctors)="loadDoctors()"
           (doctorSelected)="selectDoctor($event)"
           (slotBooked)="bookSlot($event)"
         />
 
+        <section *ngIf="auth.role() === 'PATIENT' && pendingBookingSlot() && selectedDoctor() as checkoutDoctor" class="checkout-card">
+          <div>
+            <p class="eyebrow">Pagamento</p>
+            <h3>Concluir reserva com {{ checkoutDoctor.user.fullName }}</h3>
+            <p>
+              Horario selecionado:
+              <strong>{{ pendingBookingSlot()?.startAt | date: 'dd/MM HH:mm' }}</strong>
+            </p>
+            <p class="muted">A consulta so sera liberada depois da confirmacao do pagamento.</p>
+          </div>
+
+          <div class="checkout-actions">
+            <button type="button" class="pix" (click)="submitCheckout('PIX')">Pagar com Pix</button>
+            <button type="button" class="card" (click)="submitCheckout('CARD')">Pagar com cartao</button>
+            <button type="button" class="ghost" (click)="cancelCheckout()">Cancelar</button>
+          </div>
+        </section>
+
         <app-doctor-agenda-panel
           *ngIf="section() === primarySection() && auth.role() === 'DOCTOR'"
           [availabilityForm]="availabilityForm"
           [recordForm]="recordForm"
-          [availability]="availability()"
+          [availability]="visibleAvailability()"
           [appointments]="appointments()"
           (createAvailability)="createAvailability()"
           (createRecord)="createMedicalRecord()"
@@ -130,7 +149,7 @@ function toOffsetIso(localDateTime: string): string {
 
         <section *ngIf="section() === 'calls'" class="calls-board">
           <app-call-queue-panel
-            [appointments]="appointments()"
+            [appointments]="callableAppointments()"
             [role]="auth.role()"
             [canJoinAppointment]="canJoinAppointment"
             [joinAvailabilityLabel]="joinAvailabilityLabel"
@@ -241,6 +260,38 @@ function toOffsetIso(localDateTime: string): string {
     .feedback, .error { margin: 0; padding: 14px 16px; border-radius: 18px; }
     .feedback { background: #e6f6f2; color: #0f684f; }
     .error { background: #ffe9e3; color: #a33b19; }
+    .checkout-card {
+      border-radius: 28px;
+      background: rgba(255, 253, 249, 0.86);
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      box-shadow: 0 18px 50px rgba(17, 32, 39, 0.08);
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .checkout-card h3 { margin: 0 0 8px; }
+    .checkout-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .checkout-actions button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .checkout-actions .pix,
+    .checkout-actions .card {
+      color: white;
+      background: linear-gradient(135deg, #0e7b83, #0a5d65);
+    }
+    .checkout-actions .ghost {
+      background: #f6f1e8;
+      color: #112027;
+    }
     @media (max-width: 1100px) {
       .dashboard { grid-template-columns: 1fr; }
       .sidebar { position: static; top: auto; }
@@ -253,6 +304,7 @@ export class DashboardPageComponent {
   readonly callService = inject(CallSignalingService);
   private readonly api = inject(TelemedApiService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
@@ -268,12 +320,28 @@ export class DashboardPageComponent {
   readonly appointments = signal<AppointmentResponse[]>([]);
   readonly medicalRecords = signal<MedicalRecordResponse[]>([]);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
+  readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly currentTime = signal(Date.now());
+  readonly visibleSelectedDoctorSlots = computed(() =>
+    this.selectedDoctorSlots().filter((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())
+  );
+  readonly visibleAvailability = computed(() =>
+    this.availability().filter((slot) => new Date(slot.endAt).getTime() > this.currentTime())
+  );
+  readonly callableAppointments = computed(() =>
+    this.appointments().filter(
+      (appointment) =>
+        appointment.status !== 'PENDING_PAYMENT' &&
+        appointment.status !== 'CANCELLED' &&
+        appointment.status !== 'COMPLETED'
+    )
+  );
 
   readonly specialtyFilter = this.fb.nonNullable.control('');
   readonly availabilityForm = this.fb.nonNullable.group({
-    startAt: ['', Validators.required],
-    endAt: ['', Validators.required]
+    date: ['', Validators.required],
+    startTime: ['', Validators.required],
+    endTime: ['', Validators.required]
   });
   readonly recordForm = this.fb.nonNullable.group({
     appointmentId: ['', Validators.required],
@@ -308,6 +376,16 @@ export class DashboardPageComponent {
   constructor() {
     this.section.set(this.primarySection());
     this.destroyRef.onDestroy(() => this.callService.disconnect());
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const paymentStatus = params.get('paymentStatus');
+      if (paymentStatus === 'success') {
+        this.feedback.set('Pagamento confirmado. A consulta sera liberada assim que o backend receber a notificacao do Mercado Pago.');
+      } else if (paymentStatus === 'pending') {
+        this.feedback.set('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
+      } else if (paymentStatus === 'failure') {
+        this.handleError('O pagamento nao foi concluido. Tente novamente.');
+      }
+    });
     timer(0, 15000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
@@ -363,29 +441,50 @@ export class DashboardPageComponent {
   }
 
   bookSlot(slot: AvailabilitySlotResponse): void {
+    if (!this.selectedDoctor()) {
+      return;
+    }
+    this.pendingBookingSlot.set(slot);
+    this.feedback.set('');
+    this.error.set('');
+  }
+
+  cancelCheckout(): void {
+    this.pendingBookingSlot.set(null);
+  }
+
+  submitCheckout(paymentMethod: PaymentMethod): void {
     const doctor = this.selectedDoctor();
-    if (!doctor) {
+    const slot = this.pendingBookingSlot();
+    if (!doctor || !slot) {
       return;
     }
 
     this.api
-      .createAppointment({
+      .checkoutAppointment({
         doctorProfileId: doctor.id,
         availabilitySlotId: slot.id,
         appointmentType: 'VIDEO',
-        notes: 'Consulta agendada pelo painel Angular'
+        notes: 'Consulta agendada pelo painel Angular',
+        paymentMethod
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          this.feedback.set('Consulta agendada com sucesso.');
-          this.toast.success('Consulta criada', 'O horario foi reservado. O medico recebe e-mail quando o SMTP estiver configurado.');
-          this.section.set('history');
+        next: (checkout) => {
+          this.pendingBookingSlot.set(null);
           this.selectDoctor(doctor);
           this.loadBaseData();
+          if (checkout.payment.checkoutUrl) {
+            this.feedback.set('Redirecionando para o pagamento no Mercado Pago...');
+            this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
+            window.location.href = checkout.payment.checkoutUrl;
+            return;
+          }
+
+          this.handleError('O checkout foi criado sem URL de pagamento.');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel agendar a consulta.');
+          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
         }
       });
   }
@@ -397,10 +496,12 @@ export class DashboardPageComponent {
     }
 
     const raw = this.availabilityForm.getRawValue();
+    const startAt = `${raw.date}T${raw.startTime}`;
+    const endAt = `${raw.date}T${raw.endTime}`;
     this.api
       .createAvailabilitySlot({
-        startAt: toOffsetIso(raw.startAt),
-        endAt: toOffsetIso(raw.endAt)
+        startAt: toOffsetIso(startAt),
+        endAt: toOffsetIso(endAt)
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

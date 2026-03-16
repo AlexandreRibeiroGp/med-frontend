@@ -14,44 +14,52 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
     <article class="card" *ngIf="appointment(); else emptyState">
       <div class="call-header">
         <div>
-          <h2>{{ appointment()?.meetingRoomCode || 'Sala de atendimento' }}</h2>
-          <p class="muted">{{ appointmentRoleLabel() }}</p>
+          <h2>Consulta agendada</h2>
+          <p class="muted">{{ appointmentSummary() }}</p>
           <p class="presence" [class.online]="rtc.remoteParticipantPresent()">{{ rtc.connectivityLabel() }}</p>
         </div>
       </div>
 
-      <div class="videos">
-        <figure>
-          <figcaption>Voce</figcaption>
-          <video #localVideo playsinline autoplay muted></video>
-        </figure>
-        <figure>
-          <figcaption>Participante remoto</figcaption>
-          <video #remoteVideo playsinline autoplay></video>
-        </figure>
+      <div class="entry-card" *ngIf="!rtc.localStream()">
+        <h3>Entrar na chamada</h3>
+        <p>A sala foi aberta. Ative seus dispositivos quando estiver pronto.</p>
+        <button type="button" (click)="enterCall()">Ativar camera e microfone</button>
       </div>
 
-      <div class="status-strip">
-        <div class="status-card">
-          <strong>WebSocket</strong>
-          <span>{{ signalingStatusLabel() }}</span>
+      <ng-container *ngIf="rtc.localStream()">
+        <div class="videos">
+          <figure>
+            <figcaption>Voce</figcaption>
+            <video #localVideo playsinline autoplay muted></video>
+          </figure>
+          <figure>
+            <figcaption>Participante remoto</figcaption>
+            <video #remoteVideo playsinline autoplay></video>
+          </figure>
         </div>
-        <div class="status-card">
-          <strong>WebRTC</strong>
-          <span>{{ rtcStateLabel() }}</span>
-        </div>
-        <div class="status-card">
-          <strong>Participantes</strong>
-          <span>{{ signaling.roomState().participantCount }}/2</span>
-        </div>
-      </div>
 
-      <div class="control-bar">
-        <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
-        <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
-        <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
-        <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
-      </div>
+        <div class="status-strip">
+          <div class="status-card">
+            <strong>WebSocket</strong>
+            <span>{{ signalingStatusLabel() }}</span>
+          </div>
+          <div class="status-card">
+            <strong>WebRTC</strong>
+            <span>{{ rtcStateLabel() }}</span>
+          </div>
+          <div class="status-card">
+            <strong>Participantes</strong>
+            <span>{{ signaling.roomState().participantCount }}/2</span>
+          </div>
+        </div>
+
+        <div class="control-bar">
+          <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
+          <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
+          <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
+          <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
+        </div>
+      </ng-container>
     </article>
 
     <ng-template #emptyState>
@@ -87,6 +95,10 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       margin: 0 0 8px;
       font-size: clamp(1.6rem, 3vw, 2.4rem);
     }
+    h3 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
     .muted { color: rgba(255, 255, 255, 0.7); }
     .presence {
       margin: 8px 0 0;
@@ -94,6 +106,22 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       font-weight: 700;
     }
     .presence.online { color: #83f0d4; }
+    .entry-card {
+      min-height: 320px;
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      gap: 14px;
+      padding: 32px;
+      margin-bottom: 18px;
+    }
+    .entry-card p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.74);
+    }
     .videos {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -173,17 +201,13 @@ export class CallRoomPanelComponent {
       }
 
       this.connectRoom();
-      void this.prepareDevices();
     });
 
-    effect(
-      () => {
-        const local = this.localVideo()?.nativeElement ?? null;
-        const remote = this.remoteVideo()?.nativeElement ?? null;
-        this.rtc.bindVideos(local, remote);
-      },
-      { allowSignalWrites: true }
-    );
+    effect(() => {
+      const local = this.localVideo()?.nativeElement ?? null;
+      const remote = this.remoteVideo()?.nativeElement ?? null;
+      this.rtc.bindVideos(local, remote);
+    });
 
     effect(() => {
       const appointment = this.appointment();
@@ -248,24 +272,7 @@ export class CallRoomPanelComponent {
     }
   };
 
-  private appointmentStatusLabel(status: AppointmentStatus | undefined): string {
-    switch (status) {
-      case 'SCHEDULED':
-        return 'agendada';
-      case 'CONFIRMED':
-        return 'confirmada';
-      case 'IN_PROGRESS':
-        return 'em andamento';
-      case 'COMPLETED':
-        return 'encerrada';
-      case 'CANCELLED':
-        return 'cancelada';
-      default:
-        return 'desconhecida';
-    }
-  }
-
-  appointmentRoleLabel(): string {
+  appointmentSummary(): string {
     const appointment = this.appointment();
     if (!appointment) {
       return '';
@@ -280,10 +287,10 @@ export class CallRoomPanelComponent {
         })
       : '';
 
-    return `Consulta #${appointment.id} · ${this.appointmentStatusLabel(appointment.status)} · ${scheduleLabel}`;
+    return `${appointment.doctorName} · ${scheduleLabel}`;
   }
 
-  async prepareDevices(): Promise<void> {
+  async enterCall(): Promise<void> {
     try {
       this.connectRoom();
       await this.rtc.prepareMedia();
@@ -310,6 +317,7 @@ export class CallRoomPanelComponent {
   leaveRoom(): void {
     this.signaling.disconnect();
     void this.rtc.disconnect();
+    this.rtc.stopMedia();
     this.toast.info('Sala encerrada', 'A conexao local foi finalizada.', 2500);
   }
 
@@ -319,7 +327,9 @@ export class CallRoomPanelComponent {
       return;
     }
 
-    if (this.signaling.currentRoom() === appointment.id && this.signaling.status() === 'connected') {
+    const currentRoom = this.signaling.currentRoom();
+    const status = this.signaling.status();
+    if (currentRoom === appointment.id && (status === 'connected' || status === 'connecting')) {
       return;
     }
 

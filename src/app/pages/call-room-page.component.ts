@@ -16,7 +16,7 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
         <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
         <div class="title-block">
           <p class="eyebrow">Sala de atendimento</p>
-          <h1>{{ appointment()?.meetingRoomCode || 'Carregando sala' }}</h1>
+          <h1>Consulta agendada</h1>
         </div>
       </header>
 
