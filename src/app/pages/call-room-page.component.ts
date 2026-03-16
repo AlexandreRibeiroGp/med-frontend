@@ -88,6 +88,7 @@ export class CallRoomPageComponent {
 
   readonly appointment = signal<AppointmentResponse | null>(null);
   readonly error = signal('');
+  private errorTimer: number | null = null;
 
   constructor() {
     const navigationState = this.router.getCurrentNavigation()?.extras.state as { appointment?: AppointmentResponse } | undefined;
@@ -100,7 +101,7 @@ export class CallRoomPageComponent {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const appointmentId = Number(params.get('appointmentId'));
       if (!appointmentId) {
-        this.error.set('Consulta invalida.');
+        this.setError('Consulta invalida.');
         void this.router.navigateByUrl('/dashboard');
         return;
       }
@@ -118,7 +119,7 @@ export class CallRoomPageComponent {
           next: (appointments) => {
             const appointment = appointments.find((item) => item.id === appointmentId) ?? null;
             if (!appointment) {
-              this.error.set('Nao foi possivel localizar a consulta informada.');
+              this.setError('Nao foi possivel localizar a consulta informada.');
               void this.router.navigateByUrl('/dashboard');
               return;
             }
@@ -127,9 +128,17 @@ export class CallRoomPageComponent {
             this.appointment.set(appointment);
           },
           error: () => {
-            this.error.set('Nao foi possivel carregar os dados da consulta. Volte ao painel e tente novamente.');
+            this.setError('Nao foi possivel carregar os dados da consulta. Volte ao painel e tente novamente.');
           }
         });
     });
+  }
+
+  private setError(message: string): void {
+    this.error.set(message);
+    if (this.errorTimer !== null) {
+      window.clearTimeout(this.errorTimer);
+    }
+    this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
   }
 }

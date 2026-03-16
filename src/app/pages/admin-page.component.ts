@@ -1,56 +1,83 @@
-﻿import { CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin } from 'rxjs';
-import { DoctorResponse, UserResponse } from '../core/models';
+import { AuthService } from '../core/auth.service';
+import { DoctorResponse, DoctorSpecialty, UserResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 
 @Component({
   selector: 'app-admin-page',
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
-    <div class="page">
+    <div class="page" *ngIf="auth.isOwner(); else denied">
       <header>
         <div>
-          <p class="eyebrow">Administração</p>
-          <h1>Visão operacional</h1>
-          <p>Usuários, médicos e especialidades expostos pelo backend atual.</p>
+          <p class="eyebrow">Gestao interna</p>
+          <h1>Cadastros internos</h1>
+          <p>Somente o seu usuario pode cadastrar medicos e administradores.</p>
         </div>
         <a routerLink="/dashboard">Voltar ao painel</a>
       </header>
 
+      <p *ngIf="message()" class="message">{{ message() }}</p>
       <p *ngIf="error()" class="error">{{ error() }}</p>
 
       <section class="grid">
         <article class="card">
-          <h2>Usuários</h2>
-          <div class="list">
-            <div *ngFor="let user of users()" class="row">
-              <strong>{{ user.fullName }}</strong>
-              <span>{{ user.email }} · {{ user.role }}</span>
-            </div>
-          </div>
+          <h2>Cadastrar medico</h2>
+          <form [formGroup]="doctorForm" (ngSubmit)="submitDoctor()">
+            <input formControlName="fullName" placeholder="Nome completo" />
+            <input formControlName="email" type="email" placeholder="E-mail" />
+            <input formControlName="password" type="password" placeholder="Senha" />
+            <input formControlName="phoneNumber" placeholder="Telefone" />
+            <input formControlName="crm" placeholder="CRM" />
+            <select formControlName="specialty">
+              <option *ngFor="let specialty of specialtyOptions" [value]="specialty">{{ specialtyLabel(specialty) }}</option>
+            </select>
+            <textarea formControlName="biography" placeholder="Biografia"></textarea>
+            <label class="check">
+              <input formControlName="telemedicineEnabled" type="checkbox" />
+              Telemedicina habilitada
+            </label>
+            <button [disabled]="loading()" type="submit">Salvar medico</button>
+          </form>
         </article>
 
         <article class="card">
-          <h2>Médicos</h2>
+          <h2>Cadastrar administrador</h2>
+          <form [formGroup]="adminForm" (ngSubmit)="submitAdmin()">
+            <input formControlName="fullName" placeholder="Nome completo" />
+            <input formControlName="email" type="email" placeholder="E-mail" />
+            <input formControlName="password" type="password" placeholder="Senha" />
+            <input formControlName="phoneNumber" placeholder="Telefone" />
+            <button [disabled]="loading()" type="submit">Salvar administrador</button>
+          </form>
+        </article>
+
+        <article class="card wide">
+          <h2>Medicos cadastrados</h2>
           <div class="list">
             <div *ngFor="let doctor of doctors()" class="row">
               <strong>{{ doctor.user.fullName }}</strong>
-              <span>{{ doctor.specialty }} · {{ doctor.crm }}</span>
+              <span>{{ specialtyLabel(doctor.specialty) }} · {{ doctor.crm }}</span>
             </div>
-          </div>
-        </article>
-
-        <article class="card">
-          <h2>Especialidades</h2>
-          <div class="chips">
-            <span *ngFor="let specialty of specialties()">{{ specialty }}</span>
           </div>
         </article>
       </section>
     </div>
+
+    <ng-template #denied>
+      <div class="page">
+        <article class="card denied">
+          <h2>Acesso restrito</h2>
+          <p>Essa area interna esta disponivel somente para o dono do sistema.</p>
+          <a routerLink="/dashboard">Voltar ao painel</a>
+        </article>
+      </div>
+    </ng-template>
   `,
   styles: `
     :host {
@@ -58,7 +85,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       min-height: 100vh;
       background: #f4efe6;
       color: #112027;
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Segoe UI', sans-serif;
     }
 
     .page {
@@ -86,8 +113,12 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     .grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
+    }
+
+    .wide {
+      grid-column: 1 / -1;
     }
 
     .card {
@@ -98,9 +129,51 @@ import { TelemedApiService } from '../core/telemed-api.service';
       box-shadow: 0 18px 50px rgba(17, 32, 39, 0.08);
     }
 
+    form,
     .list {
       display: grid;
       gap: 12px;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      width: 100%;
+      border-radius: 16px;
+      font: inherit;
+    }
+
+    input,
+    select,
+    textarea {
+      border: 1px solid #d8dfdf;
+      padding: 14px 16px;
+      background: white;
+    }
+
+    textarea {
+      min-height: 96px;
+      resize: vertical;
+    }
+
+    button {
+      border: 0;
+      padding: 14px 16px;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+      color: white;
+    }
+
+    .check {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .check input {
+      width: auto;
     }
 
     .row {
@@ -110,13 +183,23 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 4px;
     }
 
-    .chips {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
+    .message,
+    .error {
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin: 0 0 18px;
     }
 
-    .chips span,
+    .message {
+      background: #e6f6f2;
+      color: #0f684f;
+    }
+
+    .error {
+      background: #ffe9e3;
+      color: #a33b19;
+    }
+
     a {
       text-decoration: none;
       background: #fff0e8;
@@ -124,14 +207,14 @@ import { TelemedApiService } from '../core/telemed-api.service';
       border-radius: 999px;
       padding: 10px 14px;
       font-weight: 700;
+      display: inline-flex;
+      width: fit-content;
     }
 
-    .error {
-      background: #ffe9e3;
-      color: #a33b19;
-      padding: 14px 16px;
-      border-radius: 18px;
-      margin-bottom: 18px;
+    .denied {
+      display: grid;
+      gap: 16px;
+      justify-items: start;
     }
 
     @media (max-width: 980px) {
@@ -142,29 +225,151 @@ import { TelemedApiService } from '../core/telemed-api.service';
   `
 })
 export class AdminPageComponent {
+  readonly auth = inject(AuthService);
   private readonly api = inject(TelemedApiService);
+  private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly users = signal<UserResponse[]>([]);
+  readonly specialtyOptions: DoctorSpecialty[] = ['GERAL'];
   readonly doctors = signal<DoctorResponse[]>([]);
-  readonly specialties = signal<string[]>([]);
+  readonly users = signal<UserResponse[]>([]);
   readonly error = signal('');
+  readonly message = signal('');
+  readonly loading = signal(false);
+  private errorTimer: number | null = null;
+  private messageTimer: number | null = null;
+
+  readonly doctorForm = this.fb.nonNullable.group({
+    fullName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    phoneNumber: [''],
+    crm: ['', Validators.required],
+    specialty: this.fb.nonNullable.control<DoctorSpecialty>('GERAL', Validators.required),
+    biography: [''],
+    telemedicineEnabled: [true]
+  });
+
+  readonly adminForm = this.fb.nonNullable.group({
+    fullName: ['', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(8)]],
+    phoneNumber: [''],
+    documentNumber: [''],
+    birthDate: [''],
+    healthInsurance: ['']
+  });
 
   constructor() {
+    this.loadData();
+  }
+
+  specialtyLabel(specialty: DoctorSpecialty): string {
+    return specialty === 'GERAL' ? 'Geral' : specialty;
+  }
+
+  submitDoctor(): void {
+    if (this.doctorForm.invalid) {
+      this.doctorForm.markAllAsTouched();
+      this.setError('Revise os campos do medico antes de continuar.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.registerDoctor(this.doctorForm.getRawValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.setMessage('Medico cadastrado com sucesso.');
+          this.doctorForm.reset({
+            fullName: '',
+            email: '',
+            password: '',
+            phoneNumber: '',
+            crm: '',
+            specialty: 'GERAL',
+            biography: '',
+            telemedicineEnabled: true
+          });
+          this.loadData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.loading.set(false);
+          this.setError(error.error?.message ?? 'Nao foi possivel cadastrar o medico.');
+        }
+      });
+  }
+
+  submitAdmin(): void {
+    if (this.adminForm.invalid) {
+      this.adminForm.markAllAsTouched();
+      this.setError('Revise os campos do administrador antes de continuar.');
+      return;
+    }
+
+    this.loading.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.registerAdmin(this.adminForm.getRawValue())
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.setMessage('Administrador cadastrado com sucesso.');
+          this.adminForm.reset({
+            fullName: '',
+            email: '',
+            password: '',
+            phoneNumber: '',
+            documentNumber: '',
+            birthDate: '',
+            healthInsurance: ''
+          });
+          this.loadData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.loading.set(false);
+          this.setError(error.error?.message ?? 'Nao foi possivel cadastrar o administrador.');
+        }
+      });
+  }
+
+  private loadData(): void {
+    if (!this.auth.isOwner()) {
+      return;
+    }
+
     forkJoin({
       users: this.api.getUsers(),
-      doctors: this.api.getDoctors(),
-      specialties: this.api.getSpecialties()
+      doctors: this.api.getDoctors()
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ users, doctors, specialties }) => {
+        next: ({ users, doctors }) => {
+          this.error.set('');
           this.users.set(users);
           this.doctors.set(doctors);
-          this.specialties.set(specialties);
         },
-        error: () => this.error.set('Não foi possível carregar os dados administrativos.')
+        error: () => this.setError('Nao foi possivel carregar os dados internos.')
       });
   }
-}
 
+  private setError(message: string): void {
+    this.error.set(message);
+    if (this.errorTimer !== null) {
+      window.clearTimeout(this.errorTimer);
+    }
+    this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
+  }
+
+  private setMessage(message: string): void {
+    this.message.set(message);
+    if (this.messageTimer !== null) {
+      window.clearTimeout(this.messageTimer);
+    }
+    this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
+  }
+}

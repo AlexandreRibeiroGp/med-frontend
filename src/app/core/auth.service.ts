@@ -11,6 +11,7 @@ interface LoginPayload {
 const API_URL = '/api';
 const TOKEN_KEY = 'med_front_token';
 const USER_KEY = 'med_front_user';
+const OWNER_EMAIL = 'alexandreribeirogp@gmail.com';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
   readonly user = this.userState.asReadonly();
   readonly isAuthenticated = computed(() => !!this.tokenState());
   readonly role = computed<Role | null>(() => this.userState()?.role ?? null);
+  readonly isOwner = computed(() => this.userState()?.email?.toLowerCase() === OWNER_EMAIL);
 
   login(payload: LoginPayload): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${API_URL}/auth/login`, payload).pipe(

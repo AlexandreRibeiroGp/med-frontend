@@ -55,6 +55,10 @@ export class TelemedApiService {
     return this.http.post<AvailabilitySlotResponse[]>(`${API_URL}/doctors/availability`, payload);
   }
 
+  deleteAvailabilityRange(payload: { startAt: string; endAt: string }) {
+    return this.http.post<void>(`${API_URL}/doctors/availability/delete-range`, payload);
+  }
+
   deleteAvailabilitySlot(slotId: number) {
     return this.http.delete<void>(`${API_URL}/doctors/availability/${slotId}`);
   }
@@ -88,6 +92,10 @@ export class TelemedApiService {
     return this.http.get<PaymentResponse[]>(`${API_URL}/payments`);
   }
 
+  confirmPayment(paymentId: number): Observable<PaymentResponse> {
+    return this.http.post<PaymentResponse>(`${API_URL}/payments/${paymentId}/confirm`, {});
+  }
+
   updateAppointmentStatus(appointmentId: number, status: AppointmentStatus): Observable<AppointmentResponse> {
     return this.http.patch<AppointmentResponse>(`${API_URL}/appointments/${appointmentId}/status`, { status });
   }
@@ -100,6 +108,19 @@ export class TelemedApiService {
     clinicalNotes?: string | null;
   }) {
     return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records`, payload);
+  }
+
+  uploadPrescription(recordId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records/${recordId}/prescription`, formData);
+  }
+
+  downloadPrescription(recordId: number) {
+    return this.http.get(`${API_URL}/medical-records/${recordId}/prescription`, {
+      responseType: 'blob',
+      observe: 'response'
+    });
   }
 
   getMedicalRecords(): Observable<MedicalRecordResponse[]> {

@@ -1,7 +1,7 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
-import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models';
+import { AvailabilitySlotResponse } from '../../core/models';
 
 @Component({
   selector: 'app-doctor-agenda-panel',
@@ -12,21 +12,74 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
         <h3>Gerar horarios do dia</h3>
         <form [formGroup]="availabilityForm()" (ngSubmit)="createAvailability.emit()">
           <div class="availability-grid">
-            <label>
+            <label class="full">
               <span>Dia</span>
               <input formControlName="date" type="date" />
             </label>
+
             <label>
               <span>Hora inicial</span>
-              <input formControlName="startTime" type="time" step="900" />
+              <div class="time-pair">
+                <select formControlName="startHour">
+                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select formControlName="startMinute">
+                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+              </div>
             </label>
+
             <label>
               <span>Hora final</span>
-              <input formControlName="endTime" type="time" step="900" />
+              <div class="time-pair">
+                <select formControlName="endHour">
+                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select formControlName="endMinute">
+                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+              </div>
             </label>
           </div>
-          <p class="helper">O sistema divide o intervalo em horarios de 15 minutos para os pacientes.</p>
+          <p class="helper">Os minutos seguem blocos de 15 em 15 para os pacientes.</p>
           <button type="submit">Gerar horarios</button>
+        </form>
+      </article>
+
+      <article class="card">
+        <h3>Fechar horarios por intervalo</h3>
+        <form [formGroup]="deleteRangeForm()" (ngSubmit)="removeAvailabilityRange.emit()">
+          <div class="availability-grid">
+            <label class="full">
+              <span>Dia</span>
+              <input formControlName="date" type="date" />
+            </label>
+
+            <label>
+              <span>Hora inicial</span>
+              <div class="time-pair">
+                <select formControlName="startHour">
+                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select formControlName="startMinute">
+                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+              </div>
+            </label>
+
+            <label>
+              <span>Hora final</span>
+              <div class="time-pair">
+                <select formControlName="endHour">
+                  <option *ngFor="let hour of hourOptions" [value]="hour">{{ hour }}</option>
+                </select>
+                <select formControlName="endMinute">
+                  <option *ngFor="let minute of minuteOptions" [value]="minute">{{ minute }}</option>
+                </select>
+              </div>
+            </label>
+          </div>
+          <button type="submit" class="danger-fill">Excluir intervalo</button>
         </form>
       </article>
 
@@ -43,22 +96,6 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
         </div>
       </article>
 
-      <article class="card wide">
-        <h3>Emitir prontuario</h3>
-        <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
-          <select formControlName="appointmentId">
-            <option value="">Selecione a consulta</option>
-            <option *ngFor="let appointment of appointments()" [value]="appointment.id">
-              #{{ appointment.id }} - {{ appointment.patientName }}
-            </option>
-          </select>
-          <textarea formControlName="symptoms" placeholder="Sintomas"></textarea>
-          <textarea formControlName="diagnosis" placeholder="Diagnostico"></textarea>
-          <textarea formControlName="prescription" placeholder="Prescricao"></textarea>
-          <textarea formControlName="clinicalNotes" placeholder="Notas clinicas"></textarea>
-          <button type="submit">Salvar prontuario</button>
-        </form>
-      </article>
     </section>
   `,
   styles: `
@@ -74,13 +111,13 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       border: 1px solid rgba(17, 32, 39, 0.08);
       box-shadow: 0 18px 50px rgba(17, 32, 39, 0.08);
     }
-    .wide { grid-column: 1 / -1; }
     .timeline, form { display: grid; gap: 12px; }
     .availability-grid {
       display: grid;
-      grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
+    .full { grid-column: 1 / -1; }
     label {
       display: grid;
       gap: 8px;
@@ -89,6 +126,11 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       color: #516268;
       font-size: 0.9rem;
       font-weight: 700;
+    }
+    .time-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
     }
     .helper { margin: 0; color: #516268; font-size: 0.95rem; }
     .timeline-item {
@@ -112,7 +154,6 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       background: white;
       font: inherit;
     }
-    textarea { min-height: 96px; resize: vertical; }
     button {
       border: 0;
       border-radius: 16px;
@@ -130,20 +171,26 @@ import { AppointmentResponse, AvailabilitySlotResponse } from '../../core/models
       padding: 10px 14px;
       flex: 0 0 auto;
     }
+    .danger-fill {
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+    }
     span { color: #516268; }
     @media (max-width: 900px) {
       .board { grid-template-columns: 1fr; }
       .availability-grid { grid-template-columns: 1fr; }
+      .full { grid-column: auto; }
     }
   `
 })
 export class DoctorAgendaPanelComponent {
   readonly availabilityForm = input.required<FormGroup>();
-  readonly recordForm = input.required<FormGroup>();
+  readonly deleteRangeForm = input.required<FormGroup>();
   readonly availability = input<AvailabilitySlotResponse[]>([]);
-  readonly appointments = input<AppointmentResponse[]>([]);
 
   readonly createAvailability = output<void>();
-  readonly createRecord = output<void>();
+  readonly removeAvailabilityRange = output<void>();
   readonly removeAvailability = output<number>();
+
+  readonly hourOptions = Array.from({ length: 24 }, (_, index) => index.toString().padStart(2, '0'));
+  readonly minuteOptions = ['00', '15', '30', '45'];
 }

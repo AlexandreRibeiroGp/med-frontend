@@ -14,10 +14,10 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <div class="shell">
       <aside class="panel intro">
         <a routerLink="/" class="back">Voltar</a>
-        <p class="tag">Portal clínico</p>
-        <h1>Conecte paciente, médico e administração no mesmo ambiente.</h1>
+        <p class="tag">Portal clinico</p>
+        <h1>Conecte paciente e atendimento no mesmo ambiente.</h1>
         <p>
-          Use os formulários ao lado para entrar ou cadastrar novos perfis no backend Spring Boot.
+          O cadastro de medico e administracao agora fica dentro do sistema, em uma area interna restrita.
         </p>
       </aside>
 
@@ -25,8 +25,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="switcher">
           <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">Entrar</button>
           <button type="button" [class.active]="mode() === 'patient'" (click)="mode.set('patient')">Paciente</button>
-          <button type="button" [class.active]="mode() === 'doctor'" (click)="mode.set('doctor')">Médico</button>
-          <button type="button" [class.active]="mode() === 'admin'" (click)="mode.set('admin')">Administrador</button>
         </div>
 
         <p *ngIf="message()" class="message">{{ message() }}</p>
@@ -48,48 +46,10 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="password" placeholder="Senha" type="password" />
           <p *ngIf="controlError(patientForm, 'password') as error" class="field-error">{{ error }}</p>
           <input formControlName="phoneNumber" placeholder="Telefone" />
-          <p *ngIf="controlError(patientForm, 'phoneNumber') as error" class="field-error">{{ error }}</p>
           <input formControlName="documentNumber" placeholder="Documento" />
-          <p *ngIf="controlError(patientForm, 'documentNumber') as error" class="field-error">{{ error }}</p>
           <input formControlName="birthDate" placeholder="Nascimento" type="date" />
-          <p *ngIf="controlError(patientForm, 'birthDate') as error" class="field-error">{{ error }}</p>
-          <input formControlName="healthInsurance" placeholder="Convênio" />
-          <p *ngIf="controlError(patientForm, 'healthInsurance') as error" class="field-error">{{ error }}</p>
+          <input formControlName="healthInsurance" placeholder="Convenio" />
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
-        </form>
-
-        <form *ngIf="mode() === 'doctor'" [formGroup]="doctorForm" (ngSubmit)="submitDoctor()">
-          <input formControlName="fullName" placeholder="Nome completo" />
-          <p *ngIf="controlError(doctorForm, 'fullName') as error" class="field-error">{{ error }}</p>
-          <input formControlName="email" placeholder="E-mail" type="email" />
-          <p *ngIf="controlError(doctorForm, 'email') as error" class="field-error">{{ error }}</p>
-          <input formControlName="password" placeholder="Senha" type="password" />
-          <p *ngIf="controlError(doctorForm, 'password') as error" class="field-error">{{ error }}</p>
-          <input formControlName="phoneNumber" placeholder="Telefone" />
-          <p *ngIf="controlError(doctorForm, 'phoneNumber') as error" class="field-error">{{ error }}</p>
-          <input formControlName="crm" placeholder="CRM" />
-          <p *ngIf="controlError(doctorForm, 'crm') as error" class="field-error">{{ error }}</p>
-          <input formControlName="specialty" placeholder="Especialidade" />
-          <p *ngIf="controlError(doctorForm, 'specialty') as error" class="field-error">{{ error }}</p>
-          <textarea formControlName="biography" placeholder="Biografia"></textarea>
-          <p *ngIf="controlError(doctorForm, 'biography') as error" class="field-error">{{ error }}</p>
-          <label class="check">
-            <input formControlName="telemedicineEnabled" type="checkbox" />
-            Telemedicina habilitada
-          </label>
-          <button [disabled]="loading()" type="submit">Cadastrar médico</button>
-        </form>
-
-        <form *ngIf="mode() === 'admin'" [formGroup]="adminForm" (ngSubmit)="submitAdmin()">
-          <input formControlName="fullName" placeholder="Nome completo" />
-          <p *ngIf="controlError(adminForm, 'fullName') as error" class="field-error">{{ error }}</p>
-          <input formControlName="email" placeholder="E-mail" type="email" />
-          <p *ngIf="controlError(adminForm, 'email') as error" class="field-error">{{ error }}</p>
-          <input formControlName="password" placeholder="Senha" type="password" />
-          <p *ngIf="controlError(adminForm, 'password') as error" class="field-error">{{ error }}</p>
-          <input formControlName="phoneNumber" placeholder="Telefone" />
-          <p *ngIf="controlError(adminForm, 'phoneNumber') as error" class="field-error">{{ error }}</p>
-          <button [disabled]="loading()" type="submit">Cadastrar administrador</button>
         </form>
       </section>
     </div>
@@ -103,7 +63,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         linear-gradient(135deg, rgba(14, 123, 131, 0.92), rgba(17, 32, 39, 0.96)),
         #112027;
       padding: 24px;
-      font-family: "Segoe UI", sans-serif;
+      font-family: 'Segoe UI', sans-serif;
     }
 
     .shell {
@@ -147,7 +107,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     .switcher {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 8px;
       background: #f4f0e8;
       padding: 8px;
@@ -177,8 +137,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 12px;
     }
 
-    input,
-    textarea {
+    input {
       width: 100%;
       border: 1px solid #d9dfdf;
       border-radius: 16px;
@@ -187,22 +146,10 @@ import { TelemedApiService } from '../core/telemed-api.service';
       background: #fcfcfb;
     }
 
-    textarea {
-      min-height: 110px;
-      resize: vertical;
-    }
-
     form button {
       background: linear-gradient(135deg, #ff8e54, #d94f04);
       color: white;
       padding: 14px 18px;
-    }
-
-    .check {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #4c5d64;
     }
 
     .message,
@@ -233,10 +180,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       .shell {
         grid-template-columns: 1fr;
       }
-
-      .switcher {
-        grid-template-columns: repeat(2, 1fr);
-      }
     }
   `
 })
@@ -247,10 +190,12 @@ export class AuthPageComponent {
   private readonly authService = inject(AuthService);
   private readonly api = inject(TelemedApiService);
 
-  readonly mode = signal<'login' | 'patient' | 'doctor' | 'admin'>('login');
+  readonly mode = signal<'login' | 'patient'>('login');
   readonly loading = signal(false);
   readonly error = signal('');
   readonly message = signal('');
+  private errorTimer: number | null = null;
+  private messageTimer: number | null = null;
 
   readonly loginForm = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -267,31 +212,10 @@ export class AuthPageComponent {
     healthInsurance: ['']
   });
 
-  readonly doctorForm = this.fb.nonNullable.group({
-    fullName: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phoneNumber: [''],
-    crm: ['', Validators.required],
-    specialty: ['', Validators.required],
-    biography: [''],
-    telemedicineEnabled: [true]
-  });
-
-  readonly adminForm = this.fb.nonNullable.group({
-    fullName: ['', Validators.required],
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', [Validators.required, Validators.minLength(8)]],
-    phoneNumber: [''],
-    documentNumber: [''],
-    birthDate: [''],
-    healthInsurance: ['']
-  });
-
   submitLogin(): void {
     if (this.loginForm.invalid) {
       this.loginForm.markAllAsTouched();
-      this.error.set('Revise os campos destacados antes de continuar.');
+      this.setError('Revise os campos destacados antes de continuar.');
       return;
     }
 
@@ -301,31 +225,11 @@ export class AuthPageComponent {
   submitPatient(): void {
     if (this.patientForm.invalid) {
       this.patientForm.markAllAsTouched();
-      this.error.set('Revise os campos destacados antes de continuar.');
+      this.setError('Revise os campos destacados antes de continuar.');
       return;
     }
 
     this.runRequest(this.api.registerPatient(this.patientForm.getRawValue()), 'Paciente cadastrado com sucesso.');
-  }
-
-  submitDoctor(): void {
-    if (this.doctorForm.invalid) {
-      this.doctorForm.markAllAsTouched();
-      this.error.set('Revise os campos destacados antes de continuar.');
-      return;
-    }
-
-    this.runRequest(this.api.registerDoctor(this.doctorForm.getRawValue()), 'Médico cadastrado com sucesso.');
-  }
-
-  submitAdmin(): void {
-    if (this.adminForm.invalid) {
-      this.adminForm.markAllAsTouched();
-      this.error.set('Revise os campos destacados antes de continuar.');
-      return;
-    }
-
-    this.runRequest(this.api.registerAdmin(this.adminForm.getRawValue()), 'Administrador cadastrado com sucesso.');
   }
 
   controlError(form: { get(path: string): AbstractControl | null }, controlName: string): string {
@@ -335,10 +239,10 @@ export class AuthPageComponent {
     }
 
     if (control.errors['required']) {
-      return 'Este campo é obrigatório.';
+      return 'Este campo e obrigatorio.';
     }
     if (control.errors['email']) {
-      return 'Informe um e-mail válido.';
+      return 'Informe um e-mail valido.';
     }
     if (control.errors['minlength']) {
       const requiredLength = control.errors['minlength'].requiredLength as number;
@@ -357,16 +261,32 @@ export class AuthPageComponent {
       .pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.message.set(success);
+          this.setMessage(success);
           if (redirect) {
-            this.router.navigateByUrl('/dashboard');
+            void this.router.navigateByUrl('/dashboard');
             return;
           }
           this.mode.set('login');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.error.set(error.error?.message ?? 'Não foi possível concluir a operação.');
+          this.setError(error.error?.message ?? 'Nao foi possivel concluir a operacao.');
         }
       });
+  }
+
+  private setError(message: string): void {
+    this.error.set(message);
+    if (this.errorTimer !== null) {
+      window.clearTimeout(this.errorTimer);
+    }
+    this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
+  }
+
+  private setMessage(message: string): void {
+    this.message.set(message);
+    if (this.messageTimer !== null) {
+      window.clearTimeout(this.messageTimer);
+    }
+    this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }

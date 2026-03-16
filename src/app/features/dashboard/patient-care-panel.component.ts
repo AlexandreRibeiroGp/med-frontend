@@ -17,7 +17,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         <div class="toolbar">
           <select [formControl]="specialtyFilter()">
             <option value="">Todas as especialidades</option>
-            <option *ngFor="let specialty of specialties()" [value]="specialty">{{ specialty }}</option>
+            <option *ngFor="let specialty of specialties()" [value]="specialty">{{ specialtyLabel(specialty) }}</option>
           </select>
           <button type="button" (click)="refreshDoctors.emit()">Buscar</button>
         </div>
@@ -38,7 +38,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
             (click)="doctorSelected.emit(doctor)"
           >
             <strong>{{ doctor.user.fullName }}</strong>
-            <span>{{ doctor.specialty }}</span>
+            <span>{{ specialtyLabel(doctor.specialty) }}</span>
             <small>{{ doctor.crm }}</small>
           </button>
         </div>
@@ -268,6 +268,10 @@ export class PatientCarePanelComponent {
   readonly refreshDoctors = output<void>();
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
+
+  specialtyLabel(value: string): string {
+    return value === 'GERAL' ? 'Geral' : value;
+  }
 
   constructor() {
     effect(() => {

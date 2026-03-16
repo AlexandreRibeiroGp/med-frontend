@@ -30,3 +30,14 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
 
   return router.createUrlTree(['/dashboard']);
 };
+
+export const ownerGuard: CanActivateFn = () => {
+  const authService = inject(AuthService);
+  const router = inject(Router);
+
+  if (!authService.isAuthenticated()) {
+    return router.createUrlTree(['/auth']);
+  }
+
+  return authService.isOwner() ? true : router.createUrlTree(['/dashboard']);
+};

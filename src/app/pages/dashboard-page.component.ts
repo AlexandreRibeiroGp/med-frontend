@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { forkJoin, timer } from 'rxjs';
+import { catchError, forkJoin, of, throwError, timer } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { CallSignalingService } from '../core/call-signaling.service';
 import {
@@ -68,7 +69,7 @@ function toOffsetIso(localDateTime: string): string {
             Sala de atendimento
           </button>
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
-            Historico clinico
+            Documentos
           </button>
           <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administracao</a>
         </div>
@@ -107,7 +108,15 @@ function toOffsetIso(localDateTime: string): string {
           (slotBooked)="bookSlot($event)"
         />
 
-        <section *ngIf="auth.role() === 'PATIENT' && pendingBookingSlot() && selectedDoctor() as checkoutDoctor" class="checkout-card">
+        <section
+          *ngIf="
+            auth.role() === 'PATIENT' &&
+            section() === primarySection() &&
+            pendingBookingSlot() &&
+            selectedDoctor() as checkoutDoctor
+          "
+          class="checkout-card"
+        >
           <div>
             <p class="eyebrow">Pagamento</p>
             <h3>Concluir reserva com {{ checkoutDoctor.user.fullName }}</h3>
@@ -121,6 +130,7 @@ function toOffsetIso(localDateTime: string): string {
           <div class="checkout-actions">
             <button type="button" class="pix" (click)="submitCheckout('PIX')">Pagar com Pix</button>
             <button type="button" class="card" (click)="submitCheckout('CARD')">Pagar com cartao</button>
+            <button *ngIf="allowMockPayment" type="button" class="mock" (click)="simulateCheckout()">Simular pagamento</button>
             <button type="button" class="ghost" (click)="cancelCheckout()">Cancelar</button>
           </div>
         </section>
@@ -128,11 +138,10 @@ function toOffsetIso(localDateTime: string): string {
         <app-doctor-agenda-panel
           *ngIf="section() === primarySection() && auth.role() === 'DOCTOR'"
           [availabilityForm]="availabilityForm"
-          [recordForm]="recordForm"
+          [deleteRangeForm]="deleteRangeForm"
           [availability]="visibleAvailability()"
-          [appointments]="appointments()"
           (createAvailability)="createAvailability()"
-          (createRecord)="createMedicalRecord()"
+          (removeAvailabilityRange)="removeAvailabilityRange()"
           (removeAvailability)="removeAvailability($event)"
         />
 
@@ -151,6 +160,10 @@ function toOffsetIso(localDateTime: string): string {
           [appointments]="appointments()"
           [medicalRecords]="medicalRecords()"
           [role]="auth.role()"
+          [recordForm]="recordForm"
+          [prescriptionFileName]="prescriptionFileName()"
+          (createRecord)="createMedicalRecord()"
+          (prescriptionFileChanged)="setPrescriptionFile($event)"
         />
       </main>
     </div>
@@ -277,6 +290,10 @@ function toOffsetIso(localDateTime: string): string {
       color: white;
       background: linear-gradient(135deg, #0e7b83, #0a5d65);
     }
+    .checkout-actions .mock {
+      color: #112027;
+      background: #f6f1e8;
+    }
     .checkout-actions .ghost {
       background: #f6f1e8;
       color: #112027;
@@ -301,6 +318,8 @@ export class DashboardPageComponent {
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history'>('history');
   readonly error = signal('');
   readonly feedback = signal('');
+  private errorTimer: number | null = null;
+  private feedbackTimer: number | null = null;
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly specialties = signal<string[]>([]);
   readonly selectedDoctor = signal<DoctorResponse | null>(null);
@@ -308,8 +327,12 @@ export class DashboardPageComponent {
   readonly availability = signal<AvailabilitySlotResponse[]>([]);
   readonly appointments = signal<AppointmentResponse[]>([]);
   readonly medicalRecords = signal<MedicalRecordResponse[]>([]);
+  readonly appointmentsUnavailable = signal(false);
+  readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
+  readonly prescriptionFile = signal<File | null>(null);
+  readonly prescriptionFileName = computed(() => this.prescriptionFile()?.name ?? '');
   readonly currentTime = signal(Date.now());
   readonly visibleSelectedDoctorSlots = computed(() =>
     this.selectedDoctorSlots().filter((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())
@@ -329,14 +352,21 @@ export class DashboardPageComponent {
   readonly specialtyFilter = this.fb.nonNullable.control('');
   readonly availabilityForm = this.fb.nonNullable.group({
     date: ['', Validators.required],
-    startTime: ['', Validators.required],
-    endTime: ['', Validators.required]
+    startHour: ['07', Validators.required],
+    startMinute: ['00', Validators.required],
+    endHour: ['23', Validators.required],
+    endMinute: ['00', Validators.required]
+  });
+  readonly deleteRangeForm = this.fb.nonNullable.group({
+    date: ['', Validators.required],
+    startHour: ['07', Validators.required],
+    startMinute: ['00', Validators.required],
+    endHour: ['23', Validators.required],
+    endMinute: ['00', Validators.required]
   });
   readonly recordForm = this.fb.nonNullable.group({
     appointmentId: ['', Validators.required],
-    symptoms: [''],
     diagnosis: [''],
-    prescription: [''],
     clinicalNotes: ['']
   });
 
@@ -362,24 +392,32 @@ export class DashboardPageComponent {
   readonly primarySectionLabel = computed(() =>
     this.auth.role() === 'DOCTOR' ? 'Agenda do medico' : 'Descobrir medicos'
   );
+  readonly allowMockPayment = true;
   constructor() {
     this.section.set(this.primarySection());
     this.destroyRef.onDestroy(() => this.callService.disconnect());
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const paymentStatus = params.get('paymentStatus');
       if (paymentStatus === 'success') {
-        this.feedback.set('Pagamento confirmado. A consulta sera liberada assim que o backend receber a notificacao do Mercado Pago.');
+        this.setFeedback('Pagamento confirmado. A consulta sera liberada assim que o backend receber a notificacao do Mercado Pago.');
       } else if (paymentStatus === 'pending') {
-        this.feedback.set('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
+        this.setFeedback('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
       } else if (paymentStatus === 'failure') {
         this.handleError('O pagamento nao foi concluido. Tente novamente.');
       }
     });
-    timer(0, 15000)
+    effect(() => {
+      this.section();
+      this.loadBaseData();
+    });
+
+    timer(15000, 15000)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
         this.currentTime.set(Date.now());
-        this.loadBaseData();
+        if (this.section() !== this.primarySection()) {
+          this.loadBaseData();
+        }
       });
   }
 
@@ -464,7 +502,7 @@ export class DashboardPageComponent {
           this.selectDoctor(doctor);
           this.loadBaseData();
           if (checkout.payment.checkoutUrl) {
-            this.feedback.set('Redirecionando para o pagamento no Mercado Pago...');
+            this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
             this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
             window.location.href = checkout.payment.checkoutUrl;
             return;
@@ -478,6 +516,46 @@ export class DashboardPageComponent {
       });
   }
 
+  simulateCheckout(): void {
+    const doctor = this.selectedDoctor();
+    const slot = this.pendingBookingSlot();
+    if (!doctor || !slot) {
+      return;
+    }
+
+    this.api
+      .checkoutAppointment({
+        doctorProfileId: doctor.id,
+        availabilitySlotId: slot.id,
+        appointmentType: 'VIDEO',
+        notes: 'Consulta agendada pelo painel Angular',
+        paymentMethod: 'PIX'
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (checkout) => {
+          this.api
+            .confirmPayment(checkout.payment.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.pendingBookingSlot.set(null);
+                this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
+                this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
+                this.selectDoctor(doctor);
+                this.loadBaseData();
+              },
+              error: (error: { error?: { message?: string } }) => {
+                this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
+              }
+            });
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
+        }
+      });
+  }
+
   createAvailability(): void {
     if (this.availabilityForm.invalid) {
       this.availabilityForm.markAllAsTouched();
@@ -485,8 +563,8 @@ export class DashboardPageComponent {
     }
 
     const raw = this.availabilityForm.getRawValue();
-    const startAt = `${raw.date}T${raw.startTime}`;
-    const endAt = `${raw.date}T${raw.endTime}`;
+    const startAt = `${raw.date}T${raw.startHour}:${raw.startMinute}`;
+    const endAt = `${raw.date}T${raw.endHour}:${raw.endMinute}`;
     this.api
       .createAvailabilitySlot({
         startAt: toOffsetIso(startAt),
@@ -495,13 +573,53 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Horarios gerados com sucesso em blocos de 15 minutos.');
+          this.setFeedback('Horarios gerados com sucesso em blocos de 15 minutos.');
           this.toast.success('Agenda atualizada', 'Os horarios do intervalo ja estao disponiveis para agendamento.');
-          this.availabilityForm.reset();
+          this.availabilityForm.reset({
+            date: '',
+            startHour: '07',
+            startMinute: '00',
+            endHour: '23',
+            endMinute: '00'
+          });
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
           this.handleError(error.error?.message ?? 'Nao foi possivel gerar os horarios.');
+        }
+      });
+  }
+
+  removeAvailabilityRange(): void {
+    if (this.deleteRangeForm.invalid) {
+      this.deleteRangeForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.deleteRangeForm.getRawValue();
+    const startAt = `${raw.date}T${raw.startHour}:${raw.startMinute}`;
+    const endAt = `${raw.date}T${raw.endHour}:${raw.endMinute}`;
+    this.api
+      .deleteAvailabilityRange({
+        startAt: toOffsetIso(startAt),
+        endAt: toOffsetIso(endAt)
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.setFeedback('Intervalo removido com sucesso.');
+          this.toast.success('Agenda atualizada', 'Os horarios do intervalo foram excluidos.');
+          this.deleteRangeForm.reset({
+            date: '',
+            startHour: '07',
+            startMinute: '00',
+            endHour: '23',
+            endMinute: '00'
+          });
+          this.loadBaseData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel excluir o intervalo.');
         }
       });
   }
@@ -512,7 +630,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.feedback.set('Horario removido com sucesso.');
+          this.setFeedback('Horario removido com sucesso.');
           this.toast.success('Agenda atualizada', 'O horario foi excluido da sua agenda.');
           this.loadBaseData();
         },
@@ -532,29 +650,41 @@ export class DashboardPageComponent {
     this.api
       .createMedicalRecord({
         appointmentId: Number(raw.appointmentId),
-        symptoms: raw.symptoms,
         diagnosis: raw.diagnosis,
-        prescription: raw.prescription,
         clinicalNotes: raw.clinicalNotes
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          this.feedback.set('Prontuario salvo com sucesso.');
-          this.toast.success('Prontuario salvo', 'O registro clinico foi publicado com sucesso.');
-          this.recordForm.reset({ appointmentId: '', symptoms: '', diagnosis: '', prescription: '', clinicalNotes: '' });
-          this.loadBaseData();
+        next: (record) => {
+          const file = this.prescriptionFile();
+          if (!file) {
+            this.finishRecordCreation('Documento salvo com sucesso.');
+            return;
+          }
+
+          this.api.uploadPrescription(record.id, file)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => this.finishRecordCreation('Documento salvo com receita anexada.'),
+              error: (error: { error?: { message?: string } }) => {
+                this.handleError(error.error?.message ?? 'O documento foi salvo, mas a receita nao foi anexada.');
+              }
+            });
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o prontuario.');
+          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o documento.');
         }
       });
+  }
+
+  setPrescriptionFile(file: File | null): void {
+    this.prescriptionFile.set(file);
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
     if (!this.canJoinAppointment(appointment)) {
       const message = 'A sala sera liberada 15 minutos antes da consulta e segue disponivel ate 2 horas depois.';
-      this.feedback.set(message);
+      this.setFeedback(message);
       this.toast.info('Sala indisponivel', message);
       return;
     }
@@ -565,10 +695,59 @@ export class DashboardPageComponent {
   }
 
   private loadBaseData(): void {
+    if (this.auth.role() === 'PATIENT' && this.section() === 'care') {
+      this.api
+        .getSpecialties()
+        .pipe(
+          catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error))),
+          takeUntilDestroyed(this.destroyRef)
+        )
+        .subscribe({
+          next: (specialties) => {
+            this.error.set('');
+            this.specialties.set(specialties);
+            this.medicalRecords.set([]);
+            this.appointments.set([]);
+            this.loadRoleSpecificData();
+          },
+          error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
+        });
+      return;
+    }
+
+    if (this.auth.role() === 'DOCTOR' && this.section() === 'agenda') {
+      this.appointments.set([]);
+      this.medicalRecords.set([]);
+      this.loadRoleSpecificData();
+      return;
+    }
+
     forkJoin({
-      appointments: this.api.getAppointments(),
-      medicalRecords: this.api.getMedicalRecords(),
-      specialties: this.api.getSpecialties()
+      appointments: this.appointmentsUnavailable()
+        ? of([])
+        : this.api.getAppointments().pipe(
+            catchError((error: HttpErrorResponse) => {
+              if (error.status === 404) {
+                this.appointmentsUnavailable.set(true);
+                return of([]);
+              }
+              return throwError(() => error);
+            })
+          ),
+      medicalRecords: this.medicalRecordsUnavailable()
+        ? of([])
+        : this.api.getMedicalRecords().pipe(
+            catchError((error: HttpErrorResponse) => {
+              if (error.status === 404) {
+                this.medicalRecordsUnavailable.set(true);
+                return of([]);
+              }
+              return throwError(() => error);
+            })
+          ),
+      specialties: this.api.getSpecialties().pipe(
+        catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error)))
+      )
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
@@ -588,7 +767,16 @@ export class DashboardPageComponent {
       this.loadDoctors();
       this.api
         .getCurrentPatientProfile()
-        .pipe(takeUntilDestroyed(this.destroyRef))
+        .pipe(
+          catchError((error: HttpErrorResponse) => {
+            if (error.status === 404) {
+              this.patientProfile.set(null);
+              return of(null);
+            }
+            throw error;
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
         .subscribe({
           next: (profile) => this.patientProfile.set(profile),
           error: () => this.handleError('Nao foi possivel carregar o perfil do paciente.')
@@ -598,18 +786,35 @@ export class DashboardPageComponent {
     if (this.auth.role() === 'DOCTOR') {
       this.api
         .getDoctors()
-        .pipe(takeUntilDestroyed(this.destroyRef))
+        .pipe(
+          catchError((error: HttpErrorResponse) => {
+            if (error.status === 404) {
+              this.availability.set([]);
+              return of([]);
+            }
+            throw error;
+          }),
+          takeUntilDestroyed(this.destroyRef)
+        )
         .subscribe({
           next: (doctors) => {
             const currentDoctor = doctors.find((doctor) => doctor.user.id === this.auth.user()?.id);
             if (!currentDoctor) {
-              this.handleError('Nao foi possivel localizar o perfil do medico.');
+              this.availability.set([]);
               return;
             }
 
             this.api
               .getDoctorAvailability(currentDoctor.id)
-              .pipe(takeUntilDestroyed(this.destroyRef))
+              .pipe(
+                catchError((error: HttpErrorResponse) => {
+                  if (error.status === 404) {
+                    return of([]);
+                  }
+                  throw error;
+                }),
+                takeUntilDestroyed(this.destroyRef)
+              )
               .subscribe({
                 next: (slots) => this.availability.set(slots),
                 error: () => this.handleError('Nao foi possivel carregar sua agenda.')
@@ -622,6 +827,26 @@ export class DashboardPageComponent {
 
   private handleError(message: string): void {
     this.error.set(message);
+    if (this.errorTimer !== null) {
+      window.clearTimeout(this.errorTimer);
+    }
+    this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
     this.toast.error('Falha na operacao', message);
+  }
+
+  private setFeedback(message: string): void {
+    this.feedback.set(message);
+    if (this.feedbackTimer !== null) {
+      window.clearTimeout(this.feedbackTimer);
+    }
+    this.feedbackTimer = window.setTimeout(() => this.feedback.set(''), 3000);
+  }
+
+  private finishRecordCreation(message: string): void {
+    this.setFeedback(message);
+    this.toast.success('Documento salvo', message);
+    this.recordForm.reset({ appointmentId: '', diagnosis: '', clinicalNotes: '' });
+    this.prescriptionFile.set(null);
+    this.loadBaseData();
   }
 }

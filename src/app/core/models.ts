@@ -1,4 +1,5 @@
 export type Role = 'ADMIN' | 'PATIENT' | 'DOCTOR';
+export type DoctorSpecialty = 'GERAL';
 export type AppointmentStatus = 'PENDING_PAYMENT' | 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED';
 export type PaymentMethod = 'PIX' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
@@ -35,7 +36,7 @@ export interface RegisterDoctorRequest {
   password: string;
   phoneNumber?: string | null;
   crm: string;
-  specialty: string;
+  specialty: DoctorSpecialty;
   biography?: string | null;
   telemedicineEnabled: boolean;
 }
@@ -44,7 +45,7 @@ export interface DoctorResponse {
   id: number;
   user: UserResponse;
   crm: string;
-  specialty: string;
+  specialty: DoctorSpecialty;
   biography: string | null;
   telemedicineEnabled: boolean;
 }
@@ -101,6 +102,8 @@ export interface MedicalRecordResponse {
   symptoms: string | null;
   diagnosis: string | null;
   prescription: string | null;
+  prescriptionFileName: string | null;
+  hasPrescriptionFile: boolean;
   clinicalNotes: string | null;
   createdAt: string;
 }
