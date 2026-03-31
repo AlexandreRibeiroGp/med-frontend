@@ -103,6 +103,8 @@ function toOffsetIso(localDateTime: string): string {
           [selectedDoctor]="selectedDoctor()"
           [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
           [specialtyFilter]="specialtyFilter"
+          [consultationReason]="consultationReason"
+          [patientOccupation]="patientOccupation"
           (refreshDoctors)="loadDoctors()"
           (doctorSelected)="selectDoctor($event)"
           (slotBooked)="bookSlot($event)"
@@ -123,6 +125,18 @@ function toOffsetIso(localDateTime: string): string {
             <p>
               Horario selecionado:
               <strong>{{ pendingBookingSlot()?.startAt | date: 'dd/MM HH:mm' }}</strong>
+            </p>
+            <p>
+              Nome do paciente:
+              <strong>{{ auth.user()?.fullName }}</strong>
+            </p>
+            <p>
+              Profissao:
+              <strong>{{ patientOccupation.value }}</strong>
+            </p>
+            <p>
+              Motivo informado:
+              <strong>{{ consultationReason.value }}</strong>
             </p>
             <p class="muted">A consulta so sera liberada depois da confirmacao do pagamento.</p>
           </div>
@@ -350,6 +364,8 @@ export class DashboardPageComponent {
   );
 
   readonly specialtyFilter = this.fb.nonNullable.control('');
+  readonly patientOccupation = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]);
+  readonly consultationReason = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(5)]);
   readonly availabilityForm = this.fb.nonNullable.group({
     date: ['', Validators.required],
     startHour: ['07', Validators.required],
@@ -392,7 +408,7 @@ export class DashboardPageComponent {
   readonly primarySectionLabel = computed(() =>
     this.auth.role() === 'DOCTOR' ? 'Agenda do medico' : 'Descobrir medicos'
   );
-  readonly allowMockPayment = true;
+  readonly allowMockPayment = false;
   constructor() {
     this.section.set(this.primarySection());
     this.destroyRef.onDestroy(() => this.callService.disconnect());
@@ -409,6 +425,15 @@ export class DashboardPageComponent {
     effect(() => {
       this.section();
       this.loadBaseData();
+    });
+    effect(() => {
+      const profile = this.patientProfile();
+      if (!profile?.profession) {
+        return;
+      }
+      if (!this.patientOccupation.value.trim()) {
+        this.patientOccupation.setValue(profile.profession);
+      }
     });
 
     timer(15000, 15000)
@@ -458,6 +483,7 @@ export class DashboardPageComponent {
 
   selectDoctor(doctor: DoctorResponse): void {
     this.selectedDoctor.set(doctor);
+    this.pendingBookingSlot.set(null);
     this.api
       .getDoctorAvailability(doctor.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -469,6 +495,12 @@ export class DashboardPageComponent {
 
   bookSlot(slot: AvailabilitySlotResponse): void {
     if (!this.selectedDoctor()) {
+      return;
+    }
+    if (this.patientOccupation.invalid || this.consultationReason.invalid) {
+      this.patientOccupation.markAsTouched();
+      this.consultationReason.markAsTouched();
+      this.handleError('Informe sua profissao e o motivo da consulta antes de selecionar um horario.');
       return;
     }
     this.pendingBookingSlot.set(slot);
@@ -483,77 +515,93 @@ export class DashboardPageComponent {
   submitCheckout(paymentMethod: PaymentMethod): void {
     const doctor = this.selectedDoctor();
     const slot = this.pendingBookingSlot();
+    const occupation = this.patientOccupation.getRawValue().trim();
+    const reason = this.consultationReason.getRawValue().trim();
     if (!doctor || !slot) {
       return;
     }
+    if (!occupation || !reason) {
+      this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
+      return;
+    }
+    this.savePatientOccupationIfNeeded(occupation, () => {
+      this.api
+        .checkoutAppointment({
+          doctorProfileId: doctor.id,
+          availabilitySlotId: slot.id,
+          appointmentType: 'VIDEO',
+          notes: reason,
+          paymentMethod
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (checkout) => {
+            this.pendingBookingSlot.set(null);
+            this.consultationReason.reset('');
+            this.selectDoctor(doctor);
+            this.loadBaseData();
+            if (checkout.payment.checkoutUrl) {
+              this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
+              this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
+              window.location.href = checkout.payment.checkoutUrl;
+              return;
+            }
 
-    this.api
-      .checkoutAppointment({
-        doctorProfileId: doctor.id,
-        availabilitySlotId: slot.id,
-        appointmentType: 'VIDEO',
-        notes: 'Consulta agendada pelo painel Angular',
-        paymentMethod
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (checkout) => {
-          this.pendingBookingSlot.set(null);
-          this.selectDoctor(doctor);
-          this.loadBaseData();
-          if (checkout.payment.checkoutUrl) {
-            this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
-            this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
-            window.location.href = checkout.payment.checkoutUrl;
-            return;
+            this.handleError('O checkout foi criado sem URL de pagamento.');
+          },
+          error: (error: { error?: { message?: string } }) => {
+            this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
           }
-
-          this.handleError('O checkout foi criado sem URL de pagamento.');
-        },
-        error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
-        }
-      });
+        });
+    });
   }
 
   simulateCheckout(): void {
     const doctor = this.selectedDoctor();
     const slot = this.pendingBookingSlot();
+    const occupation = this.patientOccupation.getRawValue().trim();
+    const reason = this.consultationReason.getRawValue().trim();
     if (!doctor || !slot) {
       return;
     }
-
-    this.api
-      .checkoutAppointment({
-        doctorProfileId: doctor.id,
-        availabilitySlotId: slot.id,
-        appointmentType: 'VIDEO',
-        notes: 'Consulta agendada pelo painel Angular',
-        paymentMethod: 'PIX'
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (checkout) => {
-          this.api
-            .confirmPayment(checkout.payment.id)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: () => {
-                this.pendingBookingSlot.set(null);
-                this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
-                this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
-                this.selectDoctor(doctor);
-                this.loadBaseData();
-              },
-              error: (error: { error?: { message?: string } }) => {
-                this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
-              }
-            });
-        },
-        error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
-        }
-      });
+    if (!occupation || !reason) {
+      this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
+      return;
+    }
+    this.savePatientOccupationIfNeeded(occupation, () => {
+      this.api
+        .checkoutAppointment({
+          doctorProfileId: doctor.id,
+          availabilitySlotId: slot.id,
+          appointmentType: 'VIDEO',
+          notes: reason,
+          paymentMethod: 'PIX'
+        })
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (checkout) => {
+            this.api
+              .confirmPayment(checkout.payment.id)
+              .pipe(takeUntilDestroyed(this.destroyRef))
+              .subscribe({
+                next: () => {
+                  this.pendingBookingSlot.set(null);
+                  this.consultationReason.reset('');
+                  this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
+                  this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
+                  this.selectDoctor(doctor);
+                  this.loadBaseData();
+                },
+                error: (error: { error?: { message?: string } }) => {
+                  this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
+                }
+              });
+          },
+          error: (error: { error?: { message?: string } }) => {
+            this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
+          }
+        });
+    });
   }
 
   createAvailability(): void {
@@ -848,5 +896,33 @@ export class DashboardPageComponent {
     this.recordForm.reset({ appointmentId: '', diagnosis: '', clinicalNotes: '' });
     this.prescriptionFile.set(null);
     this.loadBaseData();
+  }
+
+  private savePatientOccupationIfNeeded(occupation: string, onSaved: () => void): void {
+    const normalizedOccupation = occupation.trim();
+    if (!normalizedOccupation) {
+      this.handleError('Informe sua profissao antes de concluir o agendamento.');
+      return;
+    }
+
+    const currentProfession = this.patientProfile()?.profession?.trim() ?? '';
+    if (currentProfession === normalizedOccupation) {
+      onSaved();
+      return;
+    }
+
+    this.api
+      .updateCurrentPatientProfession({ profession: normalizedOccupation })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.patientProfile.set(profile);
+          this.patientOccupation.setValue(profile.profession ?? normalizedOccupation);
+          onSaved();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel salvar a profissao do paciente.');
+        }
+      });
   }
 }

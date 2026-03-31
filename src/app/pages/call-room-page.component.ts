@@ -13,7 +13,10 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
   template: `
     <div class="room-page">
       <header class="topbar">
-        <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
+        <div class="topbar-brand">
+          <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
+          <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
+        </div>
         <div class="title-block">
           <p class="eyebrow">Sala de atendimento</p>
           <h1>Consulta agendada</h1>
@@ -50,6 +53,18 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       align-items: end;
       flex-wrap: wrap;
     }
+    .topbar-brand {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .brand-logo {
+      height: 64px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+    }
     .back-link {
       text-decoration: none;
       color: #112027;
@@ -77,6 +92,11 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       border-radius: 18px;
       background: #ffe9e3;
       color: #a33b19;
+    }
+    @media (max-width: 720px) {
+      .brand-logo {
+        height: 52px;
+      }
     }
   `
 })

@@ -12,33 +12,40 @@ import { TelemedApiService } from '../core/telemed-api.service';
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   template: `
     <div class="shell">
-      <aside class="panel intro">
-        <a routerLink="/" class="back">Voltar</a>
-        <p class="tag">Portal clinico</p>
-        <h1>Conecte paciente e atendimento no mesmo ambiente.</h1>
-        <p>
-          O cadastro de medico e administracao agora fica dentro do sistema, em uma area interna restrita.
-        </p>
-      </aside>
-
       <section class="panel forms">
+        <a routerLink="/" class="back">Voltar</a>
+        <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
+        <div class="hero-copy">
+          <p class="tag">Portal clínico</p>
+          <h1>Entre ou crie sua conta</h1>
+          <p>Acesse consultas, agenda e acompanhamento em um só lugar.</p>
+        </div>
+
         <div class="switcher">
           <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">Entrar</button>
-          <button type="button" [class.active]="mode() === 'patient'" (click)="mode.set('patient')">Paciente</button>
+          <button type="button" [class.active]="mode() === 'patient'" (click)="mode.set('patient')">Criar conta</button>
         </div>
 
         <p *ngIf="message()" class="message">{{ message() }}</p>
         <p *ngIf="error()" class="error">{{ error() }}</p>
 
         <form *ngIf="mode() === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
+          <div class="form-copy">
+            <h2>Acesse sua conta</h2>
+          </div>
           <input formControlName="email" placeholder="E-mail" type="email" />
           <p *ngIf="controlError(loginForm, 'email') as error" class="field-error">{{ error }}</p>
           <input formControlName="password" placeholder="Senha" type="password" />
           <p *ngIf="controlError(loginForm, 'password') as error" class="field-error">{{ error }}</p>
           <button [disabled]="loading()" type="submit">Entrar</button>
+          <p class="helper-text">Se você é médico, use o e-mail e a senha cadastrados pela administração da clínica.</p>
         </form>
 
         <form *ngIf="mode() === 'patient'" [formGroup]="patientForm" (ngSubmit)="submitPatient()">
+          <div class="form-copy">
+            <h2>Crie sua conta de paciente</h2>
+            <p>Preencha seus dados para agendar consultas e acompanhar seu atendimento com facilidade.</p>
+          </div>
           <input formControlName="fullName" placeholder="Nome completo" />
           <p *ngIf="controlError(patientForm, 'fullName') as error" class="field-error">{{ error }}</p>
           <input formControlName="email" placeholder="E-mail" type="email" />
@@ -48,8 +55,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="phoneNumber" placeholder="Telefone" />
           <input formControlName="documentNumber" placeholder="Documento" />
           <input formControlName="birthDate" placeholder="Nascimento" type="date" />
-          <input formControlName="healthInsurance" placeholder="Convenio" />
+          <input formControlName="profession" placeholder="Profissao" />
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
+          <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o médico.</p>
         </form>
       </section>
     </div>
@@ -60,58 +68,75 @@ import { TelemedApiService } from '../core/telemed-api.service';
       min-height: 100vh;
       place-items: center;
       background:
-        linear-gradient(135deg, rgba(14, 123, 131, 0.92), rgba(17, 32, 39, 0.96)),
-        #112027;
+        radial-gradient(circle at top left, rgba(74, 208, 214, 0.26), transparent 22%),
+        radial-gradient(circle at right center, rgba(255, 147, 70, 0.18), transparent 24%),
+        linear-gradient(135deg, #0b5f68 0%, #0f3f49 45%, #102830 100%);
       padding: 24px;
       font-family: 'Segoe UI', sans-serif;
     }
 
     .shell {
-      width: min(1100px, 100%);
-      display: grid;
-      grid-template-columns: 1.1fr 1fr;
-      background: rgba(250, 247, 240, 0.96);
-      border-radius: 32px;
+      width: min(540px, 100%);
+      background: rgba(255, 253, 249, 0.94);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 28px;
       overflow: hidden;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.22);
+      box-shadow: 0 28px 70px rgba(3, 17, 23, 0.28);
+      backdrop-filter: blur(18px);
     }
 
     .panel {
-      padding: 40px;
-    }
-
-    .intro {
-      background: linear-gradient(180deg, rgba(255, 142, 84, 0.18), transparent 70%);
-      color: #112027;
+      display: grid;
+      gap: 14px;
+      padding: 28px;
     }
 
     .back,
     .tag {
-      color: #0e7b83;
+      color: #0b7480;
       font-weight: 700;
       text-decoration: none;
     }
 
+    .brand-logo {
+      height: 68px;
+      width: auto;
+      display: block;
+      object-fit: contain;
+      justify-self: center;
+    }
+
+    .hero-copy {
+      display: grid;
+      gap: 6px;
+      text-align: center;
+    }
+
     h1 {
-      font-size: clamp(2.1rem, 4vw, 4rem);
-      line-height: 0.98;
-      margin: 24px 0 16px;
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
+      line-height: 1.02;
+      margin: 0;
+      letter-spacing: -0.03em;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      color: #5d6d73;
+      line-height: 1.45;
     }
 
     .forms {
-      background: #fff;
-      display: grid;
-      gap: 16px;
-      align-content: start;
+      background: transparent;
     }
 
     .switcher {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
-      background: #f4f0e8;
+      background: #f1ece3;
       padding: 8px;
       border-radius: 999px;
+      box-shadow: inset 0 0 0 1px rgba(17, 32, 39, 0.05);
     }
 
     .switcher button,
@@ -123,33 +148,68 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     .switcher button {
       background: transparent;
-      padding: 12px;
+      padding: 11px;
       color: #4c5d64;
     }
 
     .switcher button.active {
-      background: #112027;
+      background: linear-gradient(135deg, #112027, #183742);
       color: #fff;
+      box-shadow: 0 10px 22px rgba(17, 32, 39, 0.18);
     }
 
     form {
       display: grid;
-      gap: 12px;
+      gap: 10px;
+      padding: 4px 0 0;
+    }
+
+    .form-copy {
+      display: grid;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .form-copy h2 {
+      margin: 0;
+      font-size: 1.35rem;
+      line-height: 1.05;
+      color: #112027;
+      text-align: center;
+    }
+
+    .form-copy p,
+    .helper-text {
+      margin: 0;
+      color: #5d6d73;
+      line-height: 1.5;
     }
 
     input {
       width: 100%;
       border: 1px solid #d9dfdf;
       border-radius: 16px;
-      padding: 14px 16px;
+      padding: 13px 15px;
       font: inherit;
       background: #fcfcfb;
+      box-sizing: border-box;
+      transition: border-color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: rgba(14, 123, 131, 0.55);
+      box-shadow: 0 0 0 4px rgba(14, 123, 131, 0.12);
+      transform: translateY(-1px);
     }
 
     form button {
       background: linear-gradient(135deg, #ff8e54, #d94f04);
       color: white;
-      padding: 14px 18px;
+      padding: 13px 18px;
+      font-size: 0.98rem;
+      box-shadow: 0 14px 30px rgba(217, 79, 4, 0.22);
+      cursor: pointer;
     }
 
     .message,
@@ -172,13 +232,19 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .field-error {
       margin: -4px 2px 2px;
       color: #a33b19;
-      font-size: 0.9rem;
-      line-height: 1.35;
+      font-size: 0.84rem;
+      line-height: 1.25;
     }
 
     @media (max-width: 900px) {
-      .shell {
-        grid-template-columns: 1fr;
+      .brand-logo {
+        height: 60px;
+      }
+      .panel {
+        padding: 22px 18px;
+      }
+      h1 {
+        font-size: 1.45rem;
       }
     }
   `
@@ -209,7 +275,7 @@ export class AuthPageComponent {
     phoneNumber: [''],
     documentNumber: [''],
     birthDate: [''],
-    healthInsurance: ['']
+    profession: ['']
   });
 
   submitLogin(): void {

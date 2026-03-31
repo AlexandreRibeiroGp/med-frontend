@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+Ôªøimport { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 @Component({
@@ -9,24 +9,20 @@ import { RouterLink } from '@angular/router';
       <header class="hero">
         <nav class="topbar">
           <div class="brand">
-            <span class="brand-mark"></span>
-            <div>
-              <strong>MedFront</strong>
-              <small>Telemedicina integrada</small>
-            </div>
+            <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           </div>
           <div class="actions">
             <a routerLink="/auth" class="ghost">Entrar</a>
-            <a routerLink="/auth" class="solid">ComeÁar</a>
+            <a routerLink="/auth" class="solid">Come√ßar</a>
           </div>
         </nav>
 
         <section class="hero-copy">
           <p class="eyebrow">Angular + Spring Boot</p>
-          <h1>Painel clÌnico para pacientes e mÈdicos no mesmo fluxo.</h1>
+          <h1>Painel cl√≠nico para pacientes e m√©dicos no mesmo fluxo.</h1>
           <p class="lead">
-            Cadastro, autenticaÁ„o JWT, agenda, consultas, prontu·rio e preparaÁ„o para videochamada
-            conectados ao backend disponÌvel em {{ apiBaseLabel }}.
+            Cadastro, autentica√ß√£o JWT, agenda, consultas, prontu√°rio e prepara√ß√£o para videochamada
+            conectados ao backend dispon√≠vel em {{ apiBaseLabel }}.
           </p>
           <div class="hero-actions">
             <a routerLink="/auth" class="solid">Acessar portal</a>
@@ -39,17 +35,17 @@ import { RouterLink } from '@angular/router';
         <article>
           <span>01</span>
           <h2>Portal do paciente</h2>
-          <p>Busca por especialidade, visualizaÁ„o de hor·rios, agendamento e histÛrico clÌnico.</p>
+          <p>Busca por especialidade, visualiza√ß√£o de hor√°rios, agendamento e hist√≥rico cl√≠nico.</p>
         </article>
         <article>
           <span>02</span>
-          <h2>Portal do mÈdico</h2>
-          <p>Cadastro de disponibilidade, consultas recebidas e emiss„o de prontu·rio.</p>
+          <h2>Portal do m√©dico</h2>
+          <p>Cadastro de disponibilidade, consultas recebidas e emiss√£o de prontu√°rio.</p>
         </article>
         <article>
           <span>03</span>
           <h2>Base para chamadas</h2>
-          <p>Rota preparada para STOMP/WebSocket e exibiÁ„o de sala no contexto da consulta.</p>
+          <p>Rota preparada para STOMP/WebSocket e exibi√ß√£o de sala no contexto da consulta.</p>
         </article>
       </section>
     </div>
@@ -85,20 +81,13 @@ import { RouterLink } from '@angular/router';
     .brand {
       display: flex;
       align-items: center;
-      gap: 14px;
     }
 
-    .brand-mark {
-      width: 46px;
-      height: 46px;
-      border-radius: 14px;
-      background: linear-gradient(135deg, #ff8e54, #d94f04);
-      box-shadow: 0 12px 24px rgba(217, 79, 4, 0.24);
-    }
-
-    .brand small {
+    .brand-logo {
+      height: 78px;
+      width: auto;
       display: block;
-      color: #5d6d73;
+      object-fit: contain;
     }
 
     .hero {
@@ -190,9 +179,13 @@ import { RouterLink } from '@angular/router';
       .grid {
         grid-template-columns: 1fr;
       }
+      .brand-logo {
+        height: 60px;
+      }
     }
   `
 })
 export class HomePageComponent {
   readonly apiBaseLabel = window.location.origin;
 }
+

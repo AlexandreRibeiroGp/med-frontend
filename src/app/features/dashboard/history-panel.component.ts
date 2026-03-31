@@ -18,6 +18,7 @@ import { TelemedApiService } from '../../core/telemed-api.service';
               {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
               · {{ appointmentStatusLabel(appointment.status) }}
             </span>
+            <span class="helper-text" *ngIf="appointment.notes">Motivo: {{ appointment.notes }}</span>
           </div>
         </div>
       </article>

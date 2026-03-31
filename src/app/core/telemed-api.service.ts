@@ -130,4 +130,8 @@ export class TelemedApiService {
   getCurrentPatientProfile(): Observable<PatientProfileResponse> {
     return this.http.get<PatientProfileResponse>(`${API_URL}/patients/me`);
   }
+
+  updateCurrentPatientProfession(payload: { profession: string }) {
+    return this.http.patch<PatientProfileResponse>(`${API_URL}/patients/me/profession`, payload);
+  }
 }

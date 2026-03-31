@@ -47,8 +47,23 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       <article class="card schedule-card" *ngIf="selectedDoctor() as doctor">
         <div class="section-head">
           <p class="eyebrow">Passo 3</p>
-          <h3>Escolha o dia e o horário</h3>
+          <h3>Descreva o atendimento e escolha o horário</h3>
         </div>
+
+        <label class="notes-field">
+          <span>Profissao</span>
+          <input [formControl]="patientOccupation()" placeholder="Informe sua profissao" />
+          <small>Esse dado sera enviado para o medico junto com o agendamento.</small>
+        </label>
+
+        <label class="notes-field">
+          <span>Motivo da consulta</span>
+          <textarea
+            [formControl]="consultationReason()"
+            placeholder="Descreva o problema, sintomas ou o motivo da consulta"
+          ></textarea>
+          <small>Esse texto será enviado junto com o agendamento para o médico.</small>
+        </label>
 
         <div class="date-strip" *ngIf="availableDates().length; else emptySlots">
           <button
@@ -63,11 +78,20 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         </div>
 
         <div class="slot-grid" *ngIf="slotsForSelectedDate().length">
-          <button type="button" *ngFor="let slot of slotsForSelectedDate()" (click)="slotBooked.emit(slot)">
+          <button
+            type="button"
+            *ngFor="let slot of slotsForSelectedDate()"
+            [disabled]="!canBookSlot()"
+            (click)="slotBooked.emit(slot)"
+          >
             <strong>{{ slot.startAt | date: 'HH:mm' }}</strong>
             <span>{{ slot.endAt | date: 'HH:mm' }}</span>
           </button>
         </div>
+
+        <p class="helper-text" *ngIf="!canBookSlot()">
+          Informe sua profissao e o motivo da consulta para liberar a escolha do horario.
+        </p>
       </article>
     </section>
 
@@ -127,7 +151,8 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       background: linear-gradient(135deg, #0e7b83, #0a5d65);
       color: white;
     }
-    select {
+    select,
+    input {
       width: 100%;
       border: 1px solid #d8dfdf;
       border-radius: 16px;
@@ -185,6 +210,31 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .date-strip button.active span {
       color: rgba(255, 255, 255, 0.78);
     }
+    .notes-field {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 16px;
+      color: #112027;
+      font-weight: 700;
+    }
+    textarea {
+      width: 100%;
+      min-height: 110px;
+      border: 1px solid #d8dfdf;
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: white;
+      font: inherit;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .notes-field small,
+    .helper-text {
+      color: #5b6a70;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin: 0;
+    }
     .slot-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
@@ -225,6 +275,8 @@ export class PatientCarePanelComponent {
   readonly selectedDoctor = input<DoctorResponse | null>(null);
   readonly selectedDoctorSlots = input<AvailabilitySlotResponse[]>([]);
   readonly specialtyFilter = input.required<FormControl<string>>();
+  readonly consultationReason = input.required<FormControl<string>>();
+  readonly patientOccupation = input.required<FormControl<string>>();
   readonly selectedDate = signal('');
   private readonly localDateKeyFormatter = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Sao_Paulo',
@@ -268,6 +320,10 @@ export class PatientCarePanelComponent {
   readonly refreshDoctors = output<void>();
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
+
+  readonly canBookSlot = computed(
+    () => this.consultationReason().value.trim().length > 0 && this.patientOccupation().value.trim().length > 0
+  );
 
   specialtyLabel(value: string): string {
     return value === 'GERAL' ? 'Geral' : value;

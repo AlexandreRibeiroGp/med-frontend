@@ -28,6 +28,7 @@ export interface RegisterPatientRequest {
   documentNumber?: string | null;
   birthDate?: string | null;
   healthInsurance?: string | null;
+  profession?: string | null;
 }
 
 export interface RegisterDoctorRequest {
@@ -114,4 +115,5 @@ export interface PatientProfileResponse {
   documentNumber: string | null;
   birthDate: string | null;
   healthInsurance: string | null;
+  profession: string | null;
 }
