@@ -38,21 +38,6 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
           </figure>
         </div>
 
-        <div class="status-strip">
-          <div class="status-card">
-            <strong>WebSocket</strong>
-            <span>{{ signalingStatusLabel() }}</span>
-          </div>
-          <div class="status-card">
-            <strong>WebRTC</strong>
-            <span>{{ rtcStateLabel() }}</span>
-          </div>
-          <div class="status-card">
-            <strong>Participantes</strong>
-            <span>{{ signaling.roomState().participantCount }}/2</span>
-          </div>
-        </div>
-
         <div class="control-bar">
           <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
           <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
@@ -141,19 +126,6 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       object-fit: cover;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
-    .status-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-    .status-card {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
-      padding: 14px 16px;
-      display: grid;
-      gap: 6px;
-    }
     button {
       border: 0;
       border-radius: 999px;
@@ -174,8 +146,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       justify-content: center;
     }
     @media (max-width: 900px) {
-      .videos,
-      .status-strip { grid-template-columns: 1fr; }
+      .videos { grid-template-columns: 1fr; }
     }
   `
 })
@@ -241,36 +212,6 @@ export class CallRoomPanelComponent {
       this.rtc.stopMedia();
     });
   }
-
-  readonly signalingStatusLabel = () => {
-    switch (this.signaling.status()) {
-      case 'connected':
-        return 'conectado';
-      case 'connecting':
-        return 'conectando';
-      default:
-        return 'desconectado';
-    }
-  };
-
-  readonly rtcStateLabel = () => {
-    switch (this.rtc.state()) {
-      case 'idle':
-        return 'inativo';
-      case 'preparing':
-        return 'preparando';
-      case 'ready':
-        return 'pronto';
-      case 'connecting':
-        return 'conectando';
-      case 'connected':
-        return 'conectado';
-      case 'reconnecting':
-        return 'reconectando';
-      case 'failed':
-        return 'falhou';
-    }
-  };
 
   appointmentSummary(): string {
     const appointment = this.appointment();

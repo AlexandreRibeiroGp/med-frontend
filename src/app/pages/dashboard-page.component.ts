@@ -175,7 +175,6 @@ function toOffsetIso(localDateTime: string): string {
 
               <div class="pix-panel__actions">
                 <button type="button" class="copy" (click)="copyPixCode()">Copiar codigo Pix</button>
-                <button type="button" class="ghost" (click)="refreshPixPayment()">Atualizar status</button>
               </div>
 
               <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
