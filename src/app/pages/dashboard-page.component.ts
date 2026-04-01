@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -103,6 +103,7 @@ function toOffsetIso(localDateTime: string): string {
           [doctors]="doctors()"
           [selectedDoctor]="selectedDoctor()"
           [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
+          [selectedSlotId]="pendingBookingSlot()?.id ?? null"
           [specialtyFilter]="specialtyFilter"
           [consultationReason]="consultationReason"
           [patientOccupation]="patientOccupation"
@@ -118,6 +119,7 @@ function toOffsetIso(localDateTime: string): string {
             pendingBookingSlot() &&
             selectedDoctor() as checkoutDoctor
           "
+          #checkoutCard
           class="checkout-card"
         >
           <div>
@@ -330,6 +332,7 @@ export class DashboardPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  @ViewChild('checkoutCard') private checkoutCard?: ElementRef<HTMLElement>;
 
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history'>('history');
   readonly error = signal('');
@@ -509,6 +512,9 @@ export class DashboardPageComponent {
     this.pendingBookingSlot.set(slot);
     this.feedback.set('');
     this.error.set('');
+    window.setTimeout(() => {
+      this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
   }
 
   cancelCheckout(): void {

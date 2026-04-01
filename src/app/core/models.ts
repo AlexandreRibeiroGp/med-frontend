@@ -50,6 +50,7 @@ export interface DoctorResponse {
   specialty: DoctorSpecialty;
   biography: string | null;
   telemedicineEnabled: boolean;
+  profilePhotoUrl: string | null;
 }
 
 export interface AvailabilitySlotResponse {

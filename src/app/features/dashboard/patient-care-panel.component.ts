@@ -37,9 +37,17 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
             *ngFor="let doctor of doctors()"
             (click)="doctorSelected.emit(doctor)"
           >
-            <strong>{{ doctor.user.fullName }}</strong>
-            <span>{{ specialtyLabel(doctor.specialty) }}</span>
-            <small>{{ doctor.crm }}</small>
+            <div class="doctor-tile-header">
+              <div class="doctor-avatar">
+                <img *ngIf="doctor.profilePhotoUrl; else doctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+                <ng-template #doctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
+              </div>
+              <div class="doctor-text">
+                <strong>{{ doctor.user.fullName }}</strong>
+                <span>{{ specialtyLabel(doctor.specialty) }}</span>
+                <small>{{ doctor.crm }}</small>
+              </div>
+            </div>
           </button>
         </div>
       </article>
@@ -81,6 +89,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
           <button
             type="button"
             *ngFor="let slot of slotsForSelectedDate()"
+            [class.active]="selectedSlotId() === slot.id"
             [disabled]="!canBookSlot()"
             (click)="slotBooked.emit(slot)"
           >
@@ -170,8 +179,37 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       gap: 6px;
       align-content: start;
       text-align: left;
-      min-height: 92px;
+      min-height: 108px;
       transition: transform 120ms ease, background 120ms ease;
+    }
+    .doctor-tile-header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .doctor-text {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+    .doctor-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(14, 123, 131, 0.14), rgba(217, 79, 4, 0.18));
+      color: #0b5860;
+      font-size: 1.1rem;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+    .doctor-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
     .doctor-tile.active {
       background: linear-gradient(135deg, rgba(14, 123, 131, 0.12), rgba(10, 93, 101, 0.2));
@@ -247,6 +285,15 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       min-height: 52px;
       padding: 9px 6px;
     }
+    .slot-grid button.active {
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+      color: white;
+      box-shadow: 0 12px 24px rgba(217, 79, 4, 0.24);
+      transform: translateY(-2px);
+    }
+    .slot-grid button.active span {
+      color: rgba(255, 255, 255, 0.82);
+    }
     .slot-grid strong {
       font-size: 0.86rem;
       line-height: 1;
@@ -274,6 +321,7 @@ export class PatientCarePanelComponent {
   readonly doctors = input<DoctorResponse[]>([]);
   readonly selectedDoctor = input<DoctorResponse | null>(null);
   readonly selectedDoctorSlots = input<AvailabilitySlotResponse[]>([]);
+  readonly selectedSlotId = input<number | null>(null);
   readonly specialtyFilter = input.required<FormControl<string>>();
   readonly consultationReason = input.required<FormControl<string>>();
   readonly patientOccupation = input.required<FormControl<string>>();

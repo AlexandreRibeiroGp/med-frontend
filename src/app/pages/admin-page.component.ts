@@ -3,7 +3,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { forkJoin } from 'rxjs';
+import { forkJoin, of, switchMap } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { DoctorResponse, DoctorSpecialty, UserResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
@@ -38,6 +38,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <option *ngFor="let specialty of specialtyOptions" [value]="specialty">{{ specialtyLabel(specialty) }}</option>
             </select>
             <textarea formControlName="biography" placeholder="Biografia"></textarea>
+            <label class="upload-field">
+              <span>Foto do medico</span>
+              <input type="file" accept="image/*" (change)="onDoctorPhotoSelected($event)" />
+              <small *ngIf="doctorPhotoName()">{{ doctorPhotoName() }}</small>
+            </label>
             <label class="check">
               <input formControlName="telemedicineEnabled" type="checkbox" />
               Telemedicina habilitada
@@ -61,8 +66,16 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <h2>Medicos cadastrados</h2>
           <div class="list">
             <div *ngFor="let doctor of doctors()" class="row">
-              <strong>{{ doctor.user.fullName }}</strong>
-              <span>{{ specialtyLabel(doctor.specialty) }} · {{ doctor.crm }}</span>
+              <div class="doctor-summary">
+                <div class="doctor-avatar">
+                  <img *ngIf="doctor.profilePhotoUrl; else doctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+                  <ng-template #doctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
+                </div>
+                <div class="doctor-summary-text">
+                  <strong>{{ doctor.user.fullName }}</strong>
+                  <span>{{ specialtyLabel(doctor.specialty) }} · {{ doctor.crm }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </article>
@@ -157,6 +170,22 @@ import { TelemedApiService } from '../core/telemed-api.service';
       resize: vertical;
     }
 
+    .upload-field {
+      display: grid;
+      gap: 8px;
+      color: #112027;
+      font-weight: 700;
+    }
+
+    .upload-field input[type='file'] {
+      padding: 12px 14px;
+    }
+
+    .upload-field small {
+      color: #5b6a70;
+      font-weight: 500;
+    }
+
     button {
       border: 0;
       padding: 14px 16px;
@@ -181,6 +210,37 @@ import { TelemedApiService } from '../core/telemed-api.service';
       border-bottom: 1px solid rgba(17, 32, 39, 0.08);
       display: grid;
       gap: 4px;
+    }
+
+    .doctor-summary {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .doctor-summary-text {
+      display: grid;
+      gap: 4px;
+    }
+
+    .doctor-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      background: linear-gradient(135deg, rgba(14, 123, 131, 0.14), rgba(217, 79, 4, 0.18));
+      color: #0b5860;
+      font-weight: 800;
+      text-transform: uppercase;
+      flex-shrink: 0;
+    }
+
+    .doctor-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .message,
@@ -236,6 +296,8 @@ export class AdminPageComponent {
   readonly error = signal('');
   readonly message = signal('');
   readonly loading = signal(false);
+  readonly doctorPhotoName = signal('');
+  private selectedDoctorPhoto: File | null = null;
   private errorTimer: number | null = null;
   private messageTimer: number | null = null;
 
@@ -279,11 +341,20 @@ export class AdminPageComponent {
     this.error.set('');
     this.message.set('');
     this.api.registerDoctor(this.doctorForm.getRawValue())
-      .pipe(takeUntilDestroyed(this.destroyRef))
+      .pipe(
+        switchMap((doctor) =>
+          this.selectedDoctorPhoto
+            ? this.api.uploadDoctorPhoto(doctor.id, this.selectedDoctorPhoto)
+            : of(doctor)
+        ),
+        takeUntilDestroyed(this.destroyRef)
+      )
       .subscribe({
         next: () => {
           this.loading.set(false);
           this.setMessage('Medico cadastrado com sucesso.');
+          this.selectedDoctorPhoto = null;
+          this.doctorPhotoName.set('');
           this.doctorForm.reset({
             fullName: '',
             email: '',
@@ -301,6 +372,13 @@ export class AdminPageComponent {
           this.setError(error.error?.message ?? 'Nao foi possivel cadastrar o medico.');
         }
       });
+  }
+
+  onDoctorPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.selectedDoctorPhoto = file;
+    this.doctorPhotoName.set(file?.name ?? '');
   }
 
   submitAdmin(): void {
