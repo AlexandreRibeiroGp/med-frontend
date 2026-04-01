@@ -79,10 +79,10 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="password" placeholder="Senha" type="password" />
           <p *ngIf="controlError(patientForm, 'password') as error" class="field-error">{{ error }}</p>
           <input formControlName="phoneNumber" placeholder="Telefone" />
-          <input formControlName="documentNumber" placeholder="Documento" />
+          <input formControlName="documentNumber" placeholder="CPF" />
           <input formControlName="birthDate" placeholder="Nascimento" type="date" />
           <input formControlName="profession" placeholder="Profissao" />
-          <input formControlName="address" placeholder="Endereco completo" />
+          <input formControlName="address" placeholder="Endereco completo: rua, numero, complemento e CEP" />
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
           <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o médico.</p>
         </form>

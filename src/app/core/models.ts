@@ -104,10 +104,37 @@ export interface MedicalRecordResponse {
   symptoms: string | null;
   diagnosis: string | null;
   prescription: string | null;
+  patientProfession: string | null;
+  patientAddress: string | null;
+  doctorCrm: string | null;
+  doctorSpecialty: string | null;
+  requiresDigitalSignature: boolean;
+  preferredCertificateType: 'A1' | 'A3';
   prescriptionFileName: string | null;
   hasPrescriptionFile: boolean;
+  prescriptionSignatureStatus: 'NOT_GENERATED' | 'GENERATED' | 'PENDING_PROVIDER' | 'SIGNED';
+  prescriptionSignatureProvider: string | null;
+  prescriptionSignedAt: string | null;
   clinicalNotes: string | null;
   createdAt: string;
+}
+
+export interface PrescriptionSignatureStartResponse {
+  medicalRecord: MedicalRecordResponse;
+  provider: string | null;
+  bridgeUrl: string | null;
+  bridgePayload: {
+    medicalRecordId: number;
+    requestId: string;
+    provider: string;
+    certificateType: 'A1' | 'A3';
+    fileName: string;
+    doctorName: string;
+    patientName: string;
+    downloadUrl: string;
+    uploadUrl: string;
+  } | null;
+  message: string | null;
 }
 
 export interface PatientProfileResponse {

@@ -13,7 +13,8 @@ import {
   DoctorResponse,
   MedicalRecordResponse,
   PaymentMethod,
-  PatientProfileResponse
+  PatientProfileResponse,
+  PrescriptionSignatureStartResponse
 } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 import { ToastService } from '../core/toast.service';
@@ -175,9 +176,10 @@ function toOffsetIso(localDateTime: string): string {
           [medicalRecords]="medicalRecords()"
           [role]="auth.role()"
           [recordForm]="recordForm"
-          [prescriptionFileName]="prescriptionFileName()"
           (createRecord)="createMedicalRecord()"
-          (prescriptionFileChanged)="setPrescriptionFile($event)"
+          (generatePrescriptionPdf)="generatePrescriptionPdf($event)"
+          (startPrescriptionSignature)="startPrescriptionSignature($event)"
+          (signedPrescriptionFileChanged)="uploadSignedPrescription($event)"
         />
       </main>
     </div>
@@ -345,8 +347,6 @@ export class DashboardPageComponent {
   readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
-  readonly prescriptionFile = signal<File | null>(null);
-  readonly prescriptionFileName = computed(() => this.prescriptionFile()?.name ?? '');
   readonly currentTime = signal(Date.now());
   readonly visibleSelectedDoctorSlots = computed(() =>
     this.selectedDoctorSlots().filter((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())
@@ -383,6 +383,9 @@ export class DashboardPageComponent {
   readonly recordForm = this.fb.nonNullable.group({
     appointmentId: ['', Validators.required],
     diagnosis: [''],
+    prescription: [''],
+    requiresDigitalSignature: [false],
+    preferredCertificateType: ['A3' as 'A1' | 'A3'],
     clinicalNotes: ['']
   });
 
@@ -696,37 +699,113 @@ export class DashboardPageComponent {
 
     const raw = this.recordForm.getRawValue();
     this.api
-      .createMedicalRecord({
-        appointmentId: Number(raw.appointmentId),
-        diagnosis: raw.diagnosis,
-        clinicalNotes: raw.clinicalNotes
-      })
+        .createMedicalRecord({
+          appointmentId: Number(raw.appointmentId),
+          diagnosis: raw.diagnosis,
+          prescription: raw.prescription,
+          requiresDigitalSignature: raw.requiresDigitalSignature,
+          preferredCertificateType: raw.preferredCertificateType,
+          clinicalNotes: raw.clinicalNotes
+        })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (record) => {
-          const file = this.prescriptionFile();
-          if (!file) {
-            this.finishRecordCreation('Documento salvo com sucesso.');
-            return;
-          }
-
-          this.api.uploadPrescription(record.id, file)
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: () => this.finishRecordCreation('Documento salvo com receita anexada.'),
-              error: (error: { error?: { message?: string } }) => {
-                this.handleError(error.error?.message ?? 'O documento foi salvo, mas a receita nao foi anexada.');
-              }
-            });
-        },
+        next: () => this.finishRecordCreation('Documento salvo com receita emitida.'),
         error: (error: { error?: { message?: string } }) => {
           this.handleError(error.error?.message ?? 'Nao foi possivel salvar o documento.');
         }
       });
   }
 
-  setPrescriptionFile(file: File | null): void {
-    this.prescriptionFile.set(file);
+  generatePrescriptionPdf(recordId: number): void {
+    this.api.generatePrescriptionPdf(recordId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.setFeedback('PDF da receita gerado com sucesso.');
+          this.toast.success('PDF gerado', 'A receita ja pode ser baixada ou enviada para assinatura.');
+          this.loadBaseData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel gerar o PDF da receita.');
+        }
+      });
+  }
+
+  startPrescriptionSignature(recordId: number): void {
+    this.api.startPrescriptionSignature(recordId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (response: PrescriptionSignatureStartResponse) => {
+          if (response.bridgeUrl && response.bridgePayload) {
+            void this.sendToLocalSignatureBridge(response);
+          } else if (response.medicalRecord.preferredCertificateType === 'A3') {
+            this.toast.info(
+              'Assinador local pendente',
+              'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do medico.'
+            );
+          }
+          this.setFeedback(response.message || 'Assinatura iniciada.');
+          this.toast.success('Assinatura iniciada', response.message || 'O fluxo de assinatura foi iniciado.');
+          this.loadBaseData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar a assinatura digital.');
+        }
+      });
+  }
+
+  private async sendToLocalSignatureBridge(response: PrescriptionSignatureStartResponse): Promise<void> {
+    try {
+      const token = this.auth.token();
+      const bridgePayload = {
+        ...response.bridgePayload,
+        accessToken: token
+      };
+      const bridgeResponse = await fetch(response.bridgeUrl!, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(bridgePayload)
+      });
+
+      if (!bridgeResponse.ok) {
+        throw new Error('Bridge local indisponivel');
+      }
+
+      this.toast.info(
+        'Assinador aberto',
+        response.medicalRecord.preferredCertificateType === 'A3'
+          ? 'O assinador local foi acionado para o medico selecionar o certificado A3.'
+          : 'O assinador local foi acionado para o fluxo A1.'
+      );
+    } catch {
+      this.toast.info(
+        'Bridge local nao encontrado',
+        response.medicalRecord.preferredCertificateType === 'A3'
+          ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do medico.'
+          : 'Nenhum assinador local A1 respondeu em 127.0.0.1:18999.'
+      );
+    }
+  }
+
+  uploadSignedPrescription(payload: { recordId: number; file: File | null }): void {
+    if (!payload.file) {
+      return;
+    }
+
+    this.api.uploadSignedPrescription(payload.recordId, payload.file)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.setFeedback('PDF assinado enviado com sucesso.');
+          this.toast.success('Receita assinada', 'O documento assinado foi salvo no prontuario.');
+          this.loadBaseData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel enviar o PDF assinado.');
+        }
+      });
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
@@ -893,8 +972,7 @@ export class DashboardPageComponent {
   private finishRecordCreation(message: string): void {
     this.setFeedback(message);
     this.toast.success('Documento salvo', message);
-    this.recordForm.reset({ appointmentId: '', diagnosis: '', clinicalNotes: '' });
-    this.prescriptionFile.set(null);
+    this.recordForm.reset({ appointmentId: '', diagnosis: '', prescription: '', requiresDigitalSignature: false, preferredCertificateType: 'A3', clinicalNotes: '' });
     this.loadBaseData();
   }
 

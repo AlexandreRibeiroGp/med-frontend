@@ -32,7 +32,7 @@ import { TelemedApiService } from '../../core/telemed-api.service';
 
             <ng-container *ngIf="role() === 'PATIENT'; else doctorView">
               <span class="helper-text">
-                {{ record.hasPrescriptionFile ? 'Receita pronta para download.' : 'Aguardando o medico anexar a receita.' }}
+                {{ patientPrescriptionStatus(record) }}
               </span>
               <button
                 type="button"
@@ -45,14 +45,34 @@ import { TelemedApiService } from '../../core/telemed-api.service';
             </ng-container>
 
             <ng-template #doctorView>
-              <span class="helper-text">{{ record.hasPrescriptionFile ? 'Receita anexada com sucesso.' : 'Nenhuma receita anexada ainda.' }}</span>
+              <span class="helper-text">{{ doctorPrescriptionStatus(record) }}</span>
+              <div class="actions">
+                <button type="button" class="download" [disabled]="!record.hasPrescriptionFile" (click)="downloadPrescription(record)">
+                  {{ record.hasPrescriptionFile ? 'Baixar PDF' : 'Sem PDF' }}
+                </button>
+                <button type="button" class="download secondary" (click)="generatePrescriptionPdf.emit(record.id)">
+                  Gerar PDF
+                </button>
+                <button
+                  *ngIf="record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED'"
+                  type="button"
+                  class="download secondary"
+                  (click)="startPrescriptionSignature.emit(record.id)"
+                >
+                  Assinar digitalmente
+                </button>
+              </div>
+              <label *ngIf="record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED'" class="upload-box compact">
+                <span>Enviar PDF assinado pelo provedor ICP-Brasil</span>
+                <input type="file" accept=".pdf" (change)="handleSignedFileChange(record.id, $event)" />
+              </label>
             </ng-template>
           </div>
         </div>
       </article>
 
       <article class="card wide" *ngIf="role() === 'DOCTOR'">
-        <h3>Upload de receita</h3>
+        <h3>Emitir receita</h3>
         <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
           <select formControlName="appointmentId">
             <option value="">Selecione a consulta</option>
@@ -61,12 +81,18 @@ import { TelemedApiService } from '../../core/telemed-api.service';
             </option>
           </select>
           <textarea formControlName="diagnosis" placeholder="Observacao ou diagnostico (opcional)"></textarea>
-          <label class="upload-box">
-            <span>Arquivo da receita</span>
-            <input type="file" accept=".pdf,.png,.jpg,.jpeg" (change)="handleFileChange($event)" />
-            <small>{{ prescriptionFileName() || 'Selecione um PDF ou imagem para salvar no banco e liberar o download.' }}</small>
+          <textarea formControlName="prescription" placeholder="Texto da receita ou orientacoes ao paciente"></textarea>
+          <textarea formControlName="clinicalNotes" placeholder="Observacoes clinicas internas (opcional)"></textarea>
+          <label class="signature-checkbox">
+            <input type="checkbox" formControlName="requiresDigitalSignature" />
+            <span>Receita controlada ou com exigencia de assinatura ICP-Brasil</span>
           </label>
-          <button type="submit" class="upload">Salvar receita</button>
+          <select *ngIf="recordForm().get('requiresDigitalSignature')?.value" formControlName="preferredCertificateType">
+            <option value="A3">Certificado A3 no computador do medico</option>
+            <option value="A1">Certificado A1 ou certificado em nuvem</option>
+          </select>
+          <small class="helper-text">O PDF sai com nome, endereco e profissao do paciente salvos no cadastro.</small>
+          <button type="submit" class="upload">Salvar e emitir</button>
         </form>
       </article>
     </section>
@@ -108,6 +134,15 @@ import { TelemedApiService } from '../../core/telemed-api.service';
       font-weight: 700;
       cursor: pointer;
     }
+    .secondary {
+      background: #f6f1e8;
+      color: #112027;
+    }
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
     form {
       display: grid;
       gap: 12px;
@@ -131,6 +166,17 @@ import { TelemedApiService } from '../../core/telemed-api.service';
       background: #fff;
       display: grid;
       gap: 8px;
+    }
+    .compact {
+      margin-top: 10px;
+      padding: 12px 14px;
+    }
+    .signature-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: #112027;
+      font-weight: 600;
     }
     .upload {
       width: fit-content;
@@ -161,9 +207,10 @@ export class HistoryPanelComponent {
   readonly medicalRecords = input<MedicalRecordResponse[]>([]);
   readonly role = input<Role | null>(null);
   readonly recordForm = input.required<FormGroup>();
-  readonly prescriptionFileName = input('');
   readonly createRecord = output<void>();
-  readonly prescriptionFileChanged = output<File | null>();
+  readonly generatePrescriptionPdf = output<number>();
+  readonly startPrescriptionSignature = output<number>();
+  readonly signedPrescriptionFileChanged = output<{ recordId: number; file: File | null }>();
 
   readonly appointmentStatusLabel = (status: string) => {
     switch (status) {
@@ -202,8 +249,33 @@ export class HistoryPanelComponent {
     });
   }
 
-  handleFileChange(event: Event): void {
+  patientPrescriptionStatus(record: MedicalRecordResponse): string {
+    if (!record.hasPrescriptionFile) {
+      return 'Aguardando o medico gerar a receita.';
+    }
+    if (record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED') {
+      return 'Receita gerada e aguardando assinatura digital do medico.';
+    }
+    return 'Receita pronta para download.';
+  }
+
+  doctorPrescriptionStatus(record: MedicalRecordResponse): string {
+    if (record.prescriptionSignatureStatus === 'SIGNED') {
+      return `Receita assinada${record.prescriptionSignatureProvider ? ' via ' + record.prescriptionSignatureProvider : ''}.`;
+    }
+    if (record.prescriptionSignatureStatus === 'PENDING_PROVIDER') {
+      return record.preferredCertificateType === 'A3'
+        ? 'Assinatura A3 em andamento. O provedor deve abrir o seletor local do certificado do medico.'
+        : 'Assinatura A1 em andamento no provedor ICP-Brasil.';
+    }
+    if (record.hasPrescriptionFile) {
+      return `PDF da receita gerado e pronto para assinatura ${record.preferredCertificateType}.`;
+    }
+    return 'Nenhum PDF de receita gerado ainda.';
+  }
+
+  handleSignedFileChange(recordId: number, event: Event): void {
     const input = event.target as HTMLInputElement | null;
-    this.prescriptionFileChanged.emit(input?.files?.[0] ?? null);
+    this.signedPrescriptionFileChanged.emit({ recordId, file: input?.files?.[0] ?? null });
   }
 }

@@ -11,6 +11,7 @@ import {
   PaymentResponse,
   PatientProfileResponse,
   PaymentMethod,
+  PrescriptionSignatureStartResponse,
   RegisterDoctorRequest,
   RegisterPatientRequest,
   UserResponse
@@ -105,6 +106,8 @@ export class TelemedApiService {
     symptoms?: string | null;
     diagnosis?: string | null;
     prescription?: string | null;
+    requiresDigitalSignature?: boolean;
+    preferredCertificateType?: 'A1' | 'A3';
     clinicalNotes?: string | null;
   }) {
     return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records`, payload);
@@ -114,6 +117,20 @@ export class TelemedApiService {
     const formData = new FormData();
     formData.append('file', file);
     return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records/${recordId}/prescription`, formData);
+  }
+
+  generatePrescriptionPdf(recordId: number) {
+    return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records/${recordId}/prescription/generate`, {});
+  }
+
+  startPrescriptionSignature(recordId: number) {
+    return this.http.post<PrescriptionSignatureStartResponse>(`${API_URL}/medical-records/${recordId}/prescription/signature/start`, {});
+  }
+
+  uploadSignedPrescription(recordId: number, file: File) {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records/${recordId}/prescription/signature/upload`, formData);
   }
 
   downloadPrescription(recordId: number) {
