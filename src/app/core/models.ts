@@ -86,6 +86,7 @@ export interface PaymentResponse {
   providerReference: string;
   checkoutUrl: string | null;
   pixCode: string | null;
+  pixQrCodeBase64: string | null;
   expiresAt: string | null;
   confirmedAt: string | null;
 }

@@ -13,6 +13,7 @@ import {
   DoctorResponse,
   MedicalRecordResponse,
   PaymentMethod,
+  PaymentResponse,
   PatientProfileResponse,
   PrescriptionSignatureStartResponse
 } from '../core/models';
@@ -150,6 +151,39 @@ function toOffsetIso(localDateTime: string): string {
             <button *ngIf="allowMockPayment" type="button" class="mock" (click)="simulateCheckout()">Simular pagamento</button>
             <button type="button" class="ghost" (click)="cancelCheckout()">Cancelar</button>
           </div>
+
+          <section *ngIf="activePixPayment() as pixPayment" class="pix-panel">
+            <div class="pix-panel__content">
+              <div>
+                <p class="eyebrow">Pix gerado</p>
+                <h4>Finalize o pagamento sem sair da MedCallOn</h4>
+                <p class="muted">
+                  O QR Code e o codigo copia e cola ficam ativos ate
+                  <strong>{{ pixPayment.expiresAt | date: 'dd/MM HH:mm' }}</strong>.
+                </p>
+              </div>
+
+              <img
+                *ngIf="pixPayment.pixQrCodeBase64"
+                class="pix-panel__qr"
+                [src]="'data:image/png;base64,' + pixPayment.pixQrCodeBase64"
+                alt="QR Code Pix"
+              />
+
+              <label class="pix-panel__label" for="pix-code">Codigo copia e cola</label>
+              <textarea id="pix-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
+
+              <div class="pix-panel__actions">
+                <button type="button" class="copy" (click)="copyPixCode()">Copiar codigo Pix</button>
+                <button type="button" class="ghost" (click)="refreshPixPayment()">Atualizar status</button>
+              </div>
+
+              <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
+                Status atual:
+                <strong>{{ paymentStatusLabel(pixPayment) }}</strong>
+              </p>
+            </div>
+          </section>
         </section>
 
         <app-doctor-agenda-panel
@@ -316,6 +350,61 @@ function toOffsetIso(localDateTime: string): string {
       background: #f6f1e8;
       color: #112027;
     }
+    .pix-panel {
+      border-top: 1px solid rgba(17, 32, 39, 0.08);
+      padding-top: 16px;
+    }
+    .pix-panel__content {
+      display: grid;
+      gap: 14px;
+      max-width: 520px;
+    }
+    .pix-panel h4 {
+      margin: 0;
+    }
+    .pix-panel__qr {
+      width: min(240px, 100%);
+      aspect-ratio: 1;
+      border-radius: 20px;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      background: white;
+      padding: 12px;
+    }
+    .pix-panel__label {
+      font-weight: 700;
+    }
+    .pix-panel textarea {
+      min-height: 120px;
+      resize: vertical;
+      border: 1px solid rgba(17, 32, 39, 0.12);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font: inherit;
+      color: #112027;
+      background: #fff;
+    }
+    .pix-panel__actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pix-panel__actions .copy {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+    }
+    .pix-panel__status {
+      margin: 0;
+      color: #667980;
+    }
+    .pix-panel__status.confirmed {
+      color: #0f684f;
+    }
     @media (max-width: 1100px) {
       .dashboard { grid-template-columns: 1fr; }
       .sidebar { position: static; top: auto; }
@@ -350,7 +439,9 @@ export class DashboardPageComponent {
   readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
+  readonly activePixPayment = signal<PaymentResponse | null>(null);
   readonly currentTime = signal(Date.now());
+  private pixPaymentPollingId: number | null = null;
   readonly visibleSelectedDoctorSlots = computed(() =>
     this.selectedDoctorSlots().filter((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())
   );
@@ -417,7 +508,10 @@ export class DashboardPageComponent {
   readonly allowMockPayment = false;
   constructor() {
     this.section.set(this.primarySection());
-    this.destroyRef.onDestroy(() => this.callService.disconnect());
+    this.destroyRef.onDestroy(() => {
+      this.callService.disconnect();
+      this.stopPixPaymentPolling();
+    });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const paymentStatus = params.get('paymentStatus');
       if (paymentStatus === 'success') {
@@ -519,6 +613,8 @@ export class DashboardPageComponent {
 
   cancelCheckout(): void {
     this.pendingBookingSlot.set(null);
+    this.activePixPayment.set(null);
+    this.stopPixPaymentPolling();
   }
 
   submitCheckout(paymentMethod: PaymentMethod): void {
@@ -545,7 +641,20 @@ export class DashboardPageComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (checkout) => {
+            if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
+              this.activePixPayment.set(checkout.payment);
+              this.startPixPaymentPolling(checkout.payment.id, doctor);
+              this.setFeedback('Pix gerado com sucesso. Pague pelo QR Code ou pelo codigo copia e cola abaixo.');
+              this.toast.success('Pix gerado', 'Conclua o pagamento para liberar automaticamente a consulta.');
+              window.setTimeout(() => {
+                this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 80);
+              return;
+            }
+
             this.pendingBookingSlot.set(null);
+            this.activePixPayment.set(null);
+            this.stopPixPaymentPolling();
             this.consultationReason.reset('');
             this.selectDoctor(doctor);
             this.loadBaseData();
@@ -595,6 +704,8 @@ export class DashboardPageComponent {
               .subscribe({
                 next: () => {
                   this.pendingBookingSlot.set(null);
+                  this.activePixPayment.set(null);
+                  this.stopPixPaymentPolling();
                   this.consultationReason.reset('');
                   this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
                   this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
@@ -827,6 +938,44 @@ export class DashboardPageComponent {
     });
   }
 
+  refreshPixPayment(): void {
+    const pixPayment = this.activePixPayment();
+    const doctor = this.selectedDoctor();
+    if (!pixPayment || !doctor) {
+      return;
+    }
+    this.fetchPixPaymentStatus(pixPayment.id, doctor);
+  }
+
+  async copyPixCode(): Promise<void> {
+    const pixCode = this.activePixPayment()?.pixCode;
+    if (!pixCode) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(pixCode);
+      this.toast.success('Codigo copiado', 'O codigo Pix foi copiado para a area de transferencia.');
+    } catch {
+      this.toast.error('Falha ao copiar', 'Nao foi possivel copiar o codigo Pix automaticamente.');
+    }
+  }
+
+  paymentStatusLabel(payment: PaymentResponse): string {
+    switch (payment.paymentStatus) {
+      case 'CONFIRMED':
+        return 'Pagamento confirmado';
+      case 'FAILED':
+        return 'Pagamento recusado';
+      case 'CANCELLED':
+        return 'Pagamento cancelado';
+      case 'EXPIRED':
+        return 'Pagamento expirado';
+      default:
+        return 'Aguardando confirmacao';
+    }
+  }
+
   private loadBaseData(): void {
     if (this.auth.role() === 'PATIENT' && this.section() === 'care') {
       this.api
@@ -1006,6 +1155,50 @@ export class DashboardPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.handleError(error.error?.message ?? 'Nao foi possivel salvar a profissao do paciente.');
+        }
+      });
+  }
+
+  private startPixPaymentPolling(paymentId: number, doctor: DoctorResponse): void {
+    this.stopPixPaymentPolling();
+    this.pixPaymentPollingId = window.setInterval(() => {
+      this.fetchPixPaymentStatus(paymentId, doctor);
+    }, 5000);
+  }
+
+  private stopPixPaymentPolling(): void {
+    if (this.pixPaymentPollingId !== null) {
+      window.clearInterval(this.pixPaymentPollingId);
+      this.pixPaymentPollingId = null;
+    }
+  }
+
+  private fetchPixPaymentStatus(paymentId: number, doctor: DoctorResponse): void {
+    this.api
+      .getPayment(paymentId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (payment) => {
+          this.activePixPayment.set(payment);
+          if (payment.paymentStatus === 'CONFIRMED') {
+            this.stopPixPaymentPolling();
+            this.pendingBookingSlot.set(null);
+            this.consultationReason.reset('');
+            this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
+            this.toast.success('Pagamento confirmado', 'A consulta ja esta liberada para atendimento.');
+            this.selectDoctor(doctor);
+            this.loadBaseData();
+            return;
+          }
+
+          if (payment.paymentStatus === 'FAILED' || payment.paymentStatus === 'CANCELLED' || payment.paymentStatus === 'EXPIRED') {
+            this.stopPixPaymentPolling();
+            this.handleError(`O pagamento Pix foi finalizado com status ${payment.paymentStatus.toLowerCase()}. Gere um novo Pix para tentar novamente.`);
+          }
+        },
+        error: () => {
+          this.stopPixPaymentPolling();
+          this.handleError('Nao foi possivel atualizar o status do pagamento Pix.');
         }
       });
   }

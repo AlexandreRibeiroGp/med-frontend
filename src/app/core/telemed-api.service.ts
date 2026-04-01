@@ -99,6 +99,10 @@ export class TelemedApiService {
     return this.http.get<PaymentResponse[]>(`${API_URL}/payments`);
   }
 
+  getPayment(paymentId: number): Observable<PaymentResponse> {
+    return this.http.get<PaymentResponse>(`${API_URL}/payments/${paymentId}`);
+  }
+
   confirmPayment(paymentId: number): Observable<PaymentResponse> {
     return this.http.post<PaymentResponse>(`${API_URL}/payments/${paymentId}/confirm`, {});
   }
