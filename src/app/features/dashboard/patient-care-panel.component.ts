@@ -369,12 +369,12 @@ export class PatientCarePanelComponent {
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
 
-  readonly canBookSlot = computed(
-    () => this.consultationReason().value.trim().length > 0 && this.patientOccupation().value.trim().length > 0
-  );
-
   specialtyLabel(value: string): string {
     return value === 'GERAL' ? 'Geral' : value;
+  }
+
+  canBookSlot(): boolean {
+    return !this.patientOccupation().invalid && !this.consultationReason().invalid;
   }
 
   constructor() {
