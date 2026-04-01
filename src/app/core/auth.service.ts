@@ -8,6 +8,19 @@ interface LoginPayload {
   password: string;
 }
 
+interface ForgotPasswordPayload {
+  email: string;
+}
+
+interface ResetPasswordPayload {
+  token: string;
+  newPassword: string;
+}
+
+interface MessageResponse {
+  message: string;
+}
+
 const API_URL = '/api';
 const TOKEN_KEY = 'med_front_token';
 const USER_KEY = 'med_front_user';
@@ -31,6 +44,14 @@ export class AuthService {
     );
   }
 
+  forgotPassword(payload: ForgotPasswordPayload): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${API_URL}/auth/forgot-password`, payload);
+  }
+
+  resetPassword(payload: ResetPasswordPayload): Observable<MessageResponse> {
+    return this.http.post<MessageResponse>(`${API_URL}/auth/reset-password`, payload);
+  }
+
   logout(): void {
     this.tokenState.set(null);
     this.userState.set(null);
@@ -50,4 +71,3 @@ export class AuthService {
     return raw ? (JSON.parse(raw) as AuthResponse['user']) : null;
   }
 }
-
