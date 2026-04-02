@@ -35,6 +35,9 @@ export class WebRtcCallService {
     if (!this.localStream()) {
       return 'Dispositivos pendentes';
     }
+    if (this.remoteStream()?.getTracks().length) {
+      return 'Mídia conectada';
+    }
     if (!this.remoteParticipantPresent()) {
       return 'Aguardando outro participante';
     }
@@ -208,6 +211,7 @@ export class WebRtcCallService {
         }
       });
       this.remoteStream.set(this.remoteStreamValue);
+      this.state.set('connected');
       this.attachStreams();
     };
 

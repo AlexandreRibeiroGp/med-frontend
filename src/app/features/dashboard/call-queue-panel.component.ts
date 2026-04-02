@@ -7,8 +7,8 @@ import { AppointmentResponse, Role } from '../../core/models';
   imports: [CommonModule, DatePipe],
   template: `
     <article class="card">
-      <h3>Consultas com sala</h3>
-      <div class="timeline">
+      <h3>Salas abertas</h3>
+      <div class="timeline" *ngIf="appointments().length; else emptyState">
         <div *ngFor="let appointment of appointments()" class="timeline-item appointment-line">
           <strong>{{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}</strong>
           <span>{{ appointment.scheduledAt | date: 'dd/MM HH:mm' }}</span>
@@ -17,6 +17,10 @@ import { AppointmentResponse, Role } from '../../core/models';
           </button>
         </div>
       </div>
+
+      <ng-template #emptyState>
+        <p class="empty-state">Nenhuma sala aberta no momento.</p>
+      </ng-template>
     </article>
   `,
   styles: `
@@ -43,6 +47,10 @@ import { AppointmentResponse, Role } from '../../core/models';
       text-align: left;
     }
     .call-link[disabled] { cursor: not-allowed; opacity: 0.55; }
+    .empty-state {
+      margin: 0;
+      color: #516268;
+    }
   `
 })
 export class CallQueuePanelComponent {
