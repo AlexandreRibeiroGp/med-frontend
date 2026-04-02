@@ -16,6 +16,9 @@ export class WebRtcCallService {
   private reconnectAttempts = 0;
   private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
   private readonly iceServers = resolveIceServers();
+  private makingOffer = false;
+  private ignoreOffer = false;
+  private isSettingRemoteAnswerPending = false;
 
   readonly localStream = signal<MediaStream | null>(null);
   readonly remoteStream = signal<MediaStream | null>(null);
@@ -109,9 +112,17 @@ export class WebRtcCallService {
     await this.prepareMedia();
     const peer = this.ensurePeerConnection(forceRestart);
     this.state.set(forceRestart ? 'reconnecting' : 'connecting');
-    const offer = await peer.createOffer({ iceRestart: forceRestart });
-    await peer.setLocalDescription(offer);
-    this.signaling.publish('offer', JSON.stringify(offer));
+    try {
+      this.makingOffer = true;
+      const offer = await peer.createOffer({ iceRestart: forceRestart });
+      if (peer.signalingState !== 'stable') {
+        return;
+      }
+      await peer.setLocalDescription(offer);
+      this.signaling.publish('offer', JSON.stringify(offer));
+    } finally {
+      this.makingOffer = false;
+    }
   }
 
   toggleMicrophone(): void {
@@ -130,6 +141,14 @@ export class WebRtcCallService {
     await this.startCall(true);
   }
 
+  async maybeStartCall(): Promise<void> {
+    if (!this.localStream() || !this.remoteParticipantPresent() || !this.shouldInitiateOffer() || this.makingOffer) {
+      return;
+    }
+
+    await this.startCall();
+  }
+
   async disconnect(): Promise<void> {
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId);
@@ -141,6 +160,9 @@ export class WebRtcCallService {
     this.remoteStream.set(null);
     this.remoteParticipantId = null;
     this.pendingIceCandidates = [];
+    this.makingOffer = false;
+    this.ignoreOffer = false;
+    this.isSettingRemoteAnswerPending = false;
     this.state.set('idle');
     this.reconnectAttempts = 0;
   }
@@ -236,7 +258,7 @@ export class WebRtcCallService {
       if (!this.localStream()) {
         this.state.set('ready');
       }
-      if (this.localStream() && this.shouldInitiateOffer()) {
+      if (this.localStream() && this.shouldInitiateOffer() && !this.makingOffer) {
         await this.startCall();
       }
       return;
@@ -253,8 +275,17 @@ export class WebRtcCallService {
     const peer = this.ensurePeerConnection();
 
     if (event.type === 'offer') {
+      const description = new RTCSessionDescription(JSON.parse(event.payload));
+      const readyForOffer =
+        !this.makingOffer && (peer.signalingState === 'stable' || this.isSettingRemoteAnswerPending);
+      const offerCollision = description.type === 'offer' && !readyForOffer;
+      this.ignoreOffer = !this.isPolitePeer() && offerCollision;
+      if (this.ignoreOffer) {
+        return;
+      }
+
       this.state.set('connecting');
-      await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+      await peer.setRemoteDescription(description);
       await this.flushPendingIceCandidates(peer);
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
@@ -263,7 +294,12 @@ export class WebRtcCallService {
     }
 
     if (event.type === 'answer') {
-      await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+      this.isSettingRemoteAnswerPending = true;
+      try {
+        await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+      } finally {
+        this.isSettingRemoteAnswerPending = false;
+      }
       await this.flushPendingIceCandidates(peer);
       return;
     }
@@ -285,6 +321,14 @@ export class WebRtcCallService {
     }
 
     return this.signaling.clientId.localeCompare(this.remoteParticipantId) > 0;
+  }
+
+  private isPolitePeer(): boolean {
+    if (!this.remoteParticipantId) {
+      return false;
+    }
+
+    return this.signaling.clientId.localeCompare(this.remoteParticipantId) < 0;
   }
 
   private extractClientId(payload: string): string | null {
@@ -374,6 +418,9 @@ export class WebRtcCallService {
     this.pendingIceCandidates = [];
     this.currentRoomId = null;
     this.remoteParticipantId = null;
+    this.makingOffer = false;
+    this.ignoreOffer = false;
+    this.isSettingRemoteAnswerPending = false;
     this.reconnectAttempts = 0;
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId);
