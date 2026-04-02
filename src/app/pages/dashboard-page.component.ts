@@ -23,6 +23,7 @@ import { CallQueuePanelComponent } from '../features/dashboard/call-queue-panel.
 import { DoctorAgendaPanelComponent } from '../features/dashboard/doctor-agenda-panel.component';
 import { HistoryPanelComponent } from '../features/dashboard/history-panel.component';
 import { PatientCarePanelComponent } from '../features/dashboard/patient-care-panel.component';
+import { ProfilePanelComponent } from '../features/dashboard/profile-panel.component';
 
 function toOffsetIso(localDateTime: string): string {
   const [datePart, timePart] = localDateTime.split('T');
@@ -51,7 +52,8 @@ function toOffsetIso(localDateTime: string): string {
     CallQueuePanelComponent,
     DoctorAgendaPanelComponent,
     HistoryPanelComponent,
-    PatientCarePanelComponent
+    PatientCarePanelComponent,
+    ProfilePanelComponent
   ],
   template: `
     <div class="dashboard">
@@ -73,6 +75,9 @@ function toOffsetIso(localDateTime: string): string {
           <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
             Documentos
           </button>
+          <button type="button" [class.active]="section() === 'profile'" (click)="section.set('profile')">
+            Meu perfil
+          </button>
           <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administracao</a>
         </div>
 
@@ -88,8 +93,12 @@ function toOffsetIso(localDateTime: string): string {
           </div>
           <div class="stats" *ngIf="auth.role() !== 'PATIENT'">
             <div>
-              <strong>{{ appointments().length }}</strong>
-              <span>Consultas</span>
+              <strong>{{ completedAppointmentsCount() }}</strong>
+              <span>Consultas realizadas</span>
+            </div>
+            <div *ngIf="auth.role() === 'DOCTOR'">
+              <strong>{{ doctorReceivablesLabel() }}</strong>
+              <span>Valor a receber</span>
             </div>
           </div>
         </header>
@@ -204,6 +213,17 @@ function toOffsetIso(localDateTime: string): string {
             (joinRequested)="openCallRoom($event)"
           />
         </section>
+
+        <app-profile-panel
+          *ngIf="section() === 'profile' && auth.role() !== 'ADMIN'"
+          [role]="auth.role()!"
+          [patientProfile]="patientProfile()"
+          [doctorProfile]="doctorProfile()"
+          [patientForm]="patientProfileForm"
+          [doctorForm]="doctorProfileForm"
+          (savePatient)="savePatientProfile()"
+          (saveDoctor)="saveDoctorProfile()"
+        />
 
         <app-history-panel
           *ngIf="section() === 'history'"
@@ -422,7 +442,7 @@ export class DashboardPageComponent {
   private readonly toast = inject(ToastService);
   @ViewChild('checkoutCard') private checkoutCard?: ElementRef<HTMLElement>;
 
-  readonly section = signal<'care' | 'agenda' | 'calls' | 'history'>('history');
+  readonly section = signal<'care' | 'agenda' | 'calls' | 'history' | 'profile'>('history');
   readonly error = signal('');
   readonly feedback = signal('');
   private errorTimer: number | null = null;
@@ -437,6 +457,7 @@ export class DashboardPageComponent {
   readonly appointmentsUnavailable = signal(false);
   readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
+  readonly doctorProfile = signal<DoctorResponse | null>(null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
   readonly currentTime = signal(Date.now());
@@ -454,6 +475,16 @@ export class DashboardPageComponent {
         appointment.status !== 'CANCELLED' &&
         appointment.status !== 'COMPLETED'
     )
+  );
+  readonly completedAppointmentsCount = computed(() =>
+    this.appointments().filter((appointment) => appointment.status === 'COMPLETED').length
+  );
+  readonly doctorReceivables = computed(() => this.completedAppointmentsCount() * 35);
+  readonly doctorReceivablesLabel = computed(() =>
+    this.doctorReceivables().toLocaleString('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    })
   );
 
   readonly specialtyFilter = this.fb.nonNullable.control('');
@@ -480,6 +511,19 @@ export class DashboardPageComponent {
     requiresDigitalSignature: [false],
     preferredCertificateType: ['A3' as 'A1' | 'A3'],
     clinicalNotes: ['']
+  });
+  readonly patientProfileForm = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(3)]],
+    phoneNumber: [''],
+    healthInsurance: [''],
+    profession: ['', [Validators.required, Validators.minLength(2)]],
+    address: ['']
+  });
+  readonly doctorProfileForm = this.fb.nonNullable.group({
+    fullName: ['', [Validators.required, Validators.minLength(3)]],
+    phoneNumber: [''],
+    biography: [''],
+    telemedicineEnabled: [true]
   });
 
   readonly roleLabel = computed(() => {
@@ -527,12 +571,31 @@ export class DashboardPageComponent {
     });
     effect(() => {
       const profile = this.patientProfile();
-      if (!profile?.profession) {
+      if (!profile) {
         return;
       }
-      if (!this.patientOccupation.value.trim()) {
+      this.patientProfileForm.patchValue({
+        fullName: profile.user.fullName ?? '',
+        phoneNumber: profile.user.phoneNumber ?? '',
+        healthInsurance: profile.healthInsurance ?? '',
+        profession: profile.profession ?? '',
+        address: profile.address ?? ''
+      }, { emitEvent: false });
+      if (!this.patientOccupation.value.trim() && profile.profession) {
         this.patientOccupation.setValue(profile.profession);
       }
+    });
+    effect(() => {
+      const profile = this.doctorProfile();
+      if (!profile) {
+        return;
+      }
+      this.doctorProfileForm.patchValue({
+        fullName: profile.user.fullName ?? '',
+        phoneNumber: profile.user.phoneNumber ?? '',
+        biography: profile.biography ?? '',
+        telemedicineEnabled: profile.telemedicineEnabled
+      }, { emitEvent: false });
     });
 
     timer(15000, 15000)
@@ -807,6 +870,62 @@ export class DashboardPageComponent {
       });
   }
 
+  savePatientProfile(): void {
+    if (this.patientProfileForm.invalid) {
+      this.patientProfileForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.patientProfileForm.getRawValue();
+    this.api
+      .updateCurrentPatientProfile({
+        fullName: raw.fullName.trim(),
+        phoneNumber: raw.phoneNumber.trim() || null,
+        healthInsurance: raw.healthInsurance.trim() || null,
+        profession: raw.profession.trim(),
+        address: raw.address.trim() || null
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.patientProfile.set(profile);
+          this.patientOccupation.setValue(profile.profession ?? '');
+          this.setFeedback('Perfil do paciente atualizado com sucesso.');
+          this.toast.success('Perfil atualizado', 'Seus dados foram salvos.');
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel atualizar o perfil do paciente.');
+        }
+      });
+  }
+
+  saveDoctorProfile(): void {
+    if (this.doctorProfileForm.invalid) {
+      this.doctorProfileForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.doctorProfileForm.getRawValue();
+    this.api
+      .updateCurrentDoctorProfile({
+        fullName: raw.fullName.trim(),
+        phoneNumber: raw.phoneNumber.trim() || null,
+        biography: raw.biography.trim() || null,
+        telemedicineEnabled: raw.telemedicineEnabled
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (profile) => {
+          this.doctorProfile.set(profile);
+          this.setFeedback('Perfil profissional atualizado com sucesso.');
+          this.toast.success('Perfil atualizado', 'Seus dados profissionais foram salvos.');
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel atualizar o perfil do medico.');
+        }
+      });
+  }
+
   createMedicalRecord(): void {
     if (this.recordForm.invalid) {
       this.recordForm.markAllAsTouched();
@@ -996,13 +1115,6 @@ export class DashboardPageComponent {
       return;
     }
 
-    if (this.auth.role() === 'DOCTOR' && this.section() === 'agenda') {
-      this.appointments.set([]);
-      this.medicalRecords.set([]);
-      this.loadRoleSpecificData();
-      return;
-    }
-
     forkJoin({
       appointments: this.appointmentsUnavailable()
         ? of([])
@@ -1045,6 +1157,7 @@ export class DashboardPageComponent {
 
   private loadRoleSpecificData(): void {
     if (this.auth.role() === 'PATIENT') {
+      this.doctorProfile.set(null);
       this.loadDoctors();
       this.api
         .getCurrentPatientProfile()
@@ -1065,25 +1178,28 @@ export class DashboardPageComponent {
     }
 
     if (this.auth.role() === 'DOCTOR') {
+      this.patientProfile.set(null);
       this.api
-        .getDoctors()
+        .getCurrentDoctorProfile()
         .pipe(
           catchError((error: HttpErrorResponse) => {
             if (error.status === 404) {
+              this.doctorProfile.set(null);
               this.availability.set([]);
-              return of([]);
+              return of(null);
             }
             throw error;
           }),
           takeUntilDestroyed(this.destroyRef)
         )
         .subscribe({
-          next: (doctors) => {
-            const currentDoctor = doctors.find((doctor) => doctor.user.id === this.auth.user()?.id);
+          next: (currentDoctor) => {
             if (!currentDoctor) {
               this.availability.set([]);
               return;
             }
+
+            this.doctorProfile.set(currentDoctor);
 
             this.api
               .getDoctorAvailability(currentDoctor.id)

@@ -1,15 +1,24 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, ElementRef, effect, inject, input, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AppointmentResponse, AppointmentStatus } from '../../core/models';
-import { CallSignalingService } from '../../core/call-signaling.service';
+import { CallEvent, CallSignalingService } from '../../core/call-signaling.service';
 import { TelemedApiService } from '../../core/telemed-api.service';
 import { ToastService } from '../../core/toast.service';
 import { WebRtcCallService } from '../../core/webrtc-call.service';
 
+interface ChatMessage {
+  id: string;
+  text: string;
+  sender: string | null;
+  sentAt: string | null;
+  mine: boolean;
+}
+
 @Component({
   selector: 'app-call-room-panel',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   template: `
     <article class="card" *ngIf="appointment(); else emptyState">
       <div class="call-header">
@@ -20,31 +29,72 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
         </div>
       </div>
 
-      <div class="entry-card" *ngIf="!rtc.localStream()">
-        <h3>Entrar na chamada</h3>
-        <p>A sala foi aberta. Ative seus dispositivos quando estiver pronto.</p>
-        <button type="button" (click)="enterCall()">Ativar camera e microfone</button>
+      <div class="room-layout">
+        <section class="media-column">
+          <div class="entry-card" *ngIf="!rtc.localStream()">
+            <h3>Entrar na chamada</h3>
+            <p>A sala foi aberta. Se preferir, voce pode falar com o medico ou paciente apenas pelo chat.</p>
+            <button type="button" (click)="enterCall()">Ativar camera e microfone</button>
+          </div>
+
+          <ng-container *ngIf="rtc.localStream()">
+            <div class="videos">
+              <figure>
+                <figcaption>Voce</figcaption>
+                <video #localVideo playsinline autoplay muted></video>
+              </figure>
+              <figure>
+                <figcaption>Participante remoto</figcaption>
+                <video #remoteVideo playsinline autoplay></video>
+              </figure>
+            </div>
+
+            <div class="control-bar">
+              <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
+              <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
+              <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
+              <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
+            </div>
+          </ng-container>
+
+          <div class="control-bar" *ngIf="!rtc.localStream()">
+            <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
+            <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
+          </div>
+        </section>
+
+        <aside class="chat-panel">
+          <div class="chat-header">
+            <div>
+              <h3>Chat da consulta</h3>
+              <p>Use o texto se nao quiser abrir camera ou microfone.</p>
+            </div>
+          </div>
+
+          <div class="chat-messages" #chatMessages>
+            <div *ngIf="!chatMessagesList().length" class="chat-empty">
+              Nenhuma mensagem ainda. Escreva para iniciar a conversa.
+            </div>
+
+            <article *ngFor="let message of chatMessagesList()" class="chat-message" [class.mine]="message.mine">
+              <span class="chat-author">{{ message.mine ? 'Voce' : 'Participante' }}</span>
+              <p>{{ message.text }}</p>
+              <time *ngIf="message.sentAt">{{ message.sentAt | date: 'HH:mm' }}</time>
+            </article>
+          </div>
+
+          <form class="chat-form" (ngSubmit)="sendChatMessage()">
+            <textarea
+              name="chatMessage"
+              [(ngModel)]="chatDraft"
+              rows="3"
+              maxlength="1000"
+              placeholder="Digite sua mensagem..."
+            ></textarea>
+            <button type="submit" [disabled]="!canSendChat()">Enviar mensagem</button>
+          </form>
+        </aside>
       </div>
-
-      <ng-container *ngIf="rtc.localStream()">
-        <div class="videos">
-          <figure>
-            <figcaption>Voce</figcaption>
-            <video #localVideo playsinline autoplay muted></video>
-          </figure>
-          <figure>
-            <figcaption>Participante remoto</figcaption>
-            <video #remoteVideo playsinline autoplay></video>
-          </figure>
-        </div>
-
-        <div class="control-bar">
-          <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
-          <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
-          <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
-          <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
-        </div>
-      </ng-container>
     </article>
 
     <ng-template #emptyState>
@@ -92,7 +142,7 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
     }
     .presence.online { color: #83f0d4; }
     .entry-card {
-      min-height: 320px;
+      min-height: 220px;
       border-radius: 28px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -101,11 +151,20 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       text-align: center;
       gap: 14px;
       padding: 32px;
-      margin-bottom: 18px;
     }
     .entry-card p {
       margin: 0;
       color: rgba(255, 255, 255, 0.74);
+    }
+    .room-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      gap: 18px;
+      align-items: start;
+    }
+    .media-column {
+      display: grid;
+      gap: 18px;
     }
     .videos {
       display: grid;
@@ -145,7 +204,84 @@ import { WebRtcCallService } from '../../core/webrtc-call.service';
       gap: 12px;
       justify-content: center;
     }
+    .chat-panel {
+      border-radius: 28px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: grid;
+      grid-template-rows: auto minmax(260px, 1fr) auto;
+      min-height: 100%;
+      overflow: hidden;
+    }
+    .chat-header {
+      padding: 20px 20px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .chat-header h3 {
+      font-size: 1.15rem;
+      margin: 0 0 6px;
+    }
+    .chat-header p {
+      margin: 0;
+      color: rgba(255, 255, 255, 0.68);
+    }
+    .chat-messages {
+      display: grid;
+      align-content: start;
+      gap: 12px;
+      padding: 18px;
+      max-height: 520px;
+      overflow: auto;
+    }
+    .chat-empty {
+      color: rgba(255, 255, 255, 0.6);
+      font-size: 0.95rem;
+    }
+    .chat-message {
+      display: grid;
+      gap: 6px;
+      justify-items: start;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    .chat-message.mine {
+      justify-items: end;
+      margin-left: 18px;
+      background: rgba(14, 123, 131, 0.22);
+    }
+    .chat-author,
+    .chat-message time {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.65);
+    }
+    .chat-message p {
+      margin: 0;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .chat-form {
+      display: grid;
+      gap: 12px;
+      padding: 16px 18px 18px;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .chat-form textarea {
+      width: 100%;
+      min-height: 92px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font: inherit;
+      color: white;
+      background: rgba(7, 12, 15, 0.6);
+      box-sizing: border-box;
+    }
     @media (max-width: 900px) {
+      .room-layout {
+        grid-template-columns: 1fr;
+      }
       .videos { grid-template-columns: 1fr; }
     }
   `
@@ -159,7 +295,17 @@ export class CallRoomPanelComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly localVideo = viewChild<ElementRef<HTMLVideoElement>>('localVideo');
   private readonly remoteVideo = viewChild<ElementRef<HTMLVideoElement>>('remoteVideo');
+  private readonly chatMessagesContainer = viewChild<ElementRef<HTMLDivElement>>('chatMessages');
   private readonly syncedStatus = signal<AppointmentStatus | null>(null);
+  chatDraft = '';
+  readonly chatMessagesList = computed<ChatMessage[]>(() =>
+    this.signaling
+      .events()
+      .filter((event) => event.appointmentId === this.appointment()?.id && event.type === 'chat')
+      .map((event) => this.toChatMessage(event))
+      .filter((message) => message.text.length > 0)
+      .reverse()
+  );
 
   constructor() {
     effect(() => {
@@ -178,6 +324,16 @@ export class CallRoomPanelComponent {
       const local = this.localVideo()?.nativeElement ?? null;
       const remote = this.remoteVideo()?.nativeElement ?? null;
       this.rtc.bindVideos(local, remote);
+    });
+
+    effect(() => {
+      this.chatMessagesList();
+      queueMicrotask(() => {
+        const container = this.chatMessagesContainer()?.nativeElement;
+        if (container) {
+          container.scrollTop = container.scrollHeight;
+        }
+      });
     });
 
     effect(() => {
@@ -228,7 +384,7 @@ export class CallRoomPanelComponent {
         })
       : '';
 
-    return `${appointment.doctorName} � ${scheduleLabel}`;
+    return `${appointment.doctorName} - ${scheduleLabel}`;
   }
 
   async enterCall(): Promise<void> {
@@ -258,6 +414,20 @@ export class CallRoomPanelComponent {
     void this.rtc.disconnect();
     this.rtc.stopMedia();
     this.toast.info('Sala encerrada', 'A conexao local foi finalizada.', 2500);
+  }
+
+  canSendChat(): boolean {
+    return this.signaling.status() === 'connected' && this.chatDraft.trim().length > 0;
+  }
+
+  sendChatMessage(): void {
+    const text = this.chatDraft.trim();
+    if (!text || this.signaling.status() !== 'connected') {
+      return;
+    }
+
+    this.signaling.publish('chat', JSON.stringify({ text }));
+    this.chatDraft = '';
   }
 
   private connectRoom(): void {
@@ -296,5 +466,24 @@ export class CallRoomPanelComponent {
           this.toast.error('Falha ao atualizar consulta', `Nao foi possivel mover a consulta para ${status}.`);
         }
       });
+  }
+
+  private toChatMessage(event: CallEvent): ChatMessage {
+    const parsed = this.parseChatPayload(event.payload);
+    return {
+      id: event.id,
+      text: parsed?.text?.trim() || '',
+      sender: event.sender,
+      sentAt: event.sentAt,
+      mine: event.sender === this.signaling.clientId
+    };
+  }
+
+  private parseChatPayload(payload: string): { text?: string } | null {
+    try {
+      return JSON.parse(payload) as { text?: string };
+    } catch {
+      return null;
+    }
   }
 }

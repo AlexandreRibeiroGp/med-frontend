@@ -158,7 +158,30 @@ export class TelemedApiService {
     return this.http.get<PatientProfileResponse>(`${API_URL}/patients/me`);
   }
 
+  updateCurrentPatientProfile(payload: {
+    fullName: string;
+    phoneNumber?: string | null;
+    healthInsurance?: string | null;
+    profession: string;
+    address?: string | null;
+  }) {
+    return this.http.patch<PatientProfileResponse>(`${API_URL}/patients/me`, payload);
+  }
+
   updateCurrentPatientProfession(payload: { profession: string }) {
     return this.http.patch<PatientProfileResponse>(`${API_URL}/patients/me/profession`, payload);
+  }
+
+  getCurrentDoctorProfile(): Observable<DoctorResponse> {
+    return this.http.get<DoctorResponse>(`${API_URL}/doctors/me`);
+  }
+
+  updateCurrentDoctorProfile(payload: {
+    fullName: string;
+    phoneNumber?: string | null;
+    biography?: string | null;
+    telemedicineEnabled: boolean;
+  }) {
+    return this.http.patch<DoctorResponse>(`${API_URL}/doctors/me`, payload);
   }
 }
