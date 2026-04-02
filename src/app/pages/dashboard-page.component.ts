@@ -117,7 +117,6 @@ function toOffsetIso(localDateTime: string): string {
           [specialtyFilter]="specialtyFilter"
           [consultationReason]="consultationReason"
           [patientOccupation]="patientOccupation"
-          (refreshDoctors)="loadDoctors()"
           (doctorSelected)="selectDoctor($event)"
           (slotBooked)="bookSlot($event)"
         />
@@ -326,9 +325,26 @@ function toOffsetIso(localDateTime: string): string {
       flex-wrap: wrap;
     }
     h1 { margin: 0 0 10px; font-size: clamp(1.9rem, 4vw, 3.6rem); line-height: 0.98; }
-    .stats { display: grid; grid-template-columns: minmax(120px, 140px); gap: 12px; min-width: 140px; }
-    .stats div { background: #f6f1e8; border-radius: 20px; padding: 18px; }
-    .stats strong { display: block; font-size: 1.8rem; }
+    .stats { display: grid; grid-template-columns: minmax(160px, 180px); gap: 12px; min-width: 180px; }
+    .stats div {
+      background: #f6f1e8;
+      border-radius: 20px;
+      padding: 18px;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .stats strong {
+      display: block;
+      font-size: clamp(1.5rem, 2vw, 1.9rem);
+      line-height: 1.05;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+    .stats span {
+      display: block;
+      margin-top: 6px;
+      overflow-wrap: anywhere;
+    }
     .calls-board { display: grid; grid-template-columns: minmax(0, 460px); gap: 18px; }
     .feedback, .error { margin: 0; padding: 14px 16px; border-radius: 18px; }
     .feedback { background: #e6f6f2; color: #0f684f; }
@@ -635,10 +651,40 @@ export class DashboardPageComponent {
 
   loadDoctors(): void {
     this.api
-      .getDoctors(this.specialtyFilter.value || undefined)
+      .getDoctors()
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (doctors) => this.doctors.set(doctors),
+        next: (doctors) => {
+          if (!doctors.length) {
+            this.doctors.set([]);
+            return;
+          }
+
+          forkJoin(
+            doctors.map((doctor) =>
+              this.api.getDoctorAvailability(doctor.id).pipe(
+                catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error)))
+              )
+            )
+          )
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: (availabilityByDoctor) => {
+                const now = this.currentTime();
+                const availableDoctors = doctors.filter((doctor, index) =>
+                  availabilityByDoctor[index].some((slot) => slot.available && new Date(slot.endAt).getTime() > now)
+                );
+
+                this.doctors.set(availableDoctors);
+                if (this.selectedDoctor() && !availableDoctors.some((doctor) => doctor.id === this.selectedDoctor()?.id)) {
+                  this.selectedDoctor.set(null);
+                  this.selectedDoctorSlots.set([]);
+                  this.pendingBookingSlot.set(null);
+                }
+              },
+              error: () => this.handleError('Nao foi possivel carregar os medicos disponiveis.')
+            });
+        },
         error: () => this.handleError('Nao foi possivel carregar os medicos.')
       });
   }

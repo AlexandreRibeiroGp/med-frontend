@@ -8,25 +8,10 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
   imports: [CommonModule, ReactiveFormsModule, DatePipe],
   template: `
     <section class="patient-flow">
-      <article class="card specialty-card">
-        <div class="section-head">
-          <p class="eyebrow">Passo 1</p>
-          <h3>Escolha a especialidade</h3>
-        </div>
-
-        <div class="toolbar">
-          <select [formControl]="specialtyFilter()">
-            <option value="">Todas as especialidades</option>
-            <option *ngFor="let specialty of specialties()" [value]="specialty">{{ specialtyLabel(specialty) }}</option>
-          </select>
-          <button type="button" (click)="refreshDoctors.emit()">Buscar</button>
-        </div>
-      </article>
-
       <article class="card doctor-card">
         <div class="section-head">
-          <p class="eyebrow">Passo 2</p>
-          <h3>Selecione o médico</h3>
+          <p class="eyebrow">Medicos disponiveis</p>
+          <h3>Escolha um medico com horario aberto</h3>
         </div>
 
         <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
@@ -54,7 +39,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
 
       <article class="card schedule-card" *ngIf="selectedDoctor() as doctor">
         <div class="section-head">
-          <p class="eyebrow">Passo 3</p>
+          <p class="eyebrow">Agendamento</p>
           <h3>Descreva o atendimento e escolha o horário</h3>
         </div>
 
@@ -105,7 +90,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     </section>
 
     <ng-template #emptyDoctors>
-      <p class="empty-state">Nenhum médico disponível para essa especialidade no momento.</p>
+      <p class="empty-state">Nenhum medico com horario aberto no momento.</p>
     </ng-template>
 
     <ng-template #emptySlots>
@@ -138,12 +123,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       font-size: 0.72rem;
       color: #64747b;
     }
-    .toolbar {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 10px;
-    }
-    .toolbar button,
     .doctor-tile,
     .date-strip button,
     .slot-grid button {
@@ -156,11 +135,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       font-weight: 700;
       cursor: pointer;
     }
-    .toolbar button {
-      background: linear-gradient(135deg, #0e7b83, #0a5d65);
-      color: white;
-    }
-    select,
     input {
       width: 100%;
       border: 1px solid #d8dfdf;
@@ -308,11 +282,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       margin: 0;
       color: #5b6a70;
     }
-    @media (max-width: 900px) {
-      .toolbar {
-        grid-template-columns: 1fr;
-      }
-    }
   `
 })
 export class PatientCarePanelComponent {
@@ -365,7 +334,6 @@ export class PatientCarePanelComponent {
     )
   );
 
-  readonly refreshDoctors = output<void>();
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
 
