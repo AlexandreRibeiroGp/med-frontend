@@ -31,10 +31,10 @@ export class TelemedApiService {
     return this.http.post<DoctorResponse>(`${API_URL}/auth/register/doctors`, payload);
   }
 
-  uploadDoctorPhoto(doctorId: number, file: File) {
+  uploadDoctorPhoto(file: File) {
     const formData = new FormData();
     formData.append('file', file);
-    return this.http.post<DoctorResponse>(`${API_URL}/doctors/${doctorId}/photo`, formData);
+    return this.http.post<DoctorResponse>(`${API_URL}/doctors/me/photo`, formData);
   }
 
   registerAdmin(payload: RegisterPatientRequest) {

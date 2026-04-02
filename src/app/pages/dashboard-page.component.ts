@@ -982,7 +982,7 @@ export class DashboardPageComponent {
     }
 
     this.api
-      .uploadDoctorPhoto(profile.id, file)
+      .uploadDoctorPhoto(file)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (updatedProfile) => {

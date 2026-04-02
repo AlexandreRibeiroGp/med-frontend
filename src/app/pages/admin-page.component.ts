@@ -344,8 +344,8 @@ export class AdminPageComponent {
       .pipe(
         switchMap((doctor) =>
           this.selectedDoctorPhoto
-            ? this.api.uploadDoctorPhoto(doctor.id, this.selectedDoctorPhoto)
-            : of(doctor)
+            ? this.api.uploadDoctorPhoto(this.selectedDoctorPhoto)
+              : of(doctor)
         ),
         takeUntilDestroyed(this.destroyRef)
       )
