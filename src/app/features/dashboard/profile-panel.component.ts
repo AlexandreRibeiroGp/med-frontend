@@ -34,11 +34,6 @@ import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models'
             </label>
 
             <label>
-              <span>Convenio</span>
-              <input formControlName="healthInsurance" type="text" />
-            </label>
-
-            <label>
               <span>Profissao</span>
               <input formControlName="profession" type="text" />
             </label>
@@ -76,13 +71,29 @@ import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models'
 
               <label>
                 <span>CRM</span>
-                <input [value]="doctorProfile()?.crm ?? ''" type="text" readonly />
+                <input formControlName="crm" type="text" />
               </label>
 
               <label>
                 <span>Especialidade</span>
                 <input [value]="doctorProfile()?.specialty ?? ''" type="text" readonly />
               </label>
+
+              <div class="photo-block full">
+                <span>Foto do perfil</span>
+                <div class="photo-row">
+                  <div class="doctor-photo-preview">
+                    <img *ngIf="doctorProfile()?.profilePhotoUrl; else doctorPhotoFallback" [src]="doctorProfile()?.profilePhotoUrl!" [alt]="doctorProfile()?.user?.fullName ?? 'Foto do medico'" />
+                    <ng-template #doctorPhotoFallback>
+                      {{ doctorProfile()?.user?.fullName?.charAt(0) ?? 'M' }}
+                    </ng-template>
+                  </div>
+                  <label class="upload-button" for="doctor-photo-input">
+                    Escolher foto
+                  </label>
+                  <input id="doctor-photo-input" type="file" accept="image/*" (change)="onDoctorPhotoSelected($event)" />
+                </div>
+              </div>
 
               <label class="toggle">
                 <span>Telemedicina ativa</span>
@@ -159,6 +170,51 @@ import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models'
     .toggle {
       align-content: start;
     }
+    .photo-block {
+      display: grid;
+      gap: 12px;
+    }
+    .photo-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .doctor-photo-preview {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(14, 123, 131, 0.14), rgba(217, 79, 4, 0.18));
+      color: #0b5860;
+      font-size: 2rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      flex: 0 0 auto;
+    }
+    .doctor-photo-preview img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .upload-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+    }
+    #doctor-photo-input {
+      display: none;
+    }
     .toggle input {
       width: 22px;
       height: 22px;
@@ -194,4 +250,18 @@ export class ProfilePanelComponent {
 
   readonly savePatient = output<void>();
   readonly saveDoctor = output<void>();
+  readonly uploadDoctorPhoto = output<File>();
+
+  onDoctorPhotoSelected(event: Event): void {
+    const input = event.target as HTMLInputElement | null;
+    const file = input?.files?.item(0);
+    if (!file) {
+      return;
+    }
+
+    this.uploadDoctorPhoto.emit(file);
+    if (input) {
+      input.value = '';
+    }
+  }
 }

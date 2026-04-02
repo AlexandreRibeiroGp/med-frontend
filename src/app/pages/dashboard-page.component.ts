@@ -222,6 +222,7 @@ function toOffsetIso(localDateTime: string): string {
           [doctorForm]="doctorProfileForm"
           (savePatient)="savePatientProfile()"
           (saveDoctor)="saveDoctorProfile()"
+          (uploadDoctorPhoto)="uploadDoctorPhoto($event)"
         />
 
         <app-history-panel
@@ -489,7 +490,8 @@ export class DashboardPageComponent {
       (appointment) =>
         appointment.status !== 'PENDING_PAYMENT' &&
         appointment.status !== 'CANCELLED' &&
-        appointment.status !== 'COMPLETED'
+        appointment.status !== 'COMPLETED' &&
+        this.canJoinAppointment(appointment)
     )
   );
   readonly completedAppointmentsCount = computed(() =>
@@ -531,13 +533,13 @@ export class DashboardPageComponent {
   readonly patientProfileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.minLength(3)]],
     phoneNumber: [''],
-    healthInsurance: [''],
     profession: ['', [Validators.required, Validators.minLength(2)]],
     address: ['']
   });
   readonly doctorProfileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.minLength(3)]],
     phoneNumber: [''],
+    crm: ['', [Validators.required, Validators.minLength(3)]],
     biography: [''],
     telemedicineEnabled: [true]
   });
@@ -593,7 +595,6 @@ export class DashboardPageComponent {
       this.patientProfileForm.patchValue({
         fullName: profile.user.fullName ?? '',
         phoneNumber: profile.user.phoneNumber ?? '',
-        healthInsurance: profile.healthInsurance ?? '',
         profession: profile.profession ?? '',
         address: profile.address ?? ''
       }, { emitEvent: false });
@@ -609,6 +610,7 @@ export class DashboardPageComponent {
       this.doctorProfileForm.patchValue({
         fullName: profile.user.fullName ?? '',
         phoneNumber: profile.user.phoneNumber ?? '',
+        crm: profile.crm ?? '',
         biography: profile.biography ?? '',
         telemedicineEnabled: profile.telemedicineEnabled
       }, { emitEvent: false });
@@ -927,7 +929,6 @@ export class DashboardPageComponent {
       .updateCurrentPatientProfile({
         fullName: raw.fullName.trim(),
         phoneNumber: raw.phoneNumber.trim() || null,
-        healthInsurance: raw.healthInsurance.trim() || null,
         profession: raw.profession.trim(),
         address: raw.address.trim() || null
       })
@@ -956,6 +957,7 @@ export class DashboardPageComponent {
       .updateCurrentDoctorProfile({
         fullName: raw.fullName.trim(),
         phoneNumber: raw.phoneNumber.trim() || null,
+        crm: raw.crm.trim(),
         biography: raw.biography.trim() || null,
         telemedicineEnabled: raw.telemedicineEnabled
       })
@@ -968,6 +970,28 @@ export class DashboardPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.handleError(error.error?.message ?? 'Nao foi possivel atualizar o perfil do medico.');
+        }
+      });
+  }
+
+  uploadDoctorPhoto(file: File): void {
+    const profile = this.doctorProfile();
+    if (!profile) {
+      this.handleError('Nao foi possivel identificar o medico para enviar a foto.');
+      return;
+    }
+
+    this.api
+      .uploadDoctorPhoto(profile.id, file)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updatedProfile) => {
+          this.doctorProfile.set(updatedProfile);
+          this.setFeedback('Foto do perfil atualizada com sucesso.');
+          this.toast.success('Foto atualizada', 'A nova foto do medico ja esta disponivel.');
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel enviar a foto do medico.');
         }
       });
   }

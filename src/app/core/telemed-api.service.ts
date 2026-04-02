@@ -161,7 +161,6 @@ export class TelemedApiService {
   updateCurrentPatientProfile(payload: {
     fullName: string;
     phoneNumber?: string | null;
-    healthInsurance?: string | null;
     profession: string;
     address?: string | null;
   }) {
@@ -179,6 +178,7 @@ export class TelemedApiService {
   updateCurrentDoctorProfile(payload: {
     fullName: string;
     phoneNumber?: string | null;
+    crm: string;
     biography?: string | null;
     telemedicineEnabled: boolean;
   }) {
