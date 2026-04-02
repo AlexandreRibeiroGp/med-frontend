@@ -10,6 +10,7 @@ export class WebRtcCallService {
   private localVideo: HTMLVideoElement | null = null;
   private remoteVideo: HTMLVideoElement | null = null;
   private handledIds = new Set<string>();
+  private pendingIceCandidates: RTCIceCandidateInit[] = [];
   private currentRoomId: number | null = null;
   private remoteParticipantId: string | null = null;
   private reconnectAttempts = 0;
@@ -139,6 +140,7 @@ export class WebRtcCallService {
     this.remoteStreamValue = new MediaStream();
     this.remoteStream.set(null);
     this.remoteParticipantId = null;
+    this.pendingIceCandidates = [];
     this.state.set('idle');
     this.reconnectAttempts = 0;
   }
@@ -157,6 +159,7 @@ export class WebRtcCallService {
       this.peerConnection = null;
       this.remoteStreamValue = new MediaStream();
       this.remoteStream.set(null);
+      this.pendingIceCandidates = [];
     }
 
     if (this.peerConnection) {
@@ -252,6 +255,7 @@ export class WebRtcCallService {
     if (event.type === 'offer') {
       this.state.set('connecting');
       await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+      await this.flushPendingIceCandidates(peer);
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
       this.signaling.publish('answer', JSON.stringify(answer));
@@ -260,15 +264,18 @@ export class WebRtcCallService {
 
     if (event.type === 'answer') {
       await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+      await this.flushPendingIceCandidates(peer);
       return;
     }
 
     if (event.type === 'candidate') {
-      try {
-        await peer.addIceCandidate(new RTCIceCandidate(JSON.parse(event.payload)));
-      } catch {
-        this.toast.info('Sinal ICE ignorado', 'Um candidato chegou fora de ordem e foi descartado.', 2500);
+      const candidate = JSON.parse(event.payload) as RTCIceCandidateInit;
+      if (!peer.remoteDescription) {
+        this.pendingIceCandidates.push(candidate);
+        return;
       }
+
+      await this.addIceCandidateSafely(peer, candidate);
     }
   }
 
@@ -328,6 +335,27 @@ export class WebRtcCallService {
     }, 1500);
   }
 
+  private async flushPendingIceCandidates(peer: RTCPeerConnection): Promise<void> {
+    if (!peer.remoteDescription || !this.pendingIceCandidates.length) {
+      return;
+    }
+
+    const queuedCandidates = [...this.pendingIceCandidates];
+    this.pendingIceCandidates = [];
+
+    for (const candidate of queuedCandidates) {
+      await this.addIceCandidateSafely(peer, candidate);
+    }
+  }
+
+  private async addIceCandidateSafely(peer: RTCPeerConnection, candidate: RTCIceCandidateInit): Promise<void> {
+    try {
+      await peer.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch {
+      this.pendingIceCandidates.push(candidate);
+    }
+  }
+
   private attachStreams(): void {
     if (this.localVideo && this.localStream()) {
       this.localVideo.srcObject = this.localStream();
@@ -343,6 +371,7 @@ export class WebRtcCallService {
 
   private resetRoomState(): void {
     this.handledIds.clear();
+    this.pendingIceCandidates = [];
     this.currentRoomId = null;
     this.remoteParticipantId = null;
     this.reconnectAttempts = 0;
