@@ -1,5 +1,6 @@
 ﻿import { computed, effect, Injectable, signal } from '@angular/core';
 import { CallEvent, CallSignalingService } from './call-signaling.service';
+import { resolveIceServers } from './runtime-config';
 import { ToastService } from './toast.service';
 
 @Injectable({ providedIn: 'root' })
@@ -12,6 +13,8 @@ export class WebRtcCallService {
   private currentRoomId: number | null = null;
   private remoteParticipantId: string | null = null;
   private reconnectAttempts = 0;
+  private reconnectTimeoutId: ReturnType<typeof setTimeout> | null = null;
+  private readonly iceServers = resolveIceServers();
 
   readonly localStream = signal<MediaStream | null>(null);
   readonly remoteStream = signal<MediaStream | null>(null);
@@ -127,6 +130,10 @@ export class WebRtcCallService {
   }
 
   async disconnect(): Promise<void> {
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
     this.peerConnection?.close();
     this.peerConnection = null;
     this.remoteStreamValue = new MediaStream();
@@ -157,7 +164,7 @@ export class WebRtcCallService {
     }
 
     const peer = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      iceServers: this.iceServers
     });
 
     const stream = this.localStream();
@@ -183,20 +190,21 @@ export class WebRtcCallService {
       if (peer.connectionState === 'connected') {
         this.state.set('connected');
         this.reconnectAttempts = 0;
+        if (this.reconnectTimeoutId) {
+          clearTimeout(this.reconnectTimeoutId);
+          this.reconnectTimeoutId = null;
+        }
         this.toast.success('Chamada conectada', 'Os dois participantes estão na mesma sala.', 2500);
       } else if (peer.connectionState === 'disconnected') {
-        this.state.set('reconnecting');
-        this.toast.info('Reconectando chamada', 'A conexão caiu e será renegociada.');
-        void this.tryAutoReconnect();
+        this.scheduleReconnect();
       } else if (peer.connectionState === 'failed') {
-        this.state.set('failed');
-        this.toast.error('Falha na chamada', 'Não foi possível manter a conexão.');
+        this.scheduleReconnect();
       }
     };
 
     peer.oniceconnectionstatechange = () => {
       if (peer.iceConnectionState === 'failed') {
-        this.state.set('failed');
+        this.scheduleReconnect();
       }
     };
 
@@ -286,12 +294,38 @@ export class WebRtcCallService {
   }
 
   private async tryAutoReconnect(): Promise<void> {
-    if (this.reconnectAttempts >= 2 || !this.remoteParticipantPresent()) {
+    if (this.reconnectAttempts >= 1 || !this.remoteParticipantPresent() || this.signaling.status() !== 'connected') {
       return;
     }
 
     this.reconnectAttempts += 1;
     await this.startCall(true);
+  }
+
+  private scheduleReconnect(): void {
+    if (!this.remoteParticipantPresent() || this.signaling.status() !== 'connected') {
+      this.state.set('failed');
+      return;
+    }
+
+    if (this.reconnectAttempts >= 1) {
+      this.state.set('failed');
+      this.toast.error('Falha na chamada', 'A mídia não conectou. Em redes móveis ou NAT mais restritos, configure um servidor TURN.');
+      return;
+    }
+
+    if (this.reconnectTimeoutId) {
+      return;
+    }
+
+    this.state.set('reconnecting');
+    this.toast.info('Reconectando chamada', 'A conexão caiu e será renegociada.', 2500);
+    this.reconnectTimeoutId = setTimeout(() => {
+      this.reconnectTimeoutId = null;
+      void this.tryAutoReconnect().catch(() => {
+        this.state.set('failed');
+      });
+    }, 1500);
   }
 
   private attachStreams(): void {
@@ -311,6 +345,10 @@ export class WebRtcCallService {
     this.handledIds.clear();
     this.currentRoomId = null;
     this.remoteParticipantId = null;
+    this.reconnectAttempts = 0;
+    if (this.reconnectTimeoutId) {
+      clearTimeout(this.reconnectTimeoutId);
+      this.reconnectTimeoutId = null;
+    }
   }
 }
-
