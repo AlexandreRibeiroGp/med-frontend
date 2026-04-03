@@ -12,6 +12,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         <div class="section-head">
           <p class="eyebrow">Medicos disponiveis</p>
           <h3>Escolha um medico com horario aberto</h3>
+          <p class="price-note">Consulta por Pix: <strong>R$ 49,90</strong></p>
         </div>
 
         <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
@@ -41,6 +42,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         <div class="section-head">
           <p class="eyebrow">Agendamento</p>
           <h3>Descreva o atendimento e escolha o horário</h3>
+          <p class="price-note">Valor da consulta: <strong>R$ 49,90</strong></p>
         </div>
 
         <label class="notes-field">
@@ -115,6 +117,13 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .section-head h3 {
       margin: 0;
       font-size: 1.5rem;
+    }
+    .price-note {
+      margin: 10px 0 0;
+      color: #516268;
+    }
+    .price-note strong {
+      color: #112027;
     }
     .eyebrow {
       margin: 0 0 8px;

@@ -150,6 +150,10 @@ function toOffsetIso(localDateTime: string): string {
               Motivo informado:
               <strong>{{ consultationReason.value }}</strong>
             </p>
+            <p>
+              Valor da consulta:
+              <strong>R$ 49,90</strong>
+            </p>
             <p class="muted">A consulta so sera liberada depois da confirmacao do pagamento.</p>
           </div>
 
