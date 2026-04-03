@@ -155,7 +155,6 @@ function toOffsetIso(localDateTime: string): string {
 
           <div class="checkout-actions">
             <button type="button" class="pix" (click)="submitCheckout('PIX')">Pagar com Pix</button>
-            <button type="button" class="card" (click)="submitCheckout('CARD')">Pagar com cartao</button>
             <button *ngIf="allowMockPayment" type="button" class="mock" (click)="simulateCheckout()">Simular pagamento</button>
             <button type="button" class="ghost" (click)="cancelCheckout()">Cancelar</button>
           </div>
@@ -373,8 +372,7 @@ function toOffsetIso(localDateTime: string): string {
       font-weight: 700;
       cursor: pointer;
     }
-    .checkout-actions .pix,
-    .checkout-actions .card {
+    .checkout-actions .pix {
       color: white;
       background: linear-gradient(135deg, #0e7b83, #0a5d65);
     }
