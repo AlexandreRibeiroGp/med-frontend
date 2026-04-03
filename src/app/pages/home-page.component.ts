@@ -24,6 +24,11 @@ import { RouterLink } from '@angular/router';
             Cadastro, autenticação JWT, agenda, consultas, prontuário e preparação para videochamada
             conectados ao backend disponível em {{ apiBaseLabel }}.
           </p>
+          <div class="price-highlight">
+            <span class="price-kicker">Consulta online</span>
+            <strong>R$ 49,90</strong>
+            <p>Pagamento por Pix com confirmação rápida para liberar o atendimento.</p>
+          </div>
           <div class="hero-actions">
             <a routerLink="/auth" class="solid">Acessar portal</a>
             <a routerLink="/dashboard" class="ghost">Ver painel</a>
@@ -119,6 +124,37 @@ import { RouterLink } from '@angular/router';
       max-width: 60ch;
       font-size: 1.08rem;
       color: #42555d;
+    }
+
+    .price-highlight {
+      margin: 24px 0 0;
+      display: inline-grid;
+      gap: 6px;
+      padding: 18px 22px;
+      border-radius: 24px;
+      background: linear-gradient(135deg, rgba(255, 142, 84, 0.14), rgba(14, 123, 131, 0.16));
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      box-shadow: 0 18px 42px rgba(17, 32, 39, 0.08);
+    }
+
+    .price-kicker {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.74rem;
+      color: #0e7b83;
+      font-weight: 800;
+    }
+
+    .price-highlight strong {
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1;
+      color: #112027;
+    }
+
+    .price-highlight p {
+      margin: 0;
+      color: #42555d;
+      max-width: 34ch;
     }
 
     a {
