@@ -9,11 +9,11 @@ import { HomePageComponent } from './pages/home-page.component';
 
 export const routes: Routes = [
   { path: 'calls/:appointmentId', component: CallRoomPageComponent, canActivate: [authGuard] },
-  { path: '', pathMatch: 'full', redirectTo: 'auth' },
   {
     path: '',
     component: AppShellComponent,
     children: [
+      { path: '', pathMatch: 'full', component: HomePageComponent },
       { path: 'auth', component: AuthPageComponent, canActivate: [guestGuard] },
       { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
       { path: 'admin', component: AdminPageComponent, canActivate: [authGuard, ownerGuard] }

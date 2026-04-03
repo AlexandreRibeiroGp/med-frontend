@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../core/auth.service';
@@ -22,8 +22,12 @@ import { filter, map, startWith } from 'rxjs';
         </nav>
 
         <ng-template #guestActions>
-          <div class="nav">
+          <div class="nav guest-nav">
+            <a href="#como-funciona">Como funciona</a>
+            <a href="#vantagens">Vantagens</a>
+            <a href="#contato">Contato</a>
             <a routerLink="/auth">Entrar</a>
+            <a routerLink="/auth" class="cta-link">Cadastrar</a>
           </div>
         </ng-template>
       </header>
@@ -39,6 +43,18 @@ import { filter, map, startWith } from 'rxjs';
       <main class="content" [class.auth-content]="isAuthRoute()">
         <router-outlet />
       </main>
+
+      <aside class="cookie-banner" *ngIf="showCookieBanner()">
+        <div class="cookie-copy">
+          <strong>Utilizamos cookies</strong>
+          <p>Usamos cookies para melhorar sua navegacao, medir acesso e personalizar a experiencia da MedCallOn.</p>
+        </div>
+        <div class="cookie-actions">
+          <button type="button" class="ghost-button" (click)="setCookiePreference('custom')">Personalizar</button>
+          <button type="button" class="ghost-button" (click)="setCookiePreference('rejected')">Rejeitar</button>
+          <button type="button" class="solid-button" (click)="setCookiePreference('accepted')">Aceitar todos</button>
+        </div>
+      </aside>
     </div>
   `,
   styles: `
@@ -127,6 +143,11 @@ import { filter, map, startWith } from 'rxjs';
       color: white;
     }
 
+    .guest-nav .cta-link {
+      background: linear-gradient(135deg, #1dbec4, #0f8b91);
+      color: white;
+    }
+
     .nav button {
       cursor: pointer;
     }
@@ -144,6 +165,67 @@ import { filter, map, startWith } from 'rxjs';
       padding: 0;
     }
 
+    .cookie-banner {
+      position: fixed;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      z-index: 120;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      padding: 20px 24px;
+      border-radius: 26px;
+      background: rgba(255, 253, 249, 0.96);
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      box-shadow: 0 24px 60px rgba(17, 32, 39, 0.18);
+      backdrop-filter: blur(18px);
+    }
+
+    .cookie-copy {
+      display: grid;
+      gap: 6px;
+      max-width: 760px;
+    }
+
+    .cookie-copy strong {
+      font-size: 1.05rem;
+    }
+
+    .cookie-copy p {
+      margin: 0;
+      color: #5d6d73;
+      line-height: 1.5;
+    }
+
+    .cookie-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .ghost-button,
+    .solid-button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .ghost-button {
+      background: rgba(17, 32, 39, 0.06);
+      color: #112027;
+    }
+
+    .solid-button {
+      background: linear-gradient(135deg, #1dbec4, #0f8b91);
+      color: white;
+    }
+
     @media (max-width: 720px) {
       .topbar,
       .context,
@@ -154,12 +236,20 @@ import { filter, map, startWith } from 'rxjs';
       .brand-logo {
         height: 44px;
       }
+      .cookie-banner {
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   `
 })
 export class AppShellComponent {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly showCookieBanner = signal(false);
   readonly isAuthRoute = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -183,8 +273,19 @@ export class AppShellComponent {
     return 'Visitante';
   });
 
+  constructor() {
+    const cookiePreference = window.localStorage.getItem('medcallon-cookie-preference');
+    this.showCookieBanner.set(!cookiePreference);
+  }
+
   logout(): void {
     this.auth.logout();
     void this.router.navigateByUrl('/auth');
   }
+
+  setCookiePreference(value: 'accepted' | 'rejected' | 'custom'): void {
+    window.localStorage.setItem('medcallon-cookie-preference', value);
+    this.showCookieBanner.set(false);
+  }
 }
+

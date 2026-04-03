@@ -16,9 +16,15 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <a routerLink="/" class="back">Voltar</a>
         <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
         <div class="hero-copy">
-          <p class="tag">Portal clínico</p>
+          <p class="tag">Portal clinico</p>
           <h1>Entre ou crie sua conta</h1>
-          <p>Acesse consultas, agenda e acompanhamento em um só lugar.</p>
+          <p>Acesse consultas, agenda e acompanhamento em um so lugar.</p>
+        </div>
+
+        <div class="price-banner">
+          <span>Consulta online</span>
+          <strong>R$ 49,90</strong>
+          <small>Pagamento por Pix para liberar o atendimento.</small>
         </div>
 
         <div class="switcher">
@@ -39,13 +45,13 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <p *ngIf="controlError(loginForm, 'password') as error" class="field-error">{{ error }}</p>
           <button [disabled]="loading()" type="submit">Entrar</button>
           <button type="button" class="text-link" (click)="openForgotPassword()">Esqueci minha senha</button>
-          <p class="helper-text">Se você é médico, use o e-mail e a senha cadastrados pela administração da clínica.</p>
+          <p class="helper-text">Se voce e medico, use o e-mail e a senha cadastrados pela administracao da clinica.</p>
         </form>
 
         <form *ngIf="mode() === 'forgot'" [formGroup]="forgotPasswordForm" (ngSubmit)="submitForgotPassword()">
           <div class="form-copy">
             <h2>Recuperar senha</h2>
-            <p>Informe seu e-mail para receber o link de redefinição.</p>
+            <p>Informe seu e-mail para receber o link de redefinicao.</p>
           </div>
           <input formControlName="email" placeholder="E-mail" type="email" />
           <p *ngIf="controlError(forgotPasswordForm, 'email') as error" class="field-error">{{ error }}</p>
@@ -84,9 +90,38 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="profession" placeholder="Profissao" />
           <input formControlName="address" placeholder="Endereco completo: rua, numero, complemento e CEP" />
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
-          <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o médico.</p>
+          <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o medico.</p>
         </form>
       </section>
+
+      <aside class="panel showcase">
+        <p class="showcase-tag">Atendimento online</p>
+        <h2>Comece sua consulta sem sair de casa.</h2>
+        <p class="showcase-copy">
+          Entre no portal, escolha o atendimento e siga com pagamento por Pix para liberar a jornada com o medico.
+        </p>
+
+        <div class="showcase-price">
+          <span>Consulta a partir de</span>
+          <strong>R$ 49,90</strong>
+          <small>Valor pensado para um fluxo rapido de conversao.</small>
+        </div>
+
+        <div class="showcase-points">
+          <article>
+            <strong>24h</strong>
+            <p>Portal pronto para receber pacientes a qualquer hora.</p>
+          </article>
+          <article>
+            <strong>Pix</strong>
+            <p>Pagamento simples para seguir direto ao atendimento.</p>
+          </article>
+          <article>
+            <strong>Online</strong>
+            <p>Agenda, documentos e acompanhamento em um unico ambiente.</p>
+          </article>
+        </div>
+      </aside>
     </div>
   `,
   styles: `
@@ -103,19 +138,36 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .shell {
-      width: min(540px, 100%);
-      background: rgba(255, 253, 249, 0.94);
-      border: 1px solid rgba(255, 255, 255, 0.18);
+      width: min(1180px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 540px) minmax(320px, 1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .panel {
       border-radius: 28px;
-      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.18);
       box-shadow: 0 28px 70px rgba(3, 17, 23, 0.28);
       backdrop-filter: blur(18px);
     }
 
-    .panel {
+    .forms {
       display: grid;
       gap: 14px;
       padding: 28px;
+      background: rgba(255, 253, 249, 0.94);
+    }
+
+    .showcase {
+      padding: 36px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 28%),
+        linear-gradient(145deg, rgba(29, 190, 196, 0.96), rgba(18, 89, 122, 0.96));
+      color: white;
+      display: grid;
+      align-content: space-between;
+      gap: 22px;
     }
 
     .back,
@@ -141,11 +193,16 @@ import { TelemedApiService } from '../core/telemed-api.service';
       text-align: center;
     }
 
-    h1 {
-      font-size: clamp(1.7rem, 3vw, 2.3rem);
-      line-height: 1.02;
+    .hero-copy h1,
+    .showcase h2,
+    .form-copy h2 {
       margin: 0;
+      line-height: 1.02;
       letter-spacing: -0.03em;
+    }
+
+    .hero-copy h1 {
+      font-size: clamp(1.7rem, 3vw, 2.3rem);
     }
 
     .hero-copy p {
@@ -154,8 +211,37 @@ import { TelemedApiService } from '../core/telemed-api.service';
       line-height: 1.45;
     }
 
-    .forms {
-      background: transparent;
+    .price-banner {
+      display: grid;
+      gap: 6px;
+      padding: 16px 18px;
+      border-radius: 22px;
+      background: linear-gradient(135deg, rgba(29, 190, 196, 0.12), rgba(255, 142, 84, 0.16));
+      border: 1px solid rgba(17, 32, 39, 0.08);
+    }
+
+    .price-banner span,
+    .showcase-tag,
+    .showcase-price span {
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 0.74rem;
+      font-weight: 800;
+    }
+
+    .price-banner span {
+      color: #0b7480;
+    }
+
+    .price-banner strong,
+    .showcase-price strong {
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      line-height: 1;
+    }
+
+    .price-banner small {
+      color: #5d6d73;
+      line-height: 1.45;
     }
 
     .switcher {
@@ -200,18 +286,23 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .form-copy h2 {
-      margin: 0;
       font-size: 1.35rem;
-      line-height: 1.05;
       color: #112027;
       text-align: center;
     }
 
     .form-copy p,
-    .helper-text {
+    .helper-text,
+    .showcase-copy,
+    .showcase-points p,
+    .showcase-price small {
       margin: 0;
-      color: #5d6d73;
       line-height: 1.5;
+    }
+
+    .form-copy p,
+    .helper-text {
+      color: #5d6d73;
     }
 
     input {
@@ -272,16 +363,71 @@ import { TelemedApiService } from '../core/telemed-api.service';
       line-height: 1.25;
     }
 
+    .showcase-tag,
+    .showcase-price span {
+      color: rgba(255, 255, 255, 0.78);
+    }
+
+    .showcase h2 {
+      font-size: clamp(2.2rem, 4vw, 3.6rem);
+      max-width: 9ch;
+    }
+
+    .showcase-copy {
+      max-width: 34ch;
+      color: rgba(255, 255, 255, 0.86);
+    }
+
+    .showcase-price {
+      display: grid;
+      gap: 8px;
+      padding: 22px;
+      border-radius: 26px;
+      background: rgba(10, 28, 39, 0.24);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    .showcase-points {
+      display: grid;
+      gap: 12px;
+    }
+
+    .showcase-points article {
+      padding: 18px 20px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .showcase-points strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        grid-template-columns: 1fr;
+      }
+
+      .showcase {
+        order: -1;
+      }
+    }
+
     @media (max-width: 900px) {
       .brand-logo {
         height: 76px;
         width: calc(100% + 16px);
         margin-inline: -8px;
       }
-      .panel {
+
+      .forms,
+      .showcase {
         padding: 22px 18px;
       }
-      h1 {
+
+      .hero-copy h1 {
         font-size: 1.45rem;
       }
     }
