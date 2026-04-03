@@ -24,10 +24,10 @@ import { filter, map, startWith } from 'rxjs';
         <ng-template #guestActions>
           <div class="nav guest-nav">
             <a href="#como-funciona">Como funciona</a>
-            <a href="#vantagens">Vantagens</a>
-            <a href="#contato">Contato</a>
+            <a href="#medicos">Nossos medicos</a>
+            <a href="#faq">FAQ</a>
             <a routerLink="/auth">Entrar</a>
-            <a routerLink="/auth" class="cta-link">Cadastrar</a>
+            <a routerLink="/auth" class="cta-link">Quero me consultar</a>
           </div>
         </ng-template>
       </header>
@@ -47,7 +47,13 @@ import { filter, map, startWith } from 'rxjs';
       <aside class="cookie-banner" *ngIf="showCookieBanner()">
         <div class="cookie-copy">
           <strong>Utilizamos cookies</strong>
-          <p>Usamos cookies para melhorar sua navegacao, medir acesso e personalizar a experiencia da MedCallOn.</p>
+          <p>
+            Usamos cookies para melhorar sua navegacao, medir acesso e personalizar a experiencia da
+            MedCallOn. Leia a
+            <a routerLink="/legal/privacidade">Politica de Privacidade</a>
+            e a
+            <a routerLink="/legal/cookies">Politica de Cookies</a>.
+          </p>
         </div>
         <div class="cookie-actions">
           <button type="button" class="ghost-button" (click)="setCookiePreference('custom')">Personalizar</button>
@@ -61,10 +67,7 @@ import { filter, map, startWith } from 'rxjs';
     :host {
       display: block;
       min-height: 100vh;
-      background:
-        radial-gradient(circle at top right, rgba(255, 142, 84, 0.16), transparent 20%),
-        radial-gradient(circle at left center, rgba(14, 123, 131, 0.16), transparent 18%),
-        #f0ece2;
+      background: #ffffff;
       color: #112027;
       font-family: 'Segoe UI', sans-serif;
     }
@@ -89,7 +92,7 @@ import { filter, map, startWith } from 'rxjs';
       top: 0;
       z-index: 100;
       backdrop-filter: blur(14px);
-      background: rgba(240, 236, 226, 0.82);
+      background: rgba(255, 255, 255, 0.92);
       border-bottom: 1px solid rgba(17, 32, 39, 0.08);
     }
 
@@ -197,6 +200,12 @@ import { filter, map, startWith } from 'rxjs';
       margin: 0;
       color: #5d6d73;
       line-height: 1.5;
+    }
+
+    .cookie-copy a {
+      color: #0f8b91;
+      font-weight: 700;
+      text-decoration: none;
     }
 
     .cookie-actions {

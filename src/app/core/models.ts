@@ -3,6 +3,7 @@ export type DoctorSpecialty = 'GERAL';
 export type AppointmentStatus = 'PENDING_PAYMENT' | 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED';
 export type PaymentMethod = 'PIX' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';
+export type LegalDocumentType = 'PRIVACY_POLICY' | 'TERMS_OF_USE' | 'COOKIE_POLICY';
 
 export interface UserResponse {
   id: number;
@@ -30,6 +31,8 @@ export interface RegisterPatientRequest {
   healthInsurance?: string | null;
   profession?: string | null;
   address?: string | null;
+  acceptedDocumentIds?: number[];
+  acceptedTelemedicine?: boolean;
 }
 
 export interface RegisterDoctorRequest {
@@ -147,4 +150,16 @@ export interface PatientProfileResponse {
   healthInsurance: string | null;
   profession: string | null;
   address: string | null;
+}
+
+export interface LegalDocumentResponse {
+  id: number;
+  documentType: LegalDocumentType;
+  versionNumber: number;
+  title: string;
+  summary: string | null;
+  content: string;
+  active: boolean;
+  publishedAt: string | null;
+  updatedAt: string;
 }

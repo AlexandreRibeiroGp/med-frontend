@@ -5,6 +5,7 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { AuthService } from '../core/auth.service';
+import { LegalDocumentResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 
 @Component({
@@ -89,9 +90,34 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="birthDate" placeholder="Nascimento" type="date" />
           <input formControlName="profession" placeholder="Profissao" />
           <input formControlName="address" placeholder="Endereco completo: rua, numero, complemento e CEP" />
+          <label class="checkbox-line">
+            <input type="checkbox" [formControl]="termsConsentControl" />
+            <span>
+              Li e aceito os
+              <a routerLink="/legal/termos">Termos de Uso</a>
+              e a
+              <a routerLink="/legal/privacidade">Politica de Privacidade</a>.
+            </span>
+          </label>
+          <p *ngIf="termsConsentControl.touched && termsConsentControl.invalid" class="field-error">
+            O aceite dos documentos legais e obrigatorio.
+          </p>
+          <label class="checkbox-line">
+            <input type="checkbox" [formControl]="telemedicineConsentControl" />
+            <span>Concordo com atendimento por telemedicina, quando aplicavel, e com o registro em prontuario eletronico.</span>
+          </label>
+          <p *ngIf="telemedicineConsentControl.touched && telemedicineConsentControl.invalid" class="field-error">
+            O consentimento para telemedicina e obrigatorio para cadastro e atendimento remoto.
+          </p>
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
           <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o medico.</p>
         </form>
+
+        <div class="legal-links">
+          <a routerLink="/legal/privacidade">Politica de Privacidade</a>
+          <a routerLink="/legal/termos">Termos de Uso</a>
+          <a routerLink="/legal/cookies">Politica de Cookies</a>
+        </div>
       </section>
 
       <aside class="panel showcase">
@@ -363,6 +389,45 @@ import { TelemedApiService } from '../core/telemed-api.service';
       line-height: 1.25;
     }
 
+    .checkbox-line {
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      color: #51636b;
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+
+    .checkbox-line input {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+      padding: 0;
+      border-radius: 6px;
+    }
+
+    .checkbox-line a {
+      color: #0b7480;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .legal-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      padding-top: 6px;
+    }
+
+    .legal-links a {
+      color: #0b7480;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
     .showcase-tag,
     .showcase-price span {
       color: rgba(255, 255, 255, 0.78);
@@ -446,6 +511,7 @@ export class AuthPageComponent {
   readonly error = signal('');
   readonly message = signal('');
   readonly resetToken = signal('');
+  readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
   private errorTimer: number | null = null;
   private messageTimer: number | null = null;
 
@@ -473,8 +539,15 @@ export class AuthPageComponent {
     profession: [''],
     address: ['']
   });
+  readonly termsConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
+  readonly telemedicineConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
 
   constructor() {
+    this.api.getPublicLegalDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (documents) => this.legalDocuments.set(documents),
+      error: () => this.setError('Nao foi possivel carregar os documentos legais atuais.')
+    });
+
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const token = params.get('token')?.trim() ?? '';
       this.resetToken.set(token);
@@ -502,13 +575,28 @@ export class AuthPageComponent {
   }
 
   submitPatient(): void {
-    if (this.patientForm.invalid) {
+    if (this.patientForm.invalid || this.termsConsentControl.invalid || this.telemedicineConsentControl.invalid) {
       this.patientForm.markAllAsTouched();
+      this.termsConsentControl.markAsTouched();
+      this.telemedicineConsentControl.markAsTouched();
       this.setError('Revise os campos destacados antes de continuar.');
       return;
     }
 
-    this.runRequest(this.api.registerPatient(this.patientForm.getRawValue()), 'Paciente cadastrado com sucesso.');
+    const acceptedDocumentIds = this.requiredLegalDocumentIds();
+    if (acceptedDocumentIds.length < 2) {
+      this.setError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
+      return;
+    }
+
+    this.runRequest(
+      this.api.registerPatient({
+        ...this.patientForm.getRawValue(),
+        acceptedDocumentIds,
+        acceptedTelemedicine: true
+      }),
+      'Paciente cadastrado com sucesso.'
+    );
   }
 
   submitForgotPassword(): void {
@@ -573,6 +661,12 @@ export class AuthPageComponent {
     return 'As senhas informadas precisam ser iguais.';
   }
 
+  private requiredLegalDocumentIds(): number[] {
+    return this.legalDocuments()
+      .filter((document) => document.documentType === 'TERMS_OF_USE' || document.documentType === 'PRIVACY_POLICY')
+      .map((document) => document.id);
+  }
+
   controlError(form: { get(path: string): AbstractControl | null }, controlName: string): string {
     const control = form.get(controlName);
     if (!control || !(control.touched || control.dirty) || !control.errors) {
@@ -611,6 +705,8 @@ export class AuthPageComponent {
           this.loginForm.reset();
           this.forgotPasswordForm.reset();
           this.resetPasswordForm.reset();
+          this.termsConsentControl.reset(false);
+          this.telemedicineConsentControl.reset(false);
           void this.router.navigate([], { queryParams: {}, replaceUrl: true });
         },
         error: (error: { error?: { message?: string } }) => {

@@ -11,6 +11,7 @@ import {
   AppointmentResponse,
   AvailabilitySlotResponse,
   DoctorResponse,
+  LegalDocumentResponse,
   MedicalRecordResponse,
   PaymentMethod,
   PaymentResponse,
@@ -155,6 +156,19 @@ function toOffsetIso(localDateTime: string): string {
               <strong>R$ 49,90</strong>
             </p>
             <p class="muted">A consulta so sera liberada depois da confirmacao do pagamento.</p>
+            <label class="consent-line">
+              <input type="checkbox" [formControl]="checkoutConsentControl" />
+              <span>
+                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuario
+                eletronico e com os
+                <a routerLink="/legal/termos">Termos de Uso</a>
+                e a
+                <a routerLink="/legal/privacidade">Politica de Privacidade</a>.
+              </span>
+            </label>
+            <p *ngIf="checkoutConsentControl.touched && checkoutConsentControl.invalid" class="field-error">
+              O consentimento para telemedicina e obrigatorio antes do pagamento.
+            </p>
           </div>
 
           <div class="checkout-actions">
@@ -353,6 +367,7 @@ function toOffsetIso(localDateTime: string): string {
     .feedback, .error { margin: 0; padding: 14px 16px; border-radius: 18px; }
     .feedback { background: #e6f6f2; color: #0f684f; }
     .error { background: #ffe9e3; color: #a33b19; }
+    .field-error { margin: -8px 0 0; color: #a33b19; font-size: 0.84rem; line-height: 1.35; }
     .checkout-card {
       border-radius: 28px;
       background: rgba(255, 253, 249, 0.86);
@@ -367,6 +382,26 @@ function toOffsetIso(localDateTime: string): string {
       display: flex;
       gap: 12px;
       flex-wrap: wrap;
+    }
+    .consent-line {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: 18px minmax(0, 1fr);
+      gap: 10px;
+      align-items: start;
+      color: #51636b;
+      font-size: 0.94rem;
+      line-height: 1.5;
+    }
+    .consent-line input {
+      margin-top: 3px;
+      width: 18px;
+      height: 18px;
+    }
+    .consent-line a {
+      color: #0f8b91;
+      font-weight: 700;
+      text-decoration: none;
     }
     .checkout-actions button {
       border: 0;
@@ -468,6 +503,7 @@ export class DashboardPageComponent {
   private feedbackTimer: number | null = null;
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly specialties = signal<string[]>([]);
+  readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
   readonly selectedDoctor = signal<DoctorResponse | null>(null);
   readonly selectedDoctorSlots = signal<AvailabilitySlotResponse[]>([]);
   readonly availability = signal<AvailabilitySlotResponse[]>([]);
@@ -510,6 +546,7 @@ export class DashboardPageComponent {
   readonly specialtyFilter = this.fb.nonNullable.control('');
   readonly patientOccupation = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]);
   readonly consultationReason = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(5)]);
+  readonly checkoutConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
   readonly availabilityForm = this.fb.nonNullable.group({
     date: ['', Validators.required],
     startHour: ['07', Validators.required],
@@ -571,6 +608,10 @@ export class DashboardPageComponent {
   readonly allowMockPayment = false;
   constructor() {
     this.section.set(this.primarySection());
+    this.api.getPublicLegalDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (documents) => this.legalDocuments.set(documents),
+      error: () => this.handleError('Nao foi possivel carregar os documentos legais atuais.')
+    });
     this.destroyRef.onDestroy(() => {
       this.callService.disconnect();
       this.stopPixPaymentPolling();
@@ -727,6 +768,7 @@ export class DashboardPageComponent {
     this.pendingBookingSlot.set(null);
     this.activePixPayment.set(null);
     this.stopPixPaymentPolling();
+    this.checkoutConsentControl.reset(false);
   }
 
   submitCheckout(paymentMethod: PaymentMethod): void {
@@ -734,7 +776,17 @@ export class DashboardPageComponent {
     const slot = this.pendingBookingSlot();
     const occupation = this.patientOccupation.getRawValue().trim();
     const reason = this.consultationReason.getRawValue().trim();
+    const acceptedDocumentIds = this.requiredLegalDocumentIds();
     if (!doctor || !slot) {
+      return;
+    }
+    if (this.checkoutConsentControl.invalid) {
+      this.checkoutConsentControl.markAsTouched();
+      this.handleError('Aceite o consentimento de telemedicina antes de seguir para o pagamento.');
+      return;
+    }
+    if (acceptedDocumentIds.length < 2) {
+      this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
       return;
     }
     if (!occupation || !reason) {
@@ -748,7 +800,9 @@ export class DashboardPageComponent {
           availabilitySlotId: slot.id,
           appointmentType: 'VIDEO',
           notes: reason,
-          paymentMethod
+          paymentMethod,
+          acceptedDocumentIds,
+          acceptedTelemedicine: true
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -768,6 +822,7 @@ export class DashboardPageComponent {
             this.activePixPayment.set(null);
             this.stopPixPaymentPolling();
             this.consultationReason.reset('');
+            this.checkoutConsentControl.reset(false);
             this.selectDoctor(doctor);
             this.loadBaseData();
             if (checkout.payment.checkoutUrl) {
@@ -791,7 +846,17 @@ export class DashboardPageComponent {
     const slot = this.pendingBookingSlot();
     const occupation = this.patientOccupation.getRawValue().trim();
     const reason = this.consultationReason.getRawValue().trim();
+    const acceptedDocumentIds = this.requiredLegalDocumentIds();
     if (!doctor || !slot) {
+      return;
+    }
+    if (this.checkoutConsentControl.invalid) {
+      this.checkoutConsentControl.markAsTouched();
+      this.handleError('Aceite o consentimento de telemedicina antes de seguir para o pagamento.');
+      return;
+    }
+    if (acceptedDocumentIds.length < 2) {
+      this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
       return;
     }
     if (!occupation || !reason) {
@@ -805,7 +870,9 @@ export class DashboardPageComponent {
           availabilitySlotId: slot.id,
           appointmentType: 'VIDEO',
           notes: reason,
-          paymentMethod: 'PIX'
+          paymentMethod: 'PIX',
+          acceptedDocumentIds,
+          acceptedTelemedicine: true
         })
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
@@ -819,6 +886,7 @@ export class DashboardPageComponent {
                   this.activePixPayment.set(null);
                   this.stopPixPaymentPolling();
                   this.consultationReason.reset('');
+                  this.checkoutConsentControl.reset(false);
                   this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
                   this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
                   this.selectDoctor(doctor);
@@ -1164,6 +1232,12 @@ export class DashboardPageComponent {
       default:
         return 'Aguardando confirmacao';
     }
+  }
+
+  private requiredLegalDocumentIds(): number[] {
+    return this.legalDocuments()
+      .filter((document) => document.documentType === 'TERMS_OF_USE' || document.documentType === 'PRIVACY_POLICY')
+      .map((document) => document.id);
   }
 
   private loadBaseData(): void {

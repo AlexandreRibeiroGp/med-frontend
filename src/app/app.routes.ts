@@ -6,6 +6,7 @@ import { AdminPageComponent } from './pages/admin-page.component';
 import { CallRoomPageComponent } from './pages/call-room-page.component';
 import { DashboardPageComponent } from './pages/dashboard-page.component';
 import { HomePageComponent } from './pages/home-page.component';
+import { LegalPageComponent } from './pages/legal-page.component';
 
 export const routes: Routes = [
   { path: 'calls/:appointmentId', component: CallRoomPageComponent, canActivate: [authGuard] },
@@ -14,6 +15,7 @@ export const routes: Routes = [
     component: AppShellComponent,
     children: [
       { path: '', pathMatch: 'full', component: HomePageComponent },
+      { path: 'legal/:document', component: LegalPageComponent },
       { path: 'auth', component: AuthPageComponent, canActivate: [guestGuard] },
       { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },
       { path: 'admin', component: AdminPageComponent, canActivate: [authGuard, ownerGuard] }

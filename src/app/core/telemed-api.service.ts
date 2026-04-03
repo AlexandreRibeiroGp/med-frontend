@@ -7,6 +7,7 @@ import {
   AppointmentStatus,
   AvailabilitySlotResponse,
   DoctorResponse,
+  LegalDocumentResponse,
   MedicalRecordResponse,
   PaymentResponse,
   PatientProfileResponse,
@@ -39,6 +40,21 @@ export class TelemedApiService {
 
   registerAdmin(payload: RegisterPatientRequest) {
     return this.http.post(`${API_URL}/auth/register/admins`, payload);
+  }
+
+  getPublicLegalDocuments() {
+    return this.http.get<LegalDocumentResponse[]>(`${API_URL}/legal-documents/public`);
+  }
+
+  getAdminLegalDocuments() {
+    return this.http.get<LegalDocumentResponse[]>(`${API_URL}/legal-documents`);
+  }
+
+  updateLegalDocument(
+    documentType: LegalDocumentResponse['documentType'],
+    payload: { title: string; summary?: string | null; content: string }
+  ) {
+    return this.http.put<LegalDocumentResponse>(`${API_URL}/legal-documents/${documentType}`, payload);
   }
 
   getUsers(): Observable<UserResponse[]> {
@@ -87,6 +103,8 @@ export class TelemedApiService {
     appointmentType: 'VIDEO' | 'IN_PERSON';
     notes?: string | null;
     paymentMethod: PaymentMethod;
+    acceptedDocumentIds: number[];
+    acceptedTelemedicine: boolean;
   }) {
     return this.http.post<AppointmentCheckoutResponse>(`${API_URL}/appointments/checkout`, payload);
   }

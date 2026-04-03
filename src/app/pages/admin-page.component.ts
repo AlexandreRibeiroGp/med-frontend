@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of, switchMap } from 'rxjs';
 import { AuthService } from '../core/auth.service';
-import { DoctorResponse, DoctorSpecialty, UserResponse } from '../core/models';
+import { DoctorResponse, DoctorSpecialty, LegalDocumentResponse, LegalDocumentType, UserResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 
 @Component({
@@ -73,10 +73,82 @@ import { TelemedApiService } from '../core/telemed-api.service';
                 </div>
                 <div class="doctor-summary-text">
                   <strong>{{ doctor.user.fullName }}</strong>
-                  <span>{{ specialtyLabel(doctor.specialty) }} · {{ doctor.crm }}</span>
+                  <span>{{ specialtyLabel(doctor.specialty) }} - {{ doctor.crm }}</span>
                 </div>
               </div>
             </div>
+          </div>
+        </article>
+
+        <article class="card wide">
+          <h2>Documentos legais ativos</h2>
+          <div class="legal-grid">
+            <section class="legal-editor">
+              <div class="legal-head">
+                <div>
+                  <h3>Termos de uso</h3>
+                  <small>{{ legalVersionLabel('TERMS_OF_USE') }}</small>
+                </div>
+                <button type="button" class="secondary-button" (click)="submitLegalDocument('TERMS_OF_USE', termsForm)">
+                  Publicar nova versao
+                </button>
+              </div>
+              <form [formGroup]="termsForm">
+                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="summary" placeholder="Resumo" />
+                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+              </form>
+            </section>
+
+            <section class="legal-editor">
+              <div class="legal-head">
+                <div>
+                  <h3>Politica de privacidade</h3>
+                  <small>{{ legalVersionLabel('PRIVACY_POLICY') }}</small>
+                </div>
+                <button type="button" class="secondary-button" (click)="submitLegalDocument('PRIVACY_POLICY', privacyForm)">
+                  Publicar nova versao
+                </button>
+              </div>
+              <form [formGroup]="privacyForm">
+                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="summary" placeholder="Resumo" />
+                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+              </form>
+            </section>
+
+            <section class="legal-editor">
+              <div class="legal-head">
+                <div>
+                  <h3>Politica de cookies</h3>
+                  <small>{{ legalVersionLabel('COOKIE_POLICY') }}</small>
+                </div>
+                <button type="button" class="secondary-button" (click)="submitLegalDocument('COOKIE_POLICY', cookiesForm)">
+                  Publicar nova versao
+                </button>
+              </div>
+              <form [formGroup]="cookiesForm">
+                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="summary" placeholder="Resumo" />
+                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+              </form>
+            </section>
+          </div>
+        </article>
+
+        <article class="card wide">
+          <h2>Checklist operacional por prioridade</h2>
+          <div class="ops-grid">
+            <article class="ops-item" *ngFor="let item of operationalChecklist">
+              <div class="ops-head">
+                <strong>{{ item.title }}</strong>
+                <span class="priority" [class.high]="item.priority === 'Alta'" [class.medium]="item.priority === 'Media'">
+                  {{ item.priority }}
+                </span>
+              </div>
+              <p>{{ item.description }}</p>
+              <small>{{ item.action }}</small>
+            </article>
           </div>
         </article>
       </section>
@@ -148,6 +220,87 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 12px;
     }
 
+    .legal-grid {
+      display: grid;
+      gap: 18px;
+    }
+
+    .ops-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .legal-editor {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(17, 32, 39, 0.06);
+    }
+
+    .legal-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .legal-head h3,
+    .legal-head small {
+      margin: 0;
+    }
+
+    .legal-head small {
+      color: #5b6a70;
+    }
+
+    .ops-item {
+      display: grid;
+      gap: 10px;
+      padding: 18px;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.72);
+      border: 1px solid rgba(17, 32, 39, 0.06);
+    }
+
+    .ops-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .ops-item p,
+    .ops-item small {
+      margin: 0;
+      color: #5b6a70;
+      line-height: 1.6;
+    }
+
+    .priority {
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      background: #e8f7f5;
+      color: #0e7b83;
+      flex-shrink: 0;
+    }
+
+    .priority.high {
+      background: #ffe8e0;
+      color: #b54a1c;
+    }
+
+    .priority.medium {
+      background: #fff4de;
+      color: #9a6812;
+    }
+
     input,
     select,
     textarea,
@@ -193,6 +346,13 @@ import { TelemedApiService } from '../core/telemed-api.service';
       cursor: pointer;
       background: linear-gradient(135deg, #ff8e54, #d94f04);
       color: white;
+    }
+
+    .secondary-button {
+      width: auto;
+      background: #112027;
+      color: white;
+      box-shadow: none;
     }
 
     .check {
@@ -278,7 +438,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     @media (max-width: 980px) {
-      .grid {
+      .grid,
+      .ops-grid {
         grid-template-columns: 1fr;
       }
     }
@@ -293,10 +454,49 @@ export class AdminPageComponent {
   readonly specialtyOptions: DoctorSpecialty[] = ['GERAL'];
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly users = signal<UserResponse[]>([]);
+  readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
   readonly error = signal('');
   readonly message = signal('');
   readonly loading = signal(false);
   readonly doctorPhotoName = signal('');
+  readonly operationalChecklist = [
+    {
+      priority: 'Alta',
+      title: 'Completar identificacao juridica nas politicas',
+      description: 'Preencha razao social, CNPJ, endereco, canal de contato e encarregado de dados nos textos publicados.',
+      action: 'Ajuste os tres documentos legais antes de anunciar ou captar pacientes em escala.'
+    },
+    {
+      priority: 'Alta',
+      title: 'Formalizar estrutura medica da operacao',
+      description: 'Defina responsavel tecnico, vinculo com os medicos e valide o enquadramento da operacao perante CRM e regras locais.',
+      action: 'Isso depende de documentacao externa e nao pode ser resolvido so com codigo.'
+    },
+    {
+      priority: 'Alta',
+      title: 'Assinatura digital para documentos clinicos',
+      description: 'Receitas, atestados e outros documentos validos exigem fluxo de assinatura apropriado quando emitidos ao paciente.',
+      action: 'Feche o provedor e a politica operacional antes de liberar emissao ampla em producao.'
+    },
+    {
+      priority: 'Media',
+      title: 'Contratos com operadores e prestadores',
+      description: 'Formalize relacoes com medicos, hospedagem, mensageria, pagamentos e quaisquer fornecedores que tratem dados sensiveis.',
+      action: 'Mantenha DPA, clausulas de confidencialidade e matriz de compartilhamento.'
+    },
+    {
+      priority: 'Media',
+      title: 'Trilha de auditoria, retencao e backup',
+      description: 'Defina por quanto tempo manter consentimentos, prontuarios, logs de acesso e como recuperar dados em incidente.',
+      action: 'Documente a politica e verifique se a infraestrutura acompanha esse prazo.'
+    },
+    {
+      priority: 'Media',
+      title: 'Plano de resposta a incidentes e suporte LGPD',
+      description: 'Prepare fluxo para incidente de seguranca, atendimento ao titular e revisao periodica das permissoes internas.',
+      action: 'Nomeie responsaveis e crie procedimento pratico para producao.'
+    }
+  ] as const;
   private selectedDoctorPhoto: File | null = null;
   private errorTimer: number | null = null;
   private messageTimer: number | null = null;
@@ -322,8 +522,17 @@ export class AdminPageComponent {
     healthInsurance: ['']
   });
 
+  readonly termsForm = this.buildLegalForm();
+  readonly privacyForm = this.buildLegalForm();
+  readonly cookiesForm = this.buildLegalForm();
+
   constructor() {
     this.loadData();
+  }
+
+  legalVersionLabel(documentType: LegalDocumentType): string {
+    const document = this.legalDocuments().find((item) => item.documentType === documentType);
+    return document ? `Versao ${document.versionNumber}` : 'Sem versao ativa';
   }
 
   specialtyLabel(specialty: DoctorSpecialty): string {
@@ -342,11 +551,7 @@ export class AdminPageComponent {
     this.message.set('');
     this.api.registerDoctor(this.doctorForm.getRawValue())
       .pipe(
-        switchMap((doctor) =>
-          this.selectedDoctorPhoto
-            ? this.api.uploadDoctorPhoto(this.selectedDoctorPhoto)
-              : of(doctor)
-        ),
+        switchMap((doctor) => this.selectedDoctorPhoto ? this.api.uploadDoctorPhoto(this.selectedDoctorPhoto) : of(doctor)),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe({
@@ -415,6 +620,36 @@ export class AdminPageComponent {
       });
   }
 
+  submitLegalDocument(documentType: LegalDocumentType, form: FormGroup): void {
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.setError('Revise os campos do documento legal antes de publicar.');
+      return;
+    }
+
+    const raw = form.getRawValue() as { title: string; summary: string; content: string };
+    this.loading.set(true);
+    this.error.set('');
+    this.message.set('');
+    this.api.updateLegalDocument(documentType, {
+      title: raw.title.trim(),
+      summary: raw.summary.trim(),
+      content: raw.content.trim()
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.loading.set(false);
+          this.setMessage('Documento legal publicado com sucesso.');
+          this.loadData();
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.loading.set(false);
+          this.setError(error.error?.message ?? 'Nao foi possivel publicar o documento legal.');
+        }
+      });
+  }
+
   private loadData(): void {
     if (!this.auth.isOwner()) {
       return;
@@ -422,17 +657,42 @@ export class AdminPageComponent {
 
     forkJoin({
       users: this.api.getUsers(),
-      doctors: this.api.getDoctors()
+      doctors: this.api.getDoctors(),
+      legalDocuments: this.api.getAdminLegalDocuments()
     })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: ({ users, doctors }) => {
+        next: ({ users, doctors, legalDocuments }) => {
           this.error.set('');
           this.users.set(users);
           this.doctors.set(doctors);
+          this.legalDocuments.set(legalDocuments);
+          this.patchLegalForms(legalDocuments);
         },
         error: () => this.setError('Nao foi possivel carregar os dados internos.')
       });
+  }
+
+  private buildLegalForm() {
+    return this.fb.nonNullable.group({
+      title: ['', Validators.required],
+      summary: [''],
+      content: ['', [Validators.required, Validators.minLength(40)]]
+    });
+  }
+
+  private patchLegalForms(documents: LegalDocumentResponse[]): void {
+    this.patchLegalForm(this.termsForm, documents.find((document) => document.documentType === 'TERMS_OF_USE'));
+    this.patchLegalForm(this.privacyForm, documents.find((document) => document.documentType === 'PRIVACY_POLICY'));
+    this.patchLegalForm(this.cookiesForm, documents.find((document) => document.documentType === 'COOKIE_POLICY'));
+  }
+
+  private patchLegalForm(form: FormGroup, document?: LegalDocumentResponse): void {
+    form.patchValue({
+      title: document?.title ?? '',
+      summary: document?.summary ?? '',
+      content: document?.content ?? ''
+    }, { emitEvent: false });
   }
 
   private setError(message: string): void {
