@@ -127,16 +127,10 @@ import { TelemedApiService } from '../core/telemed-api.service';
           Entre no portal, escolha o atendimento e siga com pagamento por Pix para liberar a jornada com o medico.
         </p>
 
-        <div class="showcase-price">
-          <span>Consulta a partir de</span>
-          <strong>R$ 49,90</strong>
-          <small>Valor pensado para um fluxo rapido de conversao.</small>
-        </div>
-
         <div class="showcase-points">
           <article>
-            <strong>24h</strong>
-            <p>Portal pronto para receber pacientes a qualquer hora.</p>
+            <strong>Fluxo simples</strong>
+            <p>Cadastro, pagamento e acompanhamento em uma jornada mais objetiva.</p>
           </article>
           <article>
             <strong>Pix</strong>
@@ -247,8 +241,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .price-banner span,
-    .showcase-tag,
-    .showcase-price span {
+    .showcase-tag {
       text-transform: uppercase;
       letter-spacing: 0.16em;
       font-size: 0.74rem;
@@ -259,8 +252,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       color: #0b7480;
     }
 
-    .price-banner strong,
-    .showcase-price strong {
+    .price-banner strong {
       font-size: clamp(2rem, 4vw, 3.4rem);
       line-height: 1;
     }
@@ -320,8 +312,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .form-copy p,
     .helper-text,
     .showcase-copy,
-    .showcase-points p,
-    .showcase-price small {
+    .showcase-points p {
       margin: 0;
       line-height: 1.5;
     }
@@ -428,8 +419,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       font-size: 0.9rem;
     }
 
-    .showcase-tag,
-    .showcase-price span {
+    .showcase-tag {
       color: rgba(255, 255, 255, 0.78);
     }
 
@@ -441,15 +431,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .showcase-copy {
       max-width: 34ch;
       color: rgba(255, 255, 255, 0.86);
-    }
-
-    .showcase-price {
-      display: grid;
-      gap: 8px;
-      padding: 22px;
-      border-radius: 26px;
-      background: rgba(10, 28, 39, 0.24);
-      border: 1px solid rgba(255, 255, 255, 0.14);
     }
 
     .showcase-points {
