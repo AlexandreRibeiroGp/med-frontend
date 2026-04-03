@@ -12,9 +12,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <div class="landing">
       <section class="hero" id="inicio">
         <div class="hero-copy">
-          <p class="eyebrow">Consulta online com valor fixo</p>
+          <p class="eyebrow">Consulta online com preco acessivel</p>
           <div class="price-pill">Consulta R$ 49,90</div>
-          <h1>Consulta medica online com atendimento simples, rapido e visual limpo.</h1>
+          <h1>Atendimento medico online com praticidade, acolhimento e valor claro.</h1>
           <p class="lead">
             Entre no portal, escolha seu atendimento e fale com um medico de forma organizada, com
             pagamento por Pix e documentacao digital ao final da jornada.
@@ -44,14 +44,14 @@ import { TelemedApiService } from '../core/telemed-api.service';
             </ng-container>
             <p>Atendimento online</p>
             <strong>R$ 49,90</strong>
-            <small>Fluxo de consulta pensado para ser rapido, claro e sem excesso de informacao.</small>
+            <small>Uma jornada pensada para transmitir confianca, clareza e facilidade desde o primeiro acesso.</small>
           </div>
 
           <div class="visual-card visual-secondary">
             <span>01</span>
             <div>
               <strong>Cadastro e pagamento</strong>
-              <p>Preencha os dados, aceite os termos e siga para o Pix.</p>
+              <p>Preencha seus dados, confirme o pagamento e avance para o atendimento.</p>
             </div>
           </div>
 
@@ -59,7 +59,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
             <span>02</span>
             <div>
               <strong>Atendimento remoto</strong>
-              <p>Converse com o medico e acompanhe sua jornada dentro do portal.</p>
+              <p>Converse com o medico e acompanhe tudo em um ambiente simples e organizado.</p>
             </div>
           </div>
         </div>
@@ -69,7 +69,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="section-head centered">
           <p class="section-tag">Passo a passo</p>
           <h2>Como funciona</h2>
-          <p>Tudo o que o paciente precisa entender aparece em blocos claros e diretos.</p>
+          <p>Veja como e facil iniciar seu atendimento pela plataforma.</p>
         </div>
 
         <div class="steps-grid">
@@ -79,7 +79,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <strong>01</strong>
             </div>
             <h3>Cadastro e pagamento</h3>
-            <p>Crie sua conta, aceite os documentos legais e realize o pagamento da consulta com seguranca.</p>
+            <p>Crie sua conta, confirme seus dados e realize o pagamento da consulta com seguranca.</p>
           </article>
 
           <article class="step-card">
@@ -88,7 +88,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <strong>02</strong>
             </div>
             <h3>Atendimento</h3>
-            <p>Depois da confirmacao, o paciente segue para a jornada clinica e para a sala de atendimento.</p>
+            <p>Depois da confirmacao, voce segue para a jornada clinica e para a sala de atendimento.</p>
           </article>
 
           <article class="step-card">
@@ -97,7 +97,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <strong>03</strong>
             </div>
             <h3>Documentacao</h3>
-            <p>Ao final da consulta, os registros e documentos ficam organizados dentro do portal.</p>
+            <p>Ao final da consulta, seus registros e documentos ficam organizados dentro do portal.</p>
           </article>
         </div>
 
@@ -108,7 +108,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
       <section class="doctor-section" id="medicos">
         <div class="section-head centered narrow">
-          <h2>Equipe medica preparada para te atender</h2>
+          <h2>Profissionais preparados para atender com seriedade e cuidado</h2>
           <p>
             Apresente seus profissionais com CRM ativo, especialidade e uma comunicacao mais confiavel,
             sem exageros comerciais nem promessas indevidas.
@@ -145,11 +145,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="faq-list">
           <article>
             <h3>Qual o valor da consulta?</h3>
-            <p>O valor exibido na pagina e de R$ 49,90, com pagamento por Pix para liberar o atendimento.</p>
+            <p>A consulta custa R$ 49,90, com pagamento por Pix para liberar seu atendimento.</p>
           </article>
           <article>
             <h3>Preciso criar conta antes?</h3>
-            <p>Sim. O cadastro ajuda a proteger seus dados, registrar o prontuario e organizar documentos e historico.</p>
+            <p>Sim. O cadastro protege seus dados e ajuda a manter sua jornada, documentos e historico organizados.</p>
           </article>
           <article>
             <h3>Recebo documentos ao final?</h3>
@@ -161,7 +161,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="cta-band" id="contato">
         <div>
           <p class="section-tag">Comece agora</p>
-          <h2>Leve seu paciente para uma landing clara, clean e focada em conversao.</h2>
+          <h2>Seu atendimento pode comecar hoje, com um fluxo simples, valor claro e experiencia acolhedora.</h2>
         </div>
         <a routerLink="/auth" class="band-action">Quero me consultar</a>
       </section>
@@ -679,3 +679,4 @@ export class HomePageComponent {
     });
   }
 }
+

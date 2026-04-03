@@ -19,13 +19,13 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="hero-copy">
           <p class="tag">Portal clinico</p>
           <h1>Entre ou crie sua conta</h1>
-          <p>Acesse consultas, agenda e acompanhamento em um so lugar.</p>
+          <p>Agende sua consulta, acompanhe seus documentos e tenha tudo organizado em um unico portal.</p>
         </div>
 
         <div class="price-banner">
           <span>Consulta online</span>
           <strong>R$ 49,90</strong>
-          <small>Pagamento por Pix para liberar o atendimento.</small>
+          <small>Pagamento por Pix para liberar seu atendimento.</small>
         </div>
 
         <div class="switcher">
@@ -77,7 +77,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <form *ngIf="mode() === 'patient'" [formGroup]="patientForm" (ngSubmit)="submitPatient()">
           <div class="form-copy">
             <h2>Crie sua conta de paciente</h2>
-            <p>Preencha seus dados para agendar consultas e acompanhar seu atendimento com facilidade.</p>
+            <p>Preencha seus dados para iniciar sua jornada com mais praticidade e seguranca.</p>
           </div>
           <input formControlName="fullName" placeholder="Nome completo" />
           <p *ngIf="controlError(patientForm, 'fullName') as error" class="field-error">{{ error }}</p>
@@ -110,7 +110,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
             O consentimento para telemedicina e obrigatorio para cadastro e atendimento remoto.
           </p>
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
-          <p class="helper-text">Seus dados ajudam a personalizar o atendimento e agilizar o contato com o medico.</p>
+          <p class="helper-text">Seus dados ajudam a agilizar o atendimento e manter sua jornada organizada.</p>
         </form>
 
         <div class="legal-links">
@@ -122,23 +122,23 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
       <aside class="panel showcase">
         <p class="showcase-tag">Atendimento online</p>
-        <h2>Comece sua consulta sem sair de casa.</h2>
+        <h2>Seu atendimento comecando de forma simples e segura.</h2>
         <p class="showcase-copy">
-          Entre no portal, escolha o atendimento e siga com pagamento por Pix para liberar a jornada com o medico.
+          Entre, conclua o pagamento por Pix e siga para a jornada com o medico de maneira pratica.
         </p>
 
         <div class="showcase-points">
           <article>
             <strong>Fluxo simples</strong>
-            <p>Cadastro, pagamento e acompanhamento em uma jornada mais objetiva.</p>
+            <p>Cadastro, pagamento e atendimento em uma experiencia mais leve e direta.</p>
           </article>
           <article>
             <strong>Pix</strong>
-            <p>Pagamento simples para seguir direto ao atendimento.</p>
+            <p>Pagamento rapido para seguir com mais agilidade para o atendimento.</p>
           </article>
           <article>
             <strong>Online</strong>
-            <p>Agenda, documentos e acompanhamento em um unico ambiente.</p>
+            <p>Agenda, documentos e acompanhamento reunidos em um unico ambiente.</p>
           </article>
         </div>
       </aside>
@@ -712,3 +712,4 @@ export class AuthPageComponent {
     this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }
+
