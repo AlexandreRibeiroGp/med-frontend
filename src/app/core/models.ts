@@ -1,5 +1,5 @@
 export type Role = 'ADMIN' | 'PATIENT' | 'DOCTOR';
-export type DoctorSpecialty = 'GERAL';
+export type DoctorSpecialty = 'GENERALISTA' | 'GERAL';
 export type AppointmentStatus = 'PENDING_PAYMENT' | 'SCHEDULED' | 'CONFIRMED' | 'IN_PROGRESS' | 'CANCELLED' | 'COMPLETED';
 export type PaymentMethod = 'PIX' | 'CARD';
 export type PaymentStatus = 'PENDING' | 'CONFIRMED' | 'FAILED' | 'CANCELLED' | 'EXPIRED';

@@ -451,7 +451,7 @@ export class AdminPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly destroyRef = inject(DestroyRef);
 
-  readonly specialtyOptions: DoctorSpecialty[] = ['GERAL'];
+  readonly specialtyOptions: DoctorSpecialty[] = ['GENERALISTA'];
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly users = signal<UserResponse[]>([]);
   readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
@@ -507,7 +507,7 @@ export class AdminPageComponent {
     password: ['', [Validators.required, Validators.minLength(8)]],
     phoneNumber: [''],
     crm: ['', Validators.required],
-    specialty: this.fb.nonNullable.control<DoctorSpecialty>('GERAL', Validators.required),
+    specialty: this.fb.nonNullable.control<DoctorSpecialty>('GENERALISTA', Validators.required),
     biography: [''],
     telemedicineEnabled: [true]
   });
@@ -536,7 +536,7 @@ export class AdminPageComponent {
   }
 
   specialtyLabel(specialty: DoctorSpecialty): string {
-    return specialty === 'GERAL' ? 'Geral' : specialty;
+    return specialty === 'GERAL' || specialty === 'GENERALISTA' ? 'Generalista' : specialty;
   }
 
   submitDoctor(): void {
@@ -566,7 +566,7 @@ export class AdminPageComponent {
             password: '',
             phoneNumber: '',
             crm: '',
-            specialty: 'GERAL',
+            specialty: 'GENERALISTA',
             biography: '',
             telemedicineEnabled: true
           });

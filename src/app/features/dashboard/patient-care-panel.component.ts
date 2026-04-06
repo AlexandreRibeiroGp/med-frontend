@@ -347,7 +347,7 @@ export class PatientCarePanelComponent {
   readonly slotBooked = output<AvailabilitySlotResponse>();
 
   specialtyLabel(value: string): string {
-    return value === 'GERAL' ? 'Geral' : value;
+    return value === 'GERAL' || value === 'GENERALISTA' ? 'Generalista' : value;
   }
 
   canBookSlot(): boolean {
