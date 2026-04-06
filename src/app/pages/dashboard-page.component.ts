@@ -44,6 +44,14 @@ function toOffsetIso(localDateTime: string): string {
   return `${yearValue}-${monthValue}-${dayValue}T${hourValue}:${minuteValue}:00${sign}${offsetHours}:${offsetRemainingMinutes}`;
 }
 
+function monthKeyInSaoPaulo(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit'
+  }).format(date);
+}
+
 @Component({
   selector: 'app-dashboard-page',
   imports: [
@@ -532,8 +540,13 @@ export class DashboardPageComponent {
         this.canJoinAppointment(appointment)
     )
   );
+  readonly currentMonthKey = computed(() => monthKeyInSaoPaulo(new Date(this.currentTime())));
   readonly completedAppointmentsCount = computed(() =>
-    this.appointments().filter((appointment) => appointment.status === 'COMPLETED').length
+    this.appointments().filter(
+      (appointment) =>
+        appointment.status === 'COMPLETED' &&
+        monthKeyInSaoPaulo(new Date(appointment.scheduledAt)) === this.currentMonthKey()
+    ).length
   );
   readonly doctorReceivables = computed(() => this.completedAppointmentsCount() * 35);
   readonly doctorReceivablesLabel = computed(() =>
