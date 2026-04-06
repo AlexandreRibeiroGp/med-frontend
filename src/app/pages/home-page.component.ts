@@ -1,9 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { Component } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { DoctorResponse } from '../core/models';
-import { TelemedApiService } from '../core/telemed-api.service';
 
 @Component({
   selector: 'app-home-page',
@@ -98,35 +95,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         </div>
       </section>
 
-      <section class="doctor-section" id="medicos">
-        <div class="section-head centered narrow">
-          <h2>Profissionais preparados para atender com seriedade e cuidado</h2>
-          <p>
-            Apresente seus profissionais com CRM ativo, especialidade e uma comunicacao mais confiavel,
-            sem exageros comerciais nem promessas indevidas.
-          </p>
-        </div>
-
-        <div class="doctor-grid">
-          <article class="doctor-card" *ngFor="let doctor of featuredDoctors(); let index = index">
-            <div
-              class="doctor-photo"
-              [class.doctor-a]="index % 4 === 0"
-              [class.doctor-b]="index % 4 === 1"
-              [class.doctor-c]="index % 4 === 2"
-              [class.doctor-d]="index % 4 === 3"
-            >
-              <img *ngIf="doctor.profilePhotoUrl; else doctorFallback" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" loading="lazy" decoding="async" fetchpriority="low" />
-              <ng-template #doctorFallback>
-                <span>{{ doctor.user.fullName.charAt(0) }}</span>
-              </ng-template>
-            </div>
-            <h3>{{ doctor.user.fullName }}</h3>
-            <p>{{ doctor.specialty === 'GERAL' ? 'Clinica geral' : doctor.specialty }}</p>
-            <small>CRM {{ doctor.crm }}</small>
-          </article>
-        </div>
-      </section>
+      <!-- Secao de medicos temporariamente oculta enquanto ha apenas um profissional ativo na home. -->
 
       <section class="faq-section" id="faq">
         <div class="section-head">
@@ -366,7 +335,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .step-section,
-    .doctor-section,
     .faq-section,
     .cta-band {
       display: grid;
@@ -465,79 +433,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       color: #fff;
     }
 
-    .doctor-grid {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 18px;
-    }
-
-    .doctor-card {
-      overflow: hidden;
-      border-radius: 24px;
-      border: 1px solid rgba(23, 49, 58, 0.08);
-      background: #ffffff;
-      box-shadow: 0 18px 42px rgba(23, 49, 58, 0.08);
-      display: grid;
-      gap: 10px;
-      padding-bottom: 22px;
-    }
-
-    .doctor-photo {
-      aspect-ratio: 0.9;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-    }
-
-    .doctor-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .doctor-photo span {
-      font-size: 4rem;
-      font-weight: 800;
-      color: #1b6665;
-    }
-
-    .doctor-a {
-      background-image: linear-gradient(135deg, rgba(37,193,187,0.32), rgba(19,72,88,0.18)), radial-gradient(circle at 30% 30%, #fff 0%, #d9f3f2 38%, #b7e7e3 100%);
-    }
-
-    .doctor-b {
-      background-image: linear-gradient(135deg, rgba(255,181,131,0.26), rgba(37,193,187,0.18)), radial-gradient(circle at 40% 20%, #fff 0%, #f6e7dc 38%, #ebd1be 100%);
-    }
-
-    .doctor-c {
-      background-image: linear-gradient(135deg, rgba(37,193,187,0.22), rgba(23,49,58,0.12)), radial-gradient(circle at 50% 20%, #fff 0%, #e4edf0 40%, #d1dfe4 100%);
-    }
-
-    .doctor-d {
-      background-image: linear-gradient(135deg, rgba(255,192,160,0.22), rgba(37,193,187,0.18)), radial-gradient(circle at 30% 20%, #fff 0%, #efe5ea 42%, #e5d3de 100%);
-    }
-
-    .doctor-card h3,
-    .doctor-card p,
-    .doctor-card small {
-      padding: 0 18px;
-    }
-
-    .doctor-card h3 {
-      font-size: 1.3rem;
-      line-height: 1.15;
-      color: #20353b;
-    }
-
-    .doctor-card p,
-    .doctor-card small {
-      color: #68838a;
-    }
-
     .faq-list {
       display: grid;
       gap: 14px;
@@ -594,7 +489,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
     @media (max-width: 1100px) {
       .hero,
       .steps-grid,
-      .doctor-grid,
       .cta-band {
         grid-template-columns: 1fr 1fr;
       }
@@ -615,7 +509,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       }
 
       .steps-grid,
-      .doctor-grid {
+      .faq-list {
         grid-template-columns: 1fr;
       }
 
@@ -641,16 +535,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
   `
 })
 export class HomePageComponent {
-  private readonly api = inject(TelemedApiService);
-  private readonly destroyRef = inject(DestroyRef);
-
-  readonly doctors = signal<DoctorResponse[]>([]);
-  readonly featuredDoctors = computed(() => this.doctors().slice(0, 4));
-
-  constructor() {
-    this.api.getDoctors().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (doctors) => this.doctors.set(doctors),
-      error: () => this.doctors.set([])
-    });
-  }
+  // A vitrine de medicos permanece comentada por enquanto para manter a home mais enxuta.
 }
+
