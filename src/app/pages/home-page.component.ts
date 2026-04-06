@@ -33,15 +33,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         </div>
 
         <div class="hero-visual">
-          <div class="visual-card visual-main" [class.visual-main--photo]="hasFeaturedPhoto()">
-            <ng-container *ngIf="featuredDoctor() as heroDoctor">
-              <img
-                *ngIf="heroDoctor.profilePhotoUrl"
-                class="featured-doctor-photo"
-                [src]="heroDoctor.profilePhotoUrl"
-                [alt]="heroDoctor.user.fullName || 'Medico em destaque'"
-              />
-            </ng-container>
+          <div class="visual-card visual-main">
             <p>Atendimento online</p>
             <strong>R$ 49,90</strong>
             <small>Uma jornada pensada para transmitir confianca, clareza e facilidade desde o primeiro acesso.</small>
@@ -124,7 +116,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               [class.doctor-c]="index % 4 === 2"
               [class.doctor-d]="index % 4 === 3"
             >
-              <img *ngIf="doctor.profilePhotoUrl; else doctorFallback" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+              <img *ngIf="doctor.profilePhotoUrl; else doctorFallback" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" loading="lazy" decoding="async" fetchpriority="low" />
               <ng-template #doctorFallback>
                 <span>{{ doctor.user.fullName.charAt(0) }}</span>
               </ng-template>
@@ -325,22 +317,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       align-content: end;
       background: linear-gradient(180deg, #28c2bc 0%, #18ada8 100%);
       color: #fff;
-    }
-
-    .visual-main--photo {
-      align-content: end;
-    }
-
-    .featured-doctor-photo {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      opacity: 0.28;
-    }
-
-    .visual-main p,
+    }.visual-main p,
     .visual-main small {
       position: relative;
       z-index: 1;
@@ -669,8 +646,6 @@ export class HomePageComponent {
 
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly featuredDoctors = computed(() => this.doctors().slice(0, 4));
-  readonly featuredDoctor = computed(() => this.featuredDoctors()[0] ?? null);
-  readonly hasFeaturedPhoto = computed(() => !!this.featuredDoctor()?.profilePhotoUrl);
 
   constructor() {
     this.api.getDoctors().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -679,4 +654,3 @@ export class HomePageComponent {
     });
   }
 }
-
