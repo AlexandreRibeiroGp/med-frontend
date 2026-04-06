@@ -392,8 +392,9 @@ export class CallRoomPanelComponent {
       this.connectRoom();
       await this.rtc.prepareMedia();
       await this.rtc.maybeStartCall();
-    } catch {
-      this.toast.error('Falha de dispositivo', 'Nao foi possivel acessar camera e microfone.');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Nao foi possivel acessar camera e microfone.';
+      this.toast.error('Falha de dispositivo', message);
     }
   }
 

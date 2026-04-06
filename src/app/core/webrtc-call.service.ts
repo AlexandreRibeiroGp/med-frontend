@@ -97,10 +97,10 @@ export class WebRtcCallService {
     }
 
     this.state.set('preparing');
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    const stream = await this.requestMediaWithFallback();
     this.localStream.set(stream);
-    this.micEnabled.set(true);
-    this.cameraEnabled.set(true);
+    this.micEnabled.set(stream.getAudioTracks().some((track) => track.enabled));
+    this.cameraEnabled.set(stream.getVideoTracks().some((track) => track.enabled));
     this.attachStreams();
     this.state.set('ready');
   }
@@ -415,6 +415,75 @@ export class WebRtcCallService {
       this.remoteVideo.srcObject = this.remoteStream();
       void this.remoteVideo.play().catch(() => undefined);
     }
+  }
+
+  private async requestMediaWithFallback(): Promise<MediaStream> {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+    } catch (combinedError) {
+      const audioResult = await this.tryGetUserMedia({ audio: true, video: false });
+      const videoResult = await this.tryGetUserMedia({ audio: false, video: true });
+      const fallbackStream = new MediaStream();
+
+      audioResult.stream?.getAudioTracks().forEach((track) => fallbackStream.addTrack(track));
+      videoResult.stream?.getVideoTracks().forEach((track) => fallbackStream.addTrack(track));
+
+      if (fallbackStream.getTracks().length) {
+        const missingDevices: string[] = [];
+        if (!fallbackStream.getAudioTracks().length) {
+          missingDevices.push('microfone');
+        }
+        if (!fallbackStream.getVideoTracks().length) {
+          missingDevices.push('camera');
+        }
+        if (missingDevices.length) {
+          this.toast.info(
+            'Dispositivo parcial',
+            `A chamada foi iniciada sem ${missingDevices.join(' e ')}.`
+          );
+        }
+        return fallbackStream;
+      }
+
+      throw this.buildMediaAccessError(combinedError, audioResult.error, videoResult.error);
+    }
+  }
+
+  private async tryGetUserMedia(constraints: MediaStreamConstraints): Promise<{ stream: MediaStream | null; error: unknown }> {
+    try {
+      return {
+        stream: await navigator.mediaDevices.getUserMedia(constraints),
+        error: null
+      };
+    } catch (error) {
+      return { stream: null, error };
+    }
+  }
+
+  private buildMediaAccessError(...errors: unknown[]): Error {
+    for (const error of errors) {
+      if (!(error instanceof DOMException)) {
+        continue;
+      }
+      switch (error.name) {
+        case 'NotAllowedError':
+        case 'PermissionDeniedError':
+          return new Error('O navegador bloqueou o acesso. Libere camera e microfone no cadeado ao lado da URL.');
+        case 'NotFoundError':
+        case 'DevicesNotFoundError':
+          return new Error('Nenhuma camera ou microfone compativel foi encontrado neste dispositivo.');
+        case 'NotReadableError':
+        case 'TrackStartError':
+          return new Error('A camera ou o microfone ja esta sendo usado por outro aplicativo.');
+        case 'OverconstrainedError':
+        case 'ConstraintNotSatisfiedError':
+          return new Error('Nao foi possivel iniciar a camera ou o microfone com as configuracoes atuais.');
+        case 'SecurityError':
+          return new Error('O navegador bloqueou o acesso por seguranca.');
+      }
+    }
+
+    return new Error('Nao foi possivel acessar camera e microfone.');
   }
 
   private resetRoomState(): void {
