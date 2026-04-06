@@ -24,7 +24,6 @@ import { filter, map, startWith } from 'rxjs';
         <ng-template #guestActions>
           <div class="nav guest-nav">
             <a href="#como-funciona">Como funciona</a>
-            <a href="#medicos">Nossos medicos</a>
             <a href="#faq">FAQ</a>
             <a routerLink="/auth">Entrar</a>
             <a routerLink="/auth" class="cta-link">Quero me consultar</a>

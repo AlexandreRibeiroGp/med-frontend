@@ -16,6 +16,9 @@ import { RouterLink } from '@angular/router';
             Entre no portal, escolha seu atendimento e fale com um medico de forma organizada, com
             pagamento por Pix e documentacao digital ao final da jornada.
           </p>
+          <p class="hero-highlight">
+            Quando houver indicacao clinica, os medicos podem emitir receita e atestado durante o atendimento.
+          </p>
 
           <div class="hero-actions">
             <a routerLink="/auth" class="primary-action">Quero me consultar</a>
@@ -206,6 +209,17 @@ import { RouterLink } from '@angular/router';
       color: #57727a;
       font-size: 1.12rem;
       line-height: 1.75;
+    }
+
+    .hero-highlight {
+      max-width: 52ch;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: #f3fbfb;
+      border: 1px solid rgba(32, 184, 178, 0.16);
+      color: #1f555d;
+      font-weight: 700;
+      line-height: 1.6;
     }
 
     .hero-actions {
