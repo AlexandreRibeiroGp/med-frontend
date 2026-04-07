@@ -246,7 +246,7 @@ import { RouterLink } from '@angular/router';
       grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
       gap: 28px;
       align-items: center;
-      min-height: 78vh;
+      min-height: 72vh;
     }
 
     .hero-copy {
@@ -292,9 +292,9 @@ import { RouterLink } from '@angular/router';
     }
 
     h1 {
-      max-width: 10.5ch;
-      font-size: clamp(3.2rem, 6vw, 6rem);
-      line-height: 0.94;
+      max-width: 12.5ch;
+      font-size: clamp(3rem, 5.2vw, 5.4rem);
+      line-height: 0.98;
       letter-spacing: -0.06em;
       color: #1a333a;
     }
@@ -402,6 +402,7 @@ import { RouterLink } from '@angular/router';
       background: linear-gradient(180deg, #f4fcfc 0%, #ebf8f8 100%);
       border: 1px solid rgba(23, 49, 58, 0.06);
       box-shadow: 0 28px 70px rgba(23, 49, 58, 0.08);
+      align-self: end;
     }
 
     .visual-card {
@@ -737,6 +738,7 @@ import { RouterLink } from '@angular/router';
       h1 {
         max-width: none;
         font-size: 3rem;
+        line-height: 1.02;
       }
 
       .hero-actions {
