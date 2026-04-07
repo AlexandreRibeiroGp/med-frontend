@@ -402,7 +402,8 @@ import { RouterLink } from '@angular/router';
       background: linear-gradient(180deg, #f4fcfc 0%, #ebf8f8 100%);
       border: 1px solid rgba(23, 49, 58, 0.06);
       box-shadow: 0 28px 70px rgba(23, 49, 58, 0.08);
-      align-self: end;
+      align-self: start;
+      margin-top: 132px;
     }
 
     .visual-card {
@@ -714,6 +715,10 @@ import { RouterLink } from '@angular/router';
 
       .cta-band {
         grid-template-columns: 1fr;
+      }
+
+      .hero-visual {
+        margin-top: 0;
       }
     }
 
