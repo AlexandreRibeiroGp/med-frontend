@@ -788,7 +788,9 @@ export class AuthPageComponent {
         acceptedDocumentIds,
         acceptedTelemedicine: true
       }),
-      'Paciente cadastrado com sucesso.'
+      'Paciente cadastrado com sucesso.',
+      false,
+      'patient-signup'
     );
   }
 
@@ -880,7 +882,12 @@ export class AuthPageComponent {
     return 'Verifique o valor informado.';
   }
 
-  private runRequest(request$: Observable<unknown>, success: string, redirect = false): void {
+  private runRequest(
+    request$: Observable<unknown>,
+    success: string,
+    redirect = false,
+    conversionType: 'patient-signup' | null = null
+  ): void {
     this.loading.set(true);
     this.error.set('');
     this.message.set('');
@@ -889,6 +896,9 @@ export class AuthPageComponent {
       .pipe(finalize(() => this.loading.set(false)), takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
+          if (conversionType === 'patient-signup') {
+            this.trackPatientSignupConversion();
+          }
           this.setMessage(success);
           if (redirect) {
             void this.router.navigateByUrl('/dashboard');
@@ -907,6 +917,17 @@ export class AuthPageComponent {
           this.setError(error.error?.message ?? 'Nao foi possivel concluir a operacao.');
         }
       });
+  }
+
+  private trackPatientSignupConversion(): void {
+    const gtag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
+    if (!gtag) {
+      return;
+    }
+
+    gtag('event', 'conversion', {
+      send_to: 'AW-18059561380/FqVMCPGx25ccEKSTvKND'
+    });
   }
 
   private setError(message: string): void {
