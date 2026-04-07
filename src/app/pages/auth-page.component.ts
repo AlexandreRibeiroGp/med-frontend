@@ -20,13 +20,34 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="hero-copy">
           <p class="tag">Portal clinico</p>
           <h1>Entre ou crie sua conta</h1>
-          <p>Agende sua consulta, acompanhe seus documentos e tenha tudo organizado em um unico portal.</p>
+          <p>Crie sua conta, pague com Pix e avance para uma consulta online em um fluxo claro e organizado.</p>
         </div>
 
         <div class="price-banner">
           <span>Consulta online</span>
           <strong>R$ 49,90</strong>
           <small>Pagamento por Pix para liberar seu atendimento.</small>
+        </div>
+
+        <div class="assurance-strip">
+          <span>MedCallOn</span>
+          <span>Profissionais com CRM</span>
+          <span>Receita e atestado quando necessario</span>
+        </div>
+
+        <div class="journey-steps">
+          <article>
+            <strong>1. Cadastro</strong>
+            <p>Informe seus dados e proteja sua jornada dentro da plataforma.</p>
+          </article>
+          <article>
+            <strong>2. Pix</strong>
+            <p>Conclua o pagamento para liberar o seu atendimento.</p>
+          </article>
+          <article>
+            <strong>3. Atendimento</strong>
+            <p>Entre na sala e fale com o medico em ambiente remoto organizado.</p>
+          </article>
         </div>
 
         <div class="switcher">
@@ -78,25 +99,66 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <form *ngIf="mode() === 'patient'" [formGroup]="patientForm" (ngSubmit)="submitPatient()">
           <div class="form-copy">
             <h2>Crie sua conta de paciente</h2>
-            <p>Preencha seus dados para iniciar sua jornada com mais praticidade e seguranca.</p>
+            <p>Preencha seus dados para seguir com mais confianca para o pagamento e para a consulta.</p>
           </div>
-          <input formControlName="fullName" placeholder="Nome completo" />
-          <p *ngIf="controlError(patientForm, 'fullName') as error" class="field-error">{{ error }}</p>
-          <input formControlName="email" placeholder="E-mail" type="email" />
-          <p *ngIf="controlError(patientForm, 'email') as error" class="field-error">{{ error }}</p>
-          <input formControlName="password" placeholder="Senha" type="password" />
-          <p *ngIf="controlError(patientForm, 'password') as error" class="field-error">{{ error }}</p>
-          <input formControlName="phoneNumber" placeholder="Telefone" />
-          <input formControlName="documentNumber" placeholder="CPF" />
-          <input formControlName="birthDate" placeholder="Nascimento" type="date" />
-          <input formControlName="profession" placeholder="Profissao" />
-          <input formControlName="postalCode" placeholder="CEP" />
-          <input formControlName="street" placeholder="Rua" />
-          <input formControlName="number" placeholder="Numero" />
-          <input formControlName="complement" placeholder="Complemento" />
-          <input formControlName="neighborhood" placeholder="Bairro" />
-          <input formControlName="city" placeholder="Cidade" />
-          <input formControlName="state" placeholder="Estado" />
+          <div class="trust-banner">
+            <strong>Antes de continuar</strong>
+            <p>
+              O cadastro existe para proteger seus dados, organizar seus documentos e agilizar sua entrada na consulta.
+            </p>
+          </div>
+
+          <section class="form-section">
+            <div class="section-copy">
+              <h3>Dados de acesso</h3>
+              <p>Esses dados serao usados para entrar na plataforma e acompanhar sua jornada.</p>
+            </div>
+            <input formControlName="fullName" placeholder="Nome completo" />
+            <p *ngIf="controlError(patientForm, 'fullName') as error" class="field-error">{{ error }}</p>
+            <input formControlName="email" placeholder="E-mail" type="email" />
+            <p *ngIf="controlError(patientForm, 'email') as error" class="field-error">{{ error }}</p>
+            <input formControlName="password" placeholder="Senha" type="password" />
+            <p *ngIf="controlError(patientForm, 'password') as error" class="field-error">{{ error }}</p>
+          </section>
+
+          <section class="form-section">
+            <div class="section-copy">
+              <h3>Informacoes pessoais</h3>
+              <p>Esses campos ajudam a identificar corretamente o paciente e deixam o atendimento mais fluido.</p>
+            </div>
+            <div class="form-grid two-columns">
+              <input formControlName="phoneNumber" placeholder="Telefone" />
+              <input formControlName="documentNumber" placeholder="CPF" />
+              <input formControlName="birthDate" placeholder="Nascimento" type="date" />
+              <input formControlName="profession" placeholder="Profissao" />
+            </div>
+          </section>
+
+          <section class="form-section">
+            <div class="section-copy">
+              <h3>Endereco</h3>
+              <p>Preencha na ordem mais comum para manter o cadastro claro e evitar retrabalho depois.</p>
+            </div>
+            <div class="form-grid two-columns">
+              <input formControlName="postalCode" placeholder="CEP" />
+              <input formControlName="street" placeholder="Rua" />
+              <input formControlName="number" placeholder="Numero" />
+              <input formControlName="complement" placeholder="Complemento" />
+              <input formControlName="neighborhood" placeholder="Bairro" />
+              <input formControlName="city" placeholder="Cidade" />
+              <input formControlName="state" placeholder="Estado" class="full-width" />
+            </div>
+          </section>
+
+          <div class="checkout-summary">
+            <strong>Resumo antes do pagamento</strong>
+            <ul>
+              <li>Consulta online por R$ 49,90</li>
+              <li>Pagamento por Pix para liberar o atendimento</li>
+              <li>Receita e atestado quando houver indicacao clinica</li>
+            </ul>
+          </div>
+
           <label class="checkbox-line">
             <input type="checkbox" [formControl]="termsConsentControl" />
             <span>
@@ -117,7 +179,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
             O consentimento para telemedicina e obrigatorio para cadastro e atendimento remoto.
           </p>
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
-          <p class="helper-text">Seus dados ajudam a agilizar o atendimento e manter sua jornada organizada.</p>
+          <p class="helper-text">Seus dados ajudam a agilizar o atendimento, manter sua jornada organizada e liberar o Pix com menos friccao.</p>
         </form>
 
         <div class="legal-links">
@@ -129,10 +191,20 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
       <aside class="panel showcase">
         <p class="showcase-tag">Atendimento online</p>
-        <h2>Seu atendimento comecando de forma simples e segura.</h2>
+        <h2>Seu atendimento comecando de forma simples, clara e mais confiavel.</h2>
         <p class="showcase-copy">
-          Entre, conclua o pagamento por Pix e siga para a jornada com o medico de maneira pratica.
+          Entre, conclua o pagamento por Pix e siga para a jornada com o medico de maneira pratica, sem excesso de passos.
         </p>
+
+        <div class="showcase-summary">
+          <strong>O que fica claro antes de pagar</strong>
+          <ul>
+            <li>Valor da consulta: R$ 49,90</li>
+            <li>Pagamento por Pix</li>
+            <li>Atendimento online em plataforma propria</li>
+            <li>Receita e atestado quando necessario</li>
+          </ul>
+        </div>
 
         <div class="showcase-points">
           <article>
@@ -140,11 +212,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
             <p>Cadastro, pagamento e atendimento em uma experiencia mais leve e direta.</p>
           </article>
           <article>
-            <strong>Pix</strong>
+            <strong>Pix com objetivo claro</strong>
             <p>Pagamento rapido para seguir com mais agilidade para o atendimento.</p>
           </article>
           <article>
-            <strong>Online</strong>
+            <strong>Tudo em um lugar</strong>
             <p>Agenda, documentos e acompanhamento reunidos em um unico ambiente.</p>
           </article>
         </div>
@@ -269,6 +341,51 @@ import { TelemedApiService } from '../core/telemed-api.service';
       line-height: 1.45;
     }
 
+    .assurance-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .assurance-strip span {
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: #f7fbfb;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      color: #4c6168;
+      font-size: 0.88rem;
+      font-weight: 700;
+    }
+
+    .journey-steps {
+      display: grid;
+      gap: 10px;
+    }
+
+    .journey-steps article,
+    .trust-banner,
+    .checkout-summary {
+      padding: 16px 18px;
+      border-radius: 20px;
+      background: #fbfdfd;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+    }
+
+    .journey-steps strong,
+    .trust-banner strong,
+    .checkout-summary strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #112027;
+    }
+
+    .journey-steps p,
+    .trust-banner p {
+      margin: 0;
+      color: #5d6d73;
+      line-height: 1.5;
+    }
+
     .switcher {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -304,6 +421,12 @@ import { TelemedApiService } from '../core/telemed-api.service';
       padding: 4px 0 0;
     }
 
+    .form-section {
+      display: grid;
+      gap: 10px;
+      padding: 6px 0 2px;
+    }
+
     .form-copy {
       display: grid;
       gap: 4px;
@@ -322,6 +445,38 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .showcase-points p {
       margin: 0;
       line-height: 1.5;
+    }
+
+    .section-copy {
+      display: grid;
+      gap: 4px;
+      padding-top: 4px;
+    }
+
+    .section-copy h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: #112027;
+    }
+
+    .section-copy p {
+      margin: 0;
+      color: #5d6d73;
+      line-height: 1.45;
+      font-size: 0.92rem;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .form-grid.two-columns {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
     }
 
     .form-copy p,
@@ -411,6 +566,17 @@ import { TelemedApiService } from '../core/telemed-api.service';
       text-decoration: none;
     }
 
+    .checkout-summary ul,
+    .showcase-summary ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+      color: #4c6168;
+      line-height: 1.5;
+      font-weight: 700;
+    }
+
     .legal-links {
       display: flex;
       flex-wrap: wrap;
@@ -438,6 +604,23 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .showcase-copy {
       max-width: 34ch;
       color: rgba(255, 255, 255, 0.86);
+    }
+
+    .showcase-summary {
+      padding: 18px 20px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .showcase-summary strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.05rem;
+    }
+
+    .showcase-summary ul {
+      color: rgba(255, 255, 255, 0.92);
     }
 
     .showcase-points {
@@ -482,6 +665,14 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
       .hero-copy h1 {
         font-size: 1.45rem;
+      }
+
+      .form-grid.two-columns {
+        grid-template-columns: 1fr;
+      }
+
+      .full-width {
+        grid-column: auto;
       }
     }
   `

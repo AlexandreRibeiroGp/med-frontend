@@ -12,14 +12,25 @@ import { RouterLink } from '@angular/router';
           <p class="eyebrow">Consulta online com preco acessivel</p>
           <p class="brand-kicker">MedCallOn</p>
           <div class="price-pill">Consulta R$ 49,90</div>
-          <h1>Atendimento medico online com praticidade, acolhimento e valor claro.</h1>
+          <h1>Consulta medica online com atendimento rapido, valor claro e mais seguranca para decidir.</h1>
           <p class="lead">
-            Entre no portal, escolha seu atendimento e fale com um medico de forma organizada, com
-            pagamento por Pix e documentacao digital ao final da jornada.
+            Fale com um medico sem sair de casa, com pagamento por Pix, acesso simples pela plataforma
+            e orientacao em uma jornada objetiva do inicio ao fim.
           </p>
           <p class="hero-highlight">
             Quando houver indicacao clinica, os medicos podem emitir receita e atestado durante o atendimento.
           </p>
+
+          <div class="hero-proof">
+            <article>
+              <strong>Valor transparente</strong>
+              <p>Consulta por R$ 49,90, sem surpresa no fluxo.</p>
+            </article>
+            <article>
+              <strong>Atendimento com CRM</strong>
+              <p>Plataforma pensada para telemedicina com organizacao e clareza.</p>
+            </article>
+          </div>
 
           <div class="hero-actions">
             <a routerLink="/auth" class="primary-action">Quero me consultar</a>
@@ -30,14 +41,20 @@ import { RouterLink } from '@angular/router';
             <span>Pagamento por Pix</span>
             <span>Profissionais com CRM</span>
             <span>Documentacao digital</span>
+            <span>Atendimento sem sair de casa</span>
           </div>
         </div>
 
         <div class="hero-visual">
           <div class="visual-card visual-main">
-            <p>Atendimento online</p>
+            <p>Consulta online com MedCallOn</p>
             <strong>R$ 49,90</strong>
             <small>Uma jornada pensada para transmitir confianca, clareza e facilidade desde o primeiro acesso.</small>
+            <ul>
+              <li>Pagamento por Pix</li>
+              <li>Atendimento remoto</li>
+              <li>Receita e atestado quando necessario</li>
+            </ul>
           </div>
 
           <div class="visual-card visual-secondary">
@@ -58,11 +75,41 @@ import { RouterLink } from '@angular/router';
         </div>
       </section>
 
+      <section class="trust-section" aria-label="Motivos para confiar na MedCallOn">
+        <div class="section-head">
+          <p class="section-tag">Confianca desde o primeiro acesso</p>
+          <h2>O que a pessoa precisa entender rapido antes de pagar</h2>
+          <p>
+            A MedCallOn foi organizada para deixar claro o valor, o passo a passo e o que pode ser emitido
+            no atendimento quando houver indicacao clinica.
+          </p>
+        </div>
+
+        <div class="trust-grid">
+          <article class="trust-card">
+            <strong>Medicos com CRM</strong>
+            <p>Atendimento clinico remoto em um fluxo pensado para telemedicina.</p>
+          </article>
+          <article class="trust-card">
+            <strong>Pagamento claro e simples</strong>
+            <p>Consulta por R$ 49,90, com pagamento por Pix antes do atendimento.</p>
+          </article>
+          <article class="trust-card">
+            <strong>Documentacao digital</strong>
+            <p>Receita e atestado podem ser emitidos quando forem clinicamente indicados.</p>
+          </article>
+          <article class="trust-card">
+            <strong>Jornada objetiva</strong>
+            <p>Cadastro, pagamento e atendimento em uma mesma plataforma, sem excesso de etapas.</p>
+          </article>
+        </div>
+      </section>
+
       <section class="step-section" id="como-funciona">
         <div class="section-head centered">
           <p class="section-tag">Passo a passo</p>
-          <h2>Como funciona</h2>
-          <p>Veja como e facil iniciar seu atendimento pela plataforma.</p>
+          <h2>Como funciona a consulta</h2>
+          <p>Veja como e simples sair da duvida inicial ate o atendimento com medico.</p>
         </div>
 
         <div class="steps-grid">
@@ -71,8 +118,8 @@ import { RouterLink } from '@angular/router';
               <div class="icon-box">01</div>
               <strong>01</strong>
             </div>
-            <h3>Cadastro e pagamento</h3>
-            <p>Crie sua conta, confirme seus dados e realize o pagamento da consulta com seguranca.</p>
+            <h3>Crie sua conta e pague com Pix</h3>
+            <p>Informe seus dados, revise o valor e conclua o pagamento para liberar o atendimento.</p>
           </article>
 
           <article class="step-card">
@@ -80,8 +127,8 @@ import { RouterLink } from '@angular/router';
               <div class="icon-box">02</div>
               <strong>02</strong>
             </div>
-            <h3>Atendimento</h3>
-            <p>Depois da confirmacao, voce segue para a jornada clinica e para a sala de atendimento.</p>
+            <h3>Entre na sala e fale com o medico</h3>
+            <p>Depois da confirmacao, voce segue para a jornada clinica e conversa em um ambiente remoto simples.</p>
           </article>
 
           <article class="step-card">
@@ -89,13 +136,40 @@ import { RouterLink } from '@angular/router';
               <div class="icon-box">03</div>
               <strong>03</strong>
             </div>
-            <h3>Documentacao</h3>
-            <p>Ao final da consulta, seus registros e documentos ficam organizados dentro do portal.</p>
+            <h3>Receba orientacao e documentos quando aplicavel</h3>
+            <p>Ao final, seus registros ficam organizados e a documentacao clinica pode ser disponibilizada quando indicada.</p>
           </article>
         </div>
 
         <div class="section-action">
           <a routerLink="/auth" class="dark-action">Quero me consultar</a>
+        </div>
+      </section>
+
+      <section class="assurance-section">
+        <div class="section-head">
+          <p class="section-tag">Transparencia</p>
+          <h2>Uma pagina mais clara reduz a hesitacao antes do cadastro</h2>
+        </div>
+
+        <div class="assurance-grid">
+          <article class="assurance-card">
+            <h3>O que esta claro antes do cadastro</h3>
+            <ul>
+              <li>Valor da consulta</li>
+              <li>Forma de pagamento</li>
+              <li>Como funciona o atendimento</li>
+              <li>Quando pode haver receita ou atestado</li>
+            </ul>
+          </article>
+          <article class="assurance-card">
+            <h3>Para quem esta decidindo agora</h3>
+            <p>
+              A pagina foi desenhada para responder rapido se a consulta e remota, como o pagamento funciona
+              e quais documentos podem ser emitidos quando houver indicacao clinica.
+            </p>
+            <a routerLink="/auth" class="inline-action">Iniciar cadastro</a>
+          </article>
         </div>
       </section>
 
@@ -113,8 +187,20 @@ import { RouterLink } from '@angular/router';
             <p>A consulta custa R$ 49,90, com pagamento por Pix para liberar seu atendimento.</p>
           </article>
           <article>
+            <h3>A consulta e com medico de verdade?</h3>
+            <p>Sim. A proposta da MedCallOn e organizar o atendimento remoto com profissionais com CRM em uma jornada digital clara.</p>
+          </article>
+          <article>
             <h3>Preciso criar conta antes?</h3>
             <p>Sim. O cadastro protege seus dados e ajuda a manter sua jornada, documentos e historico organizados.</p>
+          </article>
+          <article>
+            <h3>Receita e atestado sao garantidos?</h3>
+            <p>Nao. Eles podem ser emitidos quando houver indicacao clinica durante a consulta, de acordo com a avaliacao do medico.</p>
+          </article>
+          <article>
+            <h3>Preciso instalar algum aplicativo?</h3>
+            <p>Nao. A ideia e entrar na plataforma, concluir o fluxo e seguir para o atendimento online de forma simples.</p>
           </article>
           <article>
             <h3>Recebo documentos ao final?</h3>
@@ -126,7 +212,7 @@ import { RouterLink } from '@angular/router';
       <section class="cta-band" id="contato">
         <div>
           <p class="section-tag">Comece agora</p>
-          <h2>Seu atendimento pode comecar hoje, com um fluxo simples, valor claro e experiencia acolhedora.</h2>
+          <h2>Seu atendimento pode comecar hoje, com valor claro, fluxo simples e uma decisao mais segura antes do pagamento.</h2>
         </div>
         <a routerLink="/auth" class="band-action">Quero me consultar</a>
       </section>
@@ -231,6 +317,32 @@ import { RouterLink } from '@angular/router';
       line-height: 1.6;
     }
 
+    .hero-proof {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .hero-proof article {
+      padding: 16px 18px;
+      border-radius: 22px;
+      background: #fbfdfd;
+      border: 1px solid rgba(23, 49, 58, 0.08);
+      box-shadow: 0 14px 30px rgba(23, 49, 58, 0.05);
+    }
+
+    .hero-proof strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #17313a;
+      font-size: 1rem;
+    }
+
+    .hero-proof p {
+      color: #5b757d;
+      line-height: 1.55;
+    }
+
     .hero-actions {
       display: flex;
       flex-wrap: wrap;
@@ -325,6 +437,17 @@ import { RouterLink } from '@angular/router';
       letter-spacing: -0.06em;
     }
 
+    .visual-main ul {
+      position: relative;
+      z-index: 1;
+      margin: 2px 0 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 8px;
+      color: rgba(255, 255, 255, 0.96);
+      font-weight: 700;
+    }
+
     .visual-secondary {
       padding: 18px 20px;
       display: grid;
@@ -358,6 +481,8 @@ import { RouterLink } from '@angular/router';
     }
 
     .step-section,
+    .trust-section,
+    .assurance-section,
     .faq-section,
     .cta-band {
       display: grid;
@@ -397,6 +522,63 @@ import { RouterLink } from '@angular/router';
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 22px;
+    }
+
+    .trust-grid,
+    .assurance-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .trust-card,
+    .assurance-card {
+      padding: 24px 26px;
+      border-radius: 28px;
+      background: #f8fcfc;
+      border: 1px solid rgba(23, 49, 58, 0.07);
+      box-shadow: 0 18px 38px rgba(23, 49, 58, 0.05);
+    }
+
+    .trust-card strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+      color: #20353b;
+    }
+
+    .trust-card p,
+    .assurance-card p {
+      color: #67838a;
+      line-height: 1.65;
+    }
+
+    .assurance-card h3 {
+      margin-bottom: 10px;
+      font-size: 1.25rem;
+      color: #20353b;
+    }
+
+    .assurance-card ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 10px;
+      color: #4f6c74;
+      font-weight: 700;
+    }
+
+    .inline-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 16px;
+      padding: 14px 20px;
+      border-radius: 16px;
+      background: #20353b;
+      color: #fff;
+      text-decoration: none;
+      font-weight: 800;
     }
 
     .step-card {
@@ -519,6 +701,8 @@ import { RouterLink } from '@angular/router';
     @media (max-width: 1100px) {
       .hero,
       .steps-grid,
+      .trust-grid,
+      .assurance-grid,
       .cta-band {
         grid-template-columns: 1fr 1fr;
       }
@@ -538,7 +722,10 @@ import { RouterLink } from '@angular/router';
         gap: 40px;
       }
 
+      .hero-proof,
       .steps-grid,
+      .trust-grid,
+      .assurance-grid,
       .faq-list {
         grid-template-columns: 1fr;
       }
