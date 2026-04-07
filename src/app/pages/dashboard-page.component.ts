@@ -524,6 +524,7 @@ export class DashboardPageComponent {
   readonly doctorProfile = signal<DoctorResponse | null>(null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
+  private readonly trackedPurchaseConversions = new Set<number>();
   readonly currentTime = signal(Date.now());
   private pixPaymentPollingId: number | null = null;
   readonly visibleSelectedDoctorSlots = computed(() =>
@@ -1471,6 +1472,7 @@ export class DashboardPageComponent {
         next: (payment) => {
           this.activePixPayment.set(payment);
           if (payment.paymentStatus === 'CONFIRMED') {
+            this.trackPixApprovedConversion(payment);
             this.stopPixPaymentPolling();
             this.pendingBookingSlot.set(null);
             this.consultationReason.reset('');
@@ -1490,6 +1492,23 @@ export class DashboardPageComponent {
           this.stopPixPaymentPolling();
           this.handleError('Nao foi possivel atualizar o status do pagamento Pix.');
         }
-      });
+        });
+  }
+
+  private trackPixApprovedConversion(payment: PaymentResponse): void {
+    if (this.trackedPurchaseConversions.has(payment.id)) {
+      return;
+    }
+
+    const gtag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
+    if (!gtag) {
+      return;
+    }
+
+    this.trackedPurchaseConversions.add(payment.id);
+    gtag('event', 'conversion', {
+      send_to: 'AW-18059561380/kaUFCNTV4pccEKSTvKND',
+      transaction_id: String(payment.id)
+    });
   }
 }
