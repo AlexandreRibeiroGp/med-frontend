@@ -13,6 +13,10 @@ import { filter, map, startWith } from 'rxjs';
       <header class="topbar" *ngIf="!isAuthRoute()">
         <a class="brand" routerLink="/">
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
+          <div class="brand-copy">
+            <strong>MedCallOn</strong>
+            <span>Consulta medica online</span>
+          </div>
         </a>
 
         <nav class="nav" *ngIf="auth.isAuthenticated(); else guestActions">
@@ -98,6 +102,7 @@ import { filter, map, startWith } from 'rxjs';
     .brand {
       display: inline-flex;
       align-items: center;
+      gap: 12px;
       color: inherit;
       text-decoration: none;
     }
@@ -107,6 +112,23 @@ import { filter, map, startWith } from 'rxjs';
       width: auto;
       display: block;
       object-fit: contain;
+    }
+
+    .brand-copy {
+      display: grid;
+      gap: 2px;
+    }
+
+    .brand-copy strong {
+      font-size: 1.05rem;
+      line-height: 1.1;
+      color: #112027;
+    }
+
+    .brand-copy span {
+      font-size: 0.82rem;
+      line-height: 1.2;
+      color: #5d6d73;
     }
 
     .brand small,
@@ -243,6 +265,9 @@ import { filter, map, startWith } from 'rxjs';
       }
       .brand-logo {
         height: 44px;
+      }
+      .brand-copy span {
+        display: none;
       }
       .cookie-banner {
         left: 16px;

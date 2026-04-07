@@ -18,6 +18,7 @@ import {
   PatientProfileResponse,
   PrescriptionSignatureStartResponse
 } from '../core/models';
+import { composeAddress, parseAddress } from '../core/address-form';
 import { TelemedApiService } from '../core/telemed-api.service';
 import { ToastService } from '../core/toast.service';
 import { CallQueuePanelComponent } from '../features/dashboard/call-queue-panel.component';
@@ -595,7 +596,13 @@ export class DashboardPageComponent {
     fullName: ['', [Validators.required, Validators.minLength(3)]],
     phoneNumber: [''],
     profession: ['', [Validators.required, Validators.minLength(2)]],
-    address: ['']
+    postalCode: [''],
+    street: [''],
+    number: [''],
+    complement: [''],
+    neighborhood: [''],
+    city: [''],
+    state: ['']
   });
   readonly doctorProfileForm = this.fb.nonNullable.group({
     fullName: ['', [Validators.required, Validators.minLength(3)]],
@@ -661,7 +668,7 @@ export class DashboardPageComponent {
         fullName: profile.user.fullName ?? '',
         phoneNumber: profile.user.phoneNumber ?? '',
         profession: profile.profession ?? '',
-        address: profile.address ?? ''
+        ...parseAddress(profile.address)
       }, { emitEvent: false });
       if (!this.patientOccupation.value.trim() && profile.profession) {
         this.patientOccupation.setValue(profile.profession);
@@ -1022,7 +1029,7 @@ export class DashboardPageComponent {
         fullName: raw.fullName.trim(),
         phoneNumber: raw.phoneNumber.trim() || null,
         profession: raw.profession.trim(),
-        address: raw.address.trim() || null
+        address: composeAddress(raw)
       })
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

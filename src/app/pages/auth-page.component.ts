@@ -4,6 +4,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
+import { composeAddress } from '../core/address-form';
 import { AuthService } from '../core/auth.service';
 import { LegalDocumentResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
@@ -89,7 +90,13 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <input formControlName="documentNumber" placeholder="CPF" />
           <input formControlName="birthDate" placeholder="Nascimento" type="date" />
           <input formControlName="profession" placeholder="Profissao" />
-          <input formControlName="address" placeholder="Endereco completo: rua, numero, complemento e CEP" />
+          <input formControlName="postalCode" placeholder="CEP" />
+          <input formControlName="street" placeholder="Rua" />
+          <input formControlName="number" placeholder="Numero" />
+          <input formControlName="complement" placeholder="Complemento" />
+          <input formControlName="neighborhood" placeholder="Bairro" />
+          <input formControlName="city" placeholder="Cidade" />
+          <input formControlName="state" placeholder="Estado" />
           <label class="checkbox-line">
             <input type="checkbox" [formControl]="termsConsentControl" />
             <span>
@@ -518,7 +525,13 @@ export class AuthPageComponent {
     documentNumber: [''],
     birthDate: [''],
     profession: [''],
-    address: ['']
+    postalCode: [''],
+    street: [''],
+    number: [''],
+    complement: [''],
+    neighborhood: [''],
+    city: [''],
+    state: ['']
   });
   readonly termsConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
   readonly telemedicineConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
@@ -570,9 +583,17 @@ export class AuthPageComponent {
       return;
     }
 
+    const raw = this.patientForm.getRawValue();
     this.runRequest(
       this.api.registerPatient({
-        ...this.patientForm.getRawValue(),
+        fullName: raw.fullName,
+        email: raw.email,
+        password: raw.password,
+        phoneNumber: raw.phoneNumber || null,
+        documentNumber: raw.documentNumber || null,
+        birthDate: raw.birthDate || null,
+        profession: raw.profession || null,
+        address: composeAddress(raw),
         acceptedDocumentIds,
         acceptedTelemedicine: true
       }),
@@ -686,6 +707,7 @@ export class AuthPageComponent {
           this.loginForm.reset();
           this.forgotPasswordForm.reset();
           this.resetPasswordForm.reset();
+          this.patientForm.reset();
           this.termsConsentControl.reset(false);
           this.telemedicineConsentControl.reset(false);
           void this.router.navigate([], { queryParams: {}, replaceUrl: true });

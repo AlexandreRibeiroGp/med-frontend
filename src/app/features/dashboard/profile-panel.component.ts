@@ -38,9 +38,39 @@ import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models'
               <input formControlName="profession" type="text" />
             </label>
 
+            <label>
+              <span>CEP</span>
+              <input formControlName="postalCode" type="text" />
+            </label>
+
             <label class="full">
-              <span>Endereco</span>
-              <input formControlName="address" type="text" />
+              <span>Rua</span>
+              <input formControlName="street" type="text" />
+            </label>
+
+            <label>
+              <span>Numero</span>
+              <input formControlName="number" type="text" />
+            </label>
+
+            <label>
+              <span>Complemento</span>
+              <input formControlName="complement" type="text" />
+            </label>
+
+            <label>
+              <span>Bairro</span>
+              <input formControlName="neighborhood" type="text" />
+            </label>
+
+            <label>
+              <span>Cidade</span>
+              <input formControlName="city" type="text" />
+            </label>
+
+            <label>
+              <span>Estado</span>
+              <input formControlName="state" type="text" />
             </label>
           </div>
 

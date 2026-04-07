@@ -10,6 +10,7 @@ import { RouterLink } from '@angular/router';
       <section class="hero" id="inicio">
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preco acessivel</p>
+          <p class="brand-kicker">MedCallOn</p>
           <div class="price-pill">Consulta R$ 49,90</div>
           <h1>Atendimento medico online com praticidade, acolhimento e valor claro.</h1>
           <p class="lead">
@@ -131,6 +132,7 @@ import { RouterLink } from '@angular/router';
       </section>
 
       <footer class="legal-footer">
+        <span class="footer-brand">MedCallOn | medcallon.com.br</span>
         <a routerLink="/legal/privacidade">Politica de Privacidade</a>
         <a routerLink="/legal/termos">Termos de Uso</a>
         <a routerLink="/legal/cookies">Politica de Cookies</a>
@@ -176,6 +178,13 @@ import { RouterLink } from '@angular/router';
       font-size: 0.74rem;
       font-weight: 800;
       color: #20b8b2;
+    }
+
+    .brand-kicker {
+      margin: -8px 0 0;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: #17313a;
     }
 
     .price-pill {
@@ -492,6 +501,13 @@ import { RouterLink } from '@angular/router';
       justify-content: center;
       gap: 14px;
       padding-top: 8px;
+    }
+
+    .footer-brand {
+      width: 100%;
+      text-align: center;
+      color: #17313a;
+      font-weight: 800;
     }
 
     .legal-footer a {
