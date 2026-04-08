@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -12,14 +12,14 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <div class="landing">
       <section class="hero" id="inicio">
         <div class="hero-copy">
-          <p class="eyebrow">Consulta online com preco acessivel</p>
+          <p class="eyebrow">Consulta online com preço acessível</p>
           <p class="brand-kicker">MedCallOn</p>
           <a routerLink="/auth" class="price-pill">Consulta R$ 49,90</a>
-          <h1>Consulta medica online com atendimento simples e seguro.</h1>
+          <h1>Consulta médica online com atendimento simples e seguro.</h1>
           <p class="lead">
-            Atendimento com clinico geral por telemedicina, pagamento por Pix e acesso pela plataforma da MedCallOn.
+            Atendimento com clínico geral por telemedicina, pagamento por Pix e acesso pela plataforma da MedCallOn.
           </p>
-          <p class="hero-note">Receita e atestado podem ser emitidos quando houver indicacao clinica.</p>
+          <p class="hero-note">Receita e atestado podem ser emitidos quando houver indicação clínica.</p>
           <div class="hero-actions">
             <a routerLink="/auth" class="primary-action">Agendar consulta</a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
@@ -42,22 +42,21 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="info-band">
         <article class="info-card">
           <h2>Atendimento para sintomas comuns</h2>
-          <p>Gripe, febre, dor de garganta, virose, mal-estar e outras queixas clinicas de baixa complexidade.</p>
+          <p>Gripe, febre, dor de garganta, virose, mal-estar e outras queixas clínicas de baixa complexidade.</p>
         </article>
         <article class="info-card">
           <h2>Processo simples</h2>
-          <p>Cadastro, pagamento e entrada na consulta em um fluxo curto, pensado para quem precisa resolver rapido.</p>
+          <p>Cadastro, pagamento e entrada na consulta em um fluxo curto, pensado para quem precisa resolver rápido.</p>
         </article>
         <article class="info-card">
           <h2>Informacoes claras</h2>
-          <p>Valor da consulta, forma de pagamento e funcionamento da jornada explicados logo no inicio.</p>
+          <p>Valor da consulta, forma de pagamento e funcionamento da jornada explicados logo no início.</p>
         </article>
       </section>
 
       <section class="doctor-section" *ngIf="featuredDoctor() as doctor">
         <div class="section-head">
-          <p class="section-tag">Medico em destaque</p>
-          <h2>Profissional identificado e com informacoes objetivas.</h2>
+          <p class="section-tag">Médico disponível</p>
         </div>
 
         <article class="doctor-card">
@@ -67,7 +66,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
           </div>
           <div class="doctor-copy">
             <h3>{{ doctor.user.fullName }}</h3>
-            <p class="doctor-meta">CRM {{ doctor.crm }} � {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clinico geral' : doctor.specialty }}</p>
+            <p class="doctor-meta">CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clínico geral' : doctor.specialty }}</p>
             <p>Atendimento online pela plataforma da MedCallOn.</p>
           </div>
           <a routerLink="/auth" class="doctor-action">Seguir para o cadastro</a>
@@ -94,28 +93,46 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <article class="step-card">
             <span>3</span>
             <h3>Consulta</h3>
-            <p>Entre na sala e fale com o medico pela plataforma.</p>
+            <p>Entre na sala e fale com o médico pela plataforma.</p>
           </article>
         </div>
       </section>
 
-      <section class="testimonials-section">
+      <section class="reviews-section">
         <div class="section-head">
-          <p class="section-tag">Experiencia</p>
-          <h2>O que a pessoa encontra ao entrar.</h2>
+          <p class="section-tag">Avaliações</p>
+          <h2>Quem já passou pela consulta.</h2>
         </div>
 
-        <div class="testimonials-grid">
-          <article class="testimonial-card"><p>Valor claro antes do cadastro.</p></article>
-          <article class="testimonial-card"><p>Clinico geral identificado na plataforma.</p></article>
-          <article class="testimonial-card"><p>Fluxo simples para seguir ate a consulta.</p></article>
+        <div class="reviews-grid">
+          <article class="review-card review-card--highlight review-card--quote">
+            <div class="review-head">
+              <div class="review-avatar">H</div>
+              <div>
+                <h3>Henrique Teixeira</h3>
+                <p class="review-meta">5 estrelas · 1 avaliação</p>
+              </div>
+            </div>
+            <p>
+              O atendimento com a Dra. Carla foi excelente! Muito atenciosa e profissional.
+              A plataforma é fácil de usar e o atendimento foi rápido. Recomendo muito!
+            </p>
+          </article>
+          <article class="review-card">
+            <h3>Atendimento com médico identificado</h3>
+            <p>Nome, CRM e dados principais do profissional aparecem antes da consulta.</p>
+          </article>
+          <article class="review-card">
+            <h3>Fluxo simples do início ao fim</h3>
+            <p>Cadastro, pagamento e entrada na consulta acontecem em uma jornada curta.</p>
+          </article>
         </div>
       </section>
 
       <section class="faq-section" id="faq">
         <div class="section-head centered">
           <p class="section-tag">Perguntas frequentes</p>
-          <h2>Informacoes diretas.</h2>
+          <h2>Informações diretas.</h2>
         </div>
 
         <div class="faq-list">
@@ -125,11 +142,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
           </article>
           <article>
             <h3>Como pago?</h3>
-            <p>O pagamento e feito por Pix para liberar o atendimento.</p>
+            <p>O pagamento é feito por Pix para liberar o atendimento.</p>
           </article>
           <article>
-            <h3>Receita e atestado sao garantidos?</h3>
-            <p>Podem ser emitidos quando houver indicacao clinica.</p>
+            <h3>Receita e atestado são garantidos?</h3>
+            <p>Podem ser emitidos quando houver indicação clínica.</p>
           </article>
         </div>
       </section>
@@ -139,9 +156,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <p class="section-tag">Comece agora</p>
           <a routerLink="/auth" class="primary-action">Agendar consulta</a>
         </div>
-        <a routerLink="/legal/privacidade">Politica de Privacidade</a>
+        <a routerLink="/legal/privacidade">Política de Privacidade</a>
         <a routerLink="/legal/termos">Termos de Uso</a>
-        <a routerLink="/legal/cookies">Politica de Cookies</a>
+        <a routerLink="/legal/cookies">Política de Cookies</a>
       </footer>
     </div>
   `,
@@ -223,7 +240,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .hero-note,
     .info-card p,
     .step-card p,
-    .testimonial-card p,
+    .review-card p,
     .doctor-copy p,
     .faq-list p {
       color: #617b82;
@@ -290,16 +307,58 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     .info-band,
     .steps-grid,
-    .testimonials-grid,
+    .reviews-grid,
     .faq-list {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 18px;
     }
 
+    .reviews-grid {
+      grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+    }
+
+    .review-card {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+      min-height: 100%;
+    }
+
+    .review-card--highlight {
+      background: #eef8f8;
+      border-color: rgba(32, 184, 178, 0.18);
+    }
+
+    .review-card--quote {
+      gap: 14px;
+    }
+
+    .review-head {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .review-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 999px;
+      background: #1f666b;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+    }
+
+    .review-meta {
+      color: #7a9196;
+      font-size: 0.92rem;
+    }
     .doctor-section,
     .steps-section,
-    .testimonials-section,
+    .reviews-section,
     .faq-section,
     .legal-footer {
       display: grid;
@@ -320,6 +379,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     .section-head h2,
     .info-card h2,
     .step-card h3,
+    .review-card h3,
     .doctor-copy h3,
     .faq-list h3 {
       font-size: 1.18rem;
@@ -330,7 +390,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     .info-card,
     .step-card,
-    .testimonial-card,
+    .review-card,
     .faq-list article,
     .doctor-card {
       padding: 22px;
@@ -411,7 +471,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       .hero,
       .info-band,
       .steps-grid,
-      .testimonials-grid,
+      .reviews-grid,
       .faq-list,
       .doctor-card {
         grid-template-columns: 1fr;
@@ -458,3 +518,5 @@ export class HomePageComponent {
       });
   }
 }
+
+
