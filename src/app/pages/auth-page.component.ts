@@ -35,21 +35,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <span>Receita e atestado quando necessario</span>
         </div>
 
-        <div class="journey-steps">
-          <article>
-            <strong>1. Cadastro</strong>
-            <p>Informe seus dados e proteja sua jornada dentro da plataforma.</p>
-          </article>
-          <article>
-            <strong>2. Pix</strong>
-            <p>Conclua o pagamento para liberar o seu atendimento.</p>
-          </article>
-          <article>
-            <strong>3. Atendimento</strong>
-            <p>Entre na sala e fale com o medico em ambiente remoto organizado.</p>
-          </article>
-        </div>
-
         <div class="switcher">
           <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">Entrar</button>
           <button type="button" [class.active]="mode() === 'patient'" (click)="mode.set('patient')">Criar conta</button>

@@ -57,6 +57,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="doctor-section" *ngIf="featuredDoctor() as doctor">
         <div class="section-head">
           <p class="section-tag">Médico disponível</p>
+          <h2>Profissionais com foto, CRM e apresentação objetiva.</h2>
         </div>
 
         <article class="doctor-card">
@@ -67,10 +68,24 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <div class="doctor-copy">
             <h3>{{ doctor.user.fullName }}</h3>
             <p class="doctor-meta">CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clínico geral' : doctor.specialty }}</p>
-            <p>Atendimento online pela plataforma da MedCallOn.</p>
+            <p>{{ doctor.biography || 'Atendimento online pela plataforma da MedCallOn.' }}</p>
           </div>
           <a routerLink="/auth" class="doctor-action">Seguir para o cadastro</a>
         </article>
+
+        <div class="doctors-grid" *ngIf="doctors().length > 1">
+          <article class="doctor-card doctor-card--compact" *ngFor="let item of doctors()">
+            <div class="doctor-photo">
+              <img *ngIf="item.profilePhotoUrl" [src]="item.profilePhotoUrl" [alt]="item.user.fullName" />
+              <span *ngIf="!item.profilePhotoUrl">{{ item.user.fullName.charAt(0) }}</span>
+            </div>
+            <div class="doctor-copy">
+              <h3>{{ item.user.fullName }}</h3>
+              <p class="doctor-meta">CRM {{ item.crm }} · {{ item.specialty === 'GENERALISTA' || item.specialty === 'GERAL' ? 'Clínico geral' : item.specialty }}</p>
+              <p>{{ item.biography || 'Atendimento por telemedicina com foco em orientação clínica e jornada objetiva.' }}</p>
+            </div>
+          </article>
+        </div>
       </section>
 
       <section class="steps-section" id="como-funciona">
@@ -116,6 +131,32 @@ import { TelemedApiService } from '../core/telemed-api.service';
             <p>
               O atendimento com a Dra. Carla foi excelente! Muito atenciosa e profissional.
               A plataforma é fácil de usar e o atendimento foi rápido. Recomendo muito!
+            </p>
+          </article>
+          <article class="review-card review-card--quote">
+            <div class="review-head">
+              <div class="review-avatar">A</div>
+              <div>
+                <h3>Antonio Rodrigues</h3>
+                <p class="review-meta">5 estrelas</p>
+              </div>
+            </div>
+            <p>
+              O atendimento foi excelente, rápido e muito profissional. A plataforma é simples de usar e facilitou
+              muito todo o processo da consulta. Consegui resolver meu problema sem sair de casa. Recomendo muito!
+            </p>
+          </article>
+          <article class="review-card review-card--quote">
+            <div class="review-head">
+              <div class="review-avatar">F</div>
+              <div>
+                <h3>Fernanda Silva</h3>
+                <p class="review-meta">5 estrelas</p>
+              </div>
+            </div>
+            <p>
+              Fiquei muito satisfeita com o atendimento! Foi rápido, prático e super profissional. A plataforma é bem
+              fácil de usar e todo o processo foi muito tranquilo. Com certeza utilizarei novamente e recomendo!
             </p>
           </article>
           <article class="review-card">
@@ -228,9 +269,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     h1 {
-      max-width: 10ch;
-      font-size: clamp(2.6rem, 4.4vw, 4.8rem);
-      line-height: 1;
+      max-width: 13ch;
+      font-size: clamp(2.6rem, 4vw, 4.6rem);
+      line-height: 0.98;
       letter-spacing: -0.04em;
       color: #1a333a;
       font-weight: 700;
@@ -315,7 +356,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .reviews-grid {
-      grid-template-columns: minmax(0, 1.2fr) repeat(2, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
     }
 
     .review-card {
@@ -406,6 +447,24 @@ import { TelemedApiService } from '../core/telemed-api.service';
       align-items: center;
     }
 
+    .doctors-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .doctor-card--compact {
+      grid-template-columns: auto 1fr;
+      align-items: start;
+    }
+
+    .doctor-card--compact .doctor-photo {
+      width: 72px;
+      height: 72px;
+      border-radius: 18px;
+      font-size: 1.6rem;
+    }
+
     .doctor-photo {
       width: 88px;
       height: 88px;
@@ -470,6 +529,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     @media (max-width: 1100px) {
       .hero,
       .info-band,
+      .doctors-grid,
       .steps-grid,
       .reviews-grid,
       .faq-list,
@@ -504,6 +564,7 @@ export class HomePageComponent {
   private readonly api = inject(TelemedApiService);
   private readonly destroyRef = inject(DestroyRef);
   readonly featuredDoctor = signal<DoctorResponse | null>(null);
+  readonly doctors = signal<DoctorResponse[]>([]);
 
   constructor() {
     this.api
@@ -511,10 +572,15 @@ export class HomePageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (doctors) => {
-          const telemedicineDoctor = doctors.find((doctor) => doctor.telemedicineEnabled) ?? doctors[0] ?? null;
+          const availableDoctors = doctors.filter((doctor) => doctor.telemedicineEnabled);
+          const telemedicineDoctor = availableDoctors[0] ?? doctors[0] ?? null;
+          this.doctors.set((availableDoctors.length ? availableDoctors : doctors).slice(0, 3));
           this.featuredDoctor.set(telemedicineDoctor);
         },
-        error: () => this.featuredDoctor.set(null)
+        error: () => {
+          this.featuredDoctor.set(null);
+          this.doctors.set([]);
+        }
       });
   }
 }
