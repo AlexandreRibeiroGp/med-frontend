@@ -57,7 +57,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="doctor-section" *ngIf="featuredDoctor() as doctor">
         <div class="section-head">
           <p class="section-tag">Médico disponível</p>
-          <h2>Profissionais com foto, CRM e apresentação objetiva.</h2>
         </div>
 
         <article class="doctor-card">
@@ -189,6 +188,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <p class="section-tag">Comece agora</p>
           <a routerLink="/auth" class="primary-action">Agendar consulta</a>
         </div>
+        <a href="mailto:mmedcallon@gmail.com">mmedcallon@gmail.com</a>
         <a routerLink="/legal/privacidade">Política de Privacidade</a>
         <a routerLink="/legal/termos">Termos de Uso</a>
         <a routerLink="/legal/cookies">Política de Cookies</a>
