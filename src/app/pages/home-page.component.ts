@@ -1,6 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { DoctorResponse } from '../core/models';
+import { TelemedApiService } from '../core/telemed-api.service';
 
 @Component({
   selector: 'app-home-page',
@@ -11,7 +14,7 @@ import { RouterLink } from '@angular/router';
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preco acessivel</p>
           <p class="brand-kicker">MedCallOn</p>
-          <div class="price-pill">Consulta R$ 49,90</div>
+          <a routerLink="/auth" class="price-pill">Consulta R$ 49,90</a>
           <h1>Consulta medica online com atendimento rapido, valor claro e mais seguranca para decidir.</h1>
           <p class="lead">
             Fale com um medico sem sair de casa, com pagamento por Pix, acesso simples pela plataforma
@@ -20,6 +23,14 @@ import { RouterLink } from '@angular/router';
           <p class="hero-highlight">
             Quando houver indicacao clinica, os medicos podem emitir receita e atestado durante o atendimento.
           </p>
+
+          <div class="symptoms-strip">
+            <span>Gripe</span>
+            <span>Febre</span>
+            <span>Dor de garganta</span>
+            <span>Virose</span>
+            <span>Dor lombar</span>
+          </div>
 
           <div class="hero-proof">
             <article>
@@ -46,7 +57,7 @@ import { RouterLink } from '@angular/router';
         </div>
 
         <div class="hero-visual">
-          <div class="visual-card visual-main">
+          <a routerLink="/auth" class="visual-card visual-main visual-main-link">
             <p>Consulta online com MedCallOn</p>
             <strong>R$ 49,90</strong>
             <small>Uma jornada pensada para transmitir confianca, clareza e facilidade desde o primeiro acesso.</small>
@@ -55,7 +66,7 @@ import { RouterLink } from '@angular/router';
               <li>Atendimento remoto</li>
               <li>Receita e atestado quando necessario</li>
             </ul>
-          </div>
+          </a>
 
           <div class="visual-card visual-secondary">
             <span>01</span>
@@ -73,6 +84,97 @@ import { RouterLink } from '@angular/router';
             </div>
           </div>
         </div>
+      </section>
+
+      <section class="clinical-section">
+        <div class="section-head">
+          <p class="section-tag">Pronto atendimento online</p>
+          <h2>Para quem quer saber rapido se a consulta serve para o seu caso</h2>
+          <p>
+            A MedCallOn foi organizada para sintomas comuns e orientacao clinica remota, com foco em
+            clareza, rapidez e decisao simples antes do pagamento.
+          </p>
+        </div>
+
+        <div class="clinical-grid">
+          <article class="clinical-card">
+            <h3>Atendimentos mais buscados</h3>
+            <ul>
+              <li>Gripe, febre e virose</li>
+              <li>Dor de garganta e sintomas respiratorios leves</li>
+              <li>Diarreia, vomitos e indisposicao</li>
+              <li>Dor lombar e mal-estar geral</li>
+            </ul>
+          </article>
+
+          <article class="clinical-card">
+            <h3>O que a pessoa encontra aqui</h3>
+            <ul>
+              <li>Clinico geral online</li>
+              <li>Pagamento por Pix com valor claro</li>
+              <li>Consulta remota em plataforma propria</li>
+              <li>Receita e atestado quando houver indicacao clinica</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="doctor-section" *ngIf="featuredDoctor() as doctor">
+        <div class="section-head">
+          <p class="section-tag">Profissional em destaque</p>
+          <h2>Um medico real, com identificacao clara, ajuda a reduzir a inseguranca antes do cadastro</h2>
+        </div>
+
+        <article class="doctor-card">
+          <div class="doctor-photo" [class.has-photo]="!!doctor.profilePhotoUrl">
+            <img *ngIf="doctor.profilePhotoUrl" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+            <span *ngIf="!doctor.profilePhotoUrl">{{ doctor.user.fullName.charAt(0) }}</span>
+          </div>
+          <div class="doctor-copy">
+            <strong>{{ doctor.user.fullName }}</strong>
+            <p class="doctor-meta">
+              CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clinico geral' : doctor.specialty }}
+            </p>
+            <p>
+              Atendimento remoto em telemedicina com perfil ativo na plataforma e fluxo pensado para consulta online.
+            </p>
+            <div class="doctor-badges">
+              <span>Telemedicina habilitada</span>
+              <span>Consulta online por R$ 49,90</span>
+            </div>
+          </div>
+          <a routerLink="/auth" class="doctor-action">Quero consultar com seguranca</a>
+        </article>
+      </section>
+
+      <section class="availability-section" *ngIf="featuredDoctor() as doctor">
+        <div class="section-head">
+          <p class="section-tag">Disponibilidade</p>
+          <h2>Quem quer resolver agora precisa ver disponibilidade logo no inicio</h2>
+          <p>
+            A jornada fica mais convincente quando a pessoa enxerga que existe medico ativo na plataforma e
+            um caminho rapido para seguir com o atendimento.
+          </p>
+        </div>
+
+        <article class="availability-card">
+          <div class="availability-copy">
+            <strong>{{ doctor.user.fullName }}</strong>
+            <p>
+              CRM {{ doctor.crm }} ·
+              {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clinico geral' : doctor.specialty }}
+            </p>
+            <div class="availability-badges">
+              <span>Ativo na plataforma</span>
+              <span *ngIf="doctor.telemedicineEnabled">Telemedicina habilitada</span>
+              <span>Consulta online R$ 49,90</span>
+            </div>
+          </div>
+          <div class="availability-actions">
+            <a routerLink="/auth" class="primary-action">Ver horarios e seguir para o cadastro</a>
+            <a href="#como-funciona" class="secondary-action">Entender como funciona</a>
+          </div>
+        </article>
       </section>
 
       <section class="trust-section" aria-label="Motivos para confiar na MedCallOn">
@@ -275,6 +377,9 @@ import { RouterLink } from '@angular/router';
 
     .price-pill {
       justify-self: start;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       padding: 12px 22px;
       border-radius: 999px;
       background: #25c1bb;
@@ -282,6 +387,7 @@ import { RouterLink } from '@angular/router';
       font-weight: 800;
       font-size: 1.05rem;
       box-shadow: 0 18px 42px rgba(37, 193, 187, 0.22);
+      text-decoration: none;
     }
 
     h1,
@@ -321,6 +427,21 @@ import { RouterLink } from '@angular/router';
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 14px;
+    }
+
+    .symptoms-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .symptoms-strip span {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #f6fbfb;
+      border: 1px solid rgba(32, 184, 178, 0.14);
+      color: #29585e;
+      font-weight: 700;
     }
 
     .hero-proof article {
@@ -450,6 +571,10 @@ import { RouterLink } from '@angular/router';
       font-weight: 700;
     }
 
+    .visual-main-link {
+      text-decoration: none;
+    }
+
     .visual-secondary {
       padding: 18px 20px;
       display: grid;
@@ -483,6 +608,9 @@ import { RouterLink } from '@angular/router';
     }
 
     .step-section,
+    .clinical-section,
+    .doctor-section,
+    .availability-section,
     .trust-section,
     .assurance-section,
     .faq-section,
@@ -500,10 +628,6 @@ import { RouterLink } from '@angular/router';
     .section-head.centered {
       justify-self: center;
       text-align: center;
-    }
-
-    .section-head.narrow {
-      max-width: 860px;
     }
 
     .section-head h2,
@@ -527,12 +651,14 @@ import { RouterLink } from '@angular/router';
     }
 
     .trust-grid,
+    .clinical-grid,
     .assurance-grid {
       display: grid;
       grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 18px;
     }
 
+    .clinical-card,
     .trust-card,
     .assurance-card {
       padding: 24px 26px;
@@ -542,6 +668,7 @@ import { RouterLink } from '@angular/router';
       box-shadow: 0 18px 38px rgba(23, 49, 58, 0.05);
     }
 
+    .clinical-card h3,
     .trust-card strong {
       display: block;
       margin-bottom: 8px;
@@ -549,10 +676,139 @@ import { RouterLink } from '@angular/router';
       color: #20353b;
     }
 
+    .clinical-card ul {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 12px;
+      color: #4f6c74;
+      line-height: 1.6;
+      font-weight: 700;
+    }
+
     .trust-card p,
     .assurance-card p {
       color: #67838a;
       line-height: 1.65;
+    }
+
+    .doctor-card {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 22px;
+      align-items: center;
+      padding: 28px;
+      border-radius: 30px;
+      background: linear-gradient(180deg, #f7fcfc 0%, #edf8f8 100%);
+      border: 1px solid rgba(23, 49, 58, 0.07);
+    }
+
+    .availability-card {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 22px;
+      align-items: center;
+      padding: 26px 28px;
+      border-radius: 30px;
+      background: #20353b;
+      color: #fff;
+    }
+
+    .availability-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .availability-copy strong {
+      font-size: 1.45rem;
+    }
+
+    .availability-copy p {
+      color: rgba(255, 255, 255, 0.82);
+      line-height: 1.55;
+    }
+
+    .availability-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .availability-badges span {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .availability-actions {
+      display: grid;
+      gap: 12px;
+      min-width: 260px;
+    }
+
+    .availability-actions .secondary-action {
+      text-align: center;
+      border-color: rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
+    .doctor-photo {
+      width: 104px;
+      height: 104px;
+      border-radius: 28px;
+      background: #1f555d;
+      color: #fff;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      font-weight: 800;
+      overflow: hidden;
+    }
+
+    .doctor-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .doctor-copy {
+      display: grid;
+      gap: 8px;
+    }
+
+    .doctor-copy strong {
+      font-size: 1.45rem;
+      color: #17313a;
+    }
+
+    .doctor-meta {
+      font-weight: 800;
+    }
+    .doctor-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .doctor-badges span {
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid rgba(23, 49, 58, 0.08);
+      color: #325960;
+    }
+
+    .doctor-action {
+      text-decoration: none;
+      padding: 16px 22px;
+      background: #25c1bb;
+      color: #fff;
     }
 
     .assurance-card h3 {
@@ -704,6 +960,7 @@ import { RouterLink } from '@angular/router';
       .hero,
       .steps-grid,
       .trust-grid,
+      .clinical-grid,
       .assurance-grid,
       .cta-band {
         grid-template-columns: 1fr 1fr;
@@ -720,6 +977,18 @@ import { RouterLink } from '@angular/router';
       .hero-visual {
         margin-top: 0;
       }
+
+      .doctor-card {
+        grid-template-columns: 1fr;
+      }
+
+      .availability-card {
+        grid-template-columns: 1fr;
+      }
+
+      .availability-actions {
+        min-width: 0;
+      }
     }
 
     @media (max-width: 820px) {
@@ -731,6 +1000,7 @@ import { RouterLink } from '@angular/router';
       .hero-proof,
       .steps-grid,
       .trust-grid,
+      .clinical-grid,
       .assurance-grid,
       .faq-list {
         grid-template-columns: 1fr;
@@ -759,6 +1029,23 @@ import { RouterLink } from '@angular/router';
   `
 })
 export class HomePageComponent {
-  // A vitrine de medicos permanece comentada por enquanto para manter a home mais enxuta.
+  private readonly api = inject(TelemedApiService);
+  private readonly destroyRef = inject(DestroyRef);
+  readonly featuredDoctor = signal<DoctorResponse | null>(null);
+
+  constructor() {
+    this.api
+      .getDoctors()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (doctors) => {
+          const telemedicineDoctor = doctors.find((doctor) => doctor.telemedicineEnabled) ?? doctors[0] ?? null;
+          this.featuredDoctor.set(telemedicineDoctor);
+        },
+        error: () => {
+          this.featuredDoctor.set(null);
+        }
+      });
+  }
 }
 
