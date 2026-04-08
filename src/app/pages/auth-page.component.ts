@@ -174,38 +174,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
         </div>
       </section>
 
-      <aside class="panel showcase">
-        <p class="showcase-tag">Atendimento online</p>
-        <h2>Seu atendimento comecando de forma simples, clara e mais confiavel.</h2>
-        <p class="showcase-copy">
-          Entre, conclua o pagamento por Pix e siga para a jornada com o medico de maneira pratica, sem excesso de passos.
-        </p>
-
-        <div class="showcase-summary">
-          <strong>O que fica claro antes de pagar</strong>
-          <ul>
-            <li>Valor da consulta: R$ 49,90</li>
-            <li>Pagamento por Pix</li>
-            <li>Atendimento online em plataforma propria</li>
-            <li>Receita e atestado quando necessario</li>
-          </ul>
-        </div>
-
-        <div class="showcase-points">
-          <article>
-            <strong>Fluxo simples</strong>
-            <p>Cadastro, pagamento e atendimento em uma experiencia mais leve e direta.</p>
-          </article>
-          <article>
-            <strong>Pix com objetivo claro</strong>
-            <p>Pagamento rapido para seguir com mais agilidade para o atendimento.</p>
-          </article>
-          <article>
-            <strong>Tudo em um lugar</strong>
-            <p>Agenda, documentos e acompanhamento reunidos em um unico ambiente.</p>
-          </article>
-        </div>
-      </aside>
     </div>
   `,
   styles: `
@@ -222,11 +190,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .shell {
-      width: min(1180px, 100%);
-      display: grid;
-      grid-template-columns: minmax(0, 540px) minmax(320px, 1fr);
-      gap: 24px;
-      align-items: stretch;
+      width: min(760px, 100%);
+      margin: 0 auto;
     }
 
     .panel {
@@ -241,17 +206,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 14px;
       padding: 28px;
       background: rgba(255, 253, 249, 0.94);
-    }
-
-    .showcase {
-      padding: 36px;
-      background:
-        radial-gradient(circle at top left, rgba(255, 255, 255, 0.16), transparent 28%),
-        linear-gradient(145deg, rgba(29, 190, 196, 0.96), rgba(18, 89, 122, 0.96));
-      color: white;
-      display: grid;
-      align-content: space-between;
-      gap: 22px;
     }
 
     .back,
@@ -278,7 +232,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .hero-copy h1,
-    .showcase h2,
     .form-copy h2 {
       margin: 0;
       line-height: 1.02;
@@ -425,9 +378,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
     }
 
     .form-copy p,
-    .helper-text,
-    .showcase-copy,
-    .showcase-points p {
+    .helper-text {
       margin: 0;
       line-height: 1.5;
     }
@@ -551,8 +502,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       text-decoration: none;
     }
 
-    .checkout-summary ul,
-    .showcase-summary ul {
+    .checkout-summary ul {
       margin: 0;
       padding-left: 18px;
       display: grid;
@@ -577,62 +527,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
       font-size: 0.9rem;
     }
 
-    .showcase-tag {
-      color: rgba(255, 255, 255, 0.78);
-    }
-
-    .showcase h2 {
-      font-size: clamp(2.2rem, 4vw, 3.6rem);
-      max-width: 9ch;
-    }
-
-    .showcase-copy {
-      max-width: 34ch;
-      color: rgba(255, 255, 255, 0.86);
-    }
-
-    .showcase-summary {
-      padding: 18px 20px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.16);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    .showcase-summary strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 1.05rem;
-    }
-
-    .showcase-summary ul {
-      color: rgba(255, 255, 255, 0.92);
-    }
-
-    .showcase-points {
-      display: grid;
-      gap: 12px;
-    }
-
-    .showcase-points article {
-      padding: 18px 20px;
-      border-radius: 22px;
-      background: rgba(255, 255, 255, 0.14);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    .showcase-points strong {
-      display: block;
-      margin-bottom: 6px;
-      font-size: 1.1rem;
-    }
-
     @media (max-width: 980px) {
       .shell {
-        grid-template-columns: 1fr;
-      }
-
-      .showcase {
-        order: -1;
+        width: min(760px, 100%);
       }
     }
 
@@ -643,8 +540,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         margin-inline: -8px;
       }
 
-      .forms,
-      .showcase {
+      .forms {
         padding: 22px 18px;
       }
 
