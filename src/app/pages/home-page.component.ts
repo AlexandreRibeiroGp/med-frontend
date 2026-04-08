@@ -125,7 +125,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <div class="review-avatar">H</div>
               <div>
                 <h3>Henrique Teixeira</h3>
-                <p class="review-meta">5 estrelas · 1 avaliação</p>
+                <p class="review-meta">⭐⭐⭐⭐⭐ · 1 avaliação</p>
               </div>
             </div>
             <p>
@@ -138,7 +138,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <div class="review-avatar">A</div>
               <div>
                 <h3>Antonio Rodrigues</h3>
-                <p class="review-meta">5 estrelas</p>
+                <p class="review-meta">⭐⭐⭐⭐⭐</p>
               </div>
             </div>
             <p>
@@ -151,21 +151,13 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <div class="review-avatar">F</div>
               <div>
                 <h3>Fernanda Silva</h3>
-                <p class="review-meta">5 estrelas</p>
+                <p class="review-meta">⭐⭐⭐⭐⭐</p>
               </div>
             </div>
             <p>
               Fiquei muito satisfeita com o atendimento! Foi rápido, prático e super profissional. A plataforma é bem
               fácil de usar e todo o processo foi muito tranquilo. Com certeza utilizarei novamente e recomendo!
             </p>
-          </article>
-          <article class="review-card">
-            <h3>Atendimento com médico identificado</h3>
-            <p>Nome, CRM e dados principais do profissional aparecem antes da consulta.</p>
-          </article>
-          <article class="review-card">
-            <h3>Fluxo simples do início ao fim</h3>
-            <p>Cadastro, pagamento e entrada na consulta acontecem em uma jornada curta.</p>
           </article>
         </div>
       </section>

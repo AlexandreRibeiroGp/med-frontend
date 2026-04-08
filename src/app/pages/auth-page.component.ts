@@ -795,7 +795,13 @@ export class AuthPageComponent {
           void this.router.navigate([], { queryParams: {}, replaceUrl: true });
         },
         error: (error: { error?: { message?: string } }) => {
-          this.setError(error.error?.message ?? 'Nao foi possivel concluir a operacao.');
+          const apiMessage = error.error?.message?.trim();
+          if (apiMessage && /bad credentials/i.test(apiMessage)) {
+            this.setError('E-mail ou senha incorretos.');
+            return;
+          }
+
+          this.setError(apiMessage ?? 'Nao foi possivel concluir a operacao.');
         }
       });
   }
