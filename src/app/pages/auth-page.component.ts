@@ -535,18 +535,67 @@ import { AnalyticsService } from '../core/analytics.service';
     }
 
     @media (max-width: 900px) {
+      :host {
+        padding: 12px;
+        place-items: start;
+      }
+
+      .shell {
+        width: 100%;
+      }
+
       .brand-logo {
-        height: 76px;
+        height: 64px;
         width: calc(100% + 16px);
         margin-inline: -8px;
       }
 
       .forms {
-        padding: 22px 18px;
+        gap: 12px;
+        padding: 18px 14px;
+        border-radius: 22px;
       }
 
       .hero-copy h1 {
-        font-size: 1.45rem;
+        font-size: 1.35rem;
+      }
+
+      .hero-copy p,
+      .section-copy p,
+      .helper-text {
+        font-size: 0.9rem;
+      }
+
+      .price-banner {
+        padding: 14px 16px;
+      }
+
+      .price-banner strong {
+        font-size: 2.3rem;
+      }
+
+      .assurance-strip {
+        gap: 8px;
+      }
+
+      .assurance-strip span {
+        font-size: 0.82rem;
+        padding: 8px 10px;
+      }
+
+      .trust-banner,
+      .checkout-summary {
+        padding: 14px 16px;
+      }
+
+      .trust-banner p,
+      .checkout-summary ul {
+        font-size: 0.9rem;
+      }
+
+      .section-copy p,
+      .helper-text {
+        display: none;
       }
 
       .form-grid.two-columns {
@@ -555,6 +604,25 @@ import { AnalyticsService } from '../core/analytics.service';
 
       .full-width {
         grid-column: auto;
+      }
+
+      input {
+        padding: 12px 14px;
+        border-radius: 14px;
+      }
+
+      .switcher {
+        padding: 6px;
+      }
+
+      .switcher button,
+      form button {
+        min-height: 46px;
+      }
+
+      .legal-links {
+        gap: 10px;
+        padding-bottom: 8px;
       }
     }
   `

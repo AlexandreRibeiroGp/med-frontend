@@ -47,6 +47,14 @@ import { filter, map, startWith } from 'rxjs';
         <router-outlet />
       </main>
 
+      <a
+        *ngIf="!auth.isAuthenticated() && !isAuthRoute()"
+        routerLink="/auth"
+        class="mobile-cta"
+      >
+        Quero me consultar
+      </a>
+
       <aside class="cookie-banner" *ngIf="showCookieBanner()">
         <div class="cookie-copy">
           <strong>Utilizamos cookies</strong>
@@ -256,6 +264,10 @@ import { filter, map, startWith } from 'rxjs';
       color: white;
     }
 
+    .mobile-cta {
+      display: none;
+    }
+
     @media (max-width: 720px) {
       .topbar,
       .context,
@@ -263,18 +275,92 @@ import { filter, map, startWith } from 'rxjs';
         padding-left: 16px;
         padding-right: 16px;
       }
+
+      .topbar {
+        gap: 12px;
+      }
+
       .brand-logo {
         height: 44px;
       }
+
+      .brand-copy strong {
+        font-size: 0.98rem;
+      }
+
       .brand-copy span {
         display: none;
       }
+
+      .guest-nav {
+        gap: 8px;
+      }
+
+      .guest-nav a[href^="#"] {
+        display: none;
+      }
+
+      .guest-nav a,
+      .guest-nav .cta-link {
+        padding: 9px 12px;
+        font-size: 0.92rem;
+      }
+
       .cookie-banner {
         left: 16px;
         right: 16px;
         bottom: 16px;
         flex-direction: column;
         align-items: stretch;
+        gap: 12px;
+        padding: 14px 16px;
+        border-radius: 20px;
+      }
+
+      .cookie-copy {
+        gap: 4px;
+      }
+
+      .cookie-copy strong {
+        font-size: 0.95rem;
+      }
+
+      .cookie-copy p {
+        display: none;
+      }
+
+      .cookie-actions {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+      }
+
+      .ghost-button,
+      .solid-button {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+      }
+
+      .mobile-cta {
+        display: inline-flex;
+        position: fixed;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 115;
+        align-items: center;
+        justify-content: center;
+        min-height: 52px;
+        border-radius: 999px;
+        background: linear-gradient(135deg, #1dbec4, #0f8b91);
+        color: #fff;
+        text-decoration: none;
+        font-weight: 700;
+        box-shadow: 0 16px 32px rgba(15, 139, 145, 0.28);
+      }
+
+      .cookie-banner {
+        bottom: 80px;
       }
     }
   `

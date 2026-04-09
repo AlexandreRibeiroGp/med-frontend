@@ -538,16 +538,61 @@ import { TelemedApiService } from '../core/telemed-api.service';
     @media (max-width: 820px) {
       .landing {
         padding: 18px 16px 72px;
-        gap: 26px;
+        gap: 22px;
+      }
+
+      .hero {
+        gap: 14px;
+      }
+
+      .hero-visual {
+        order: -1;
       }
 
       h1 {
-        max-width: none;
-        font-size: 2.7rem;
+        max-width: 11ch;
+        font-size: 2.15rem;
+        line-height: 1.02;
+      }
+
+      .lead,
+      .hero-note {
+        font-size: 0.95rem;
+        line-height: 1.5;
+      }
+
+      .summary-card {
+        padding: 18px;
+        gap: 8px;
+        border-radius: 20px;
+      }
+
+      .summary-card strong {
+        font-size: 2.5rem;
+      }
+
+      .price-pill {
+        padding: 9px 16px;
+        font-size: 0.95rem;
+      }
+
+      .info-band {
+        display: none;
+      }
+
+      .doctor-card {
+        grid-template-columns: 1fr;
+        justify-items: start;
+      }
+
+      .doctor-action {
+        width: 100%;
+        text-align: center;
       }
 
       .hero-actions,
       .footer-cta {
+        display: grid;
         grid-template-columns: 1fr;
       }
     }
