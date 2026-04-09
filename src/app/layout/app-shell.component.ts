@@ -277,15 +277,17 @@ import { filter, map, startWith } from 'rxjs';
       }
 
       .topbar {
-        gap: 12px;
+        gap: 8px;
+        padding-top: 12px;
+        padding-bottom: 12px;
       }
 
       .brand-logo {
-        height: 44px;
+        height: 38px;
       }
 
       .brand-copy strong {
-        font-size: 0.98rem;
+        font-size: 0.92rem;
       }
 
       .brand-copy span {
@@ -293,17 +295,21 @@ import { filter, map, startWith } from 'rxjs';
       }
 
       .guest-nav {
-        gap: 8px;
+        gap: 6px;
       }
 
       .guest-nav a[href^="#"] {
         display: none;
       }
 
+      .guest-nav a:not(.cta-link):not([routerLink="/auth"]) {
+        display: none;
+      }
+
       .guest-nav a,
       .guest-nav .cta-link {
-        padding: 9px 12px;
-        font-size: 0.92rem;
+        padding: 8px 11px;
+        font-size: 0.88rem;
       }
 
       .cookie-banner {
@@ -312,9 +318,9 @@ import { filter, map, startWith } from 'rxjs';
         bottom: 16px;
         flex-direction: column;
         align-items: stretch;
-        gap: 12px;
-        padding: 14px 16px;
-        border-radius: 20px;
+        gap: 10px;
+        padding: 12px 14px;
+        border-radius: 18px;
       }
 
       .cookie-copy {
@@ -337,8 +343,8 @@ import { filter, map, startWith } from 'rxjs';
 
       .ghost-button,
       .solid-button {
-        padding: 10px 12px;
-        font-size: 0.85rem;
+        padding: 9px 10px;
+        font-size: 0.82rem;
       }
 
       .mobile-cta {
@@ -350,7 +356,7 @@ import { filter, map, startWith } from 'rxjs';
         z-index: 115;
         align-items: center;
         justify-content: center;
-        min-height: 52px;
+        min-height: 50px;
         border-radius: 999px;
         background: linear-gradient(135deg, #1dbec4, #0f8b91);
         color: #fff;

@@ -537,43 +537,60 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
     @media (max-width: 820px) {
       .landing {
-        padding: 18px 16px 72px;
-        gap: 22px;
+        padding: 12px 16px 72px;
+        gap: 18px;
       }
 
       .hero {
-        gap: 14px;
+        gap: 10px;
       }
 
       .hero-visual {
         order: -1;
       }
 
+      .hero-copy {
+        gap: 10px;
+        padding: 0;
+      }
+
+      .eyebrow {
+        font-size: 0.68rem;
+      }
+
+      .brand-kicker {
+        font-size: 0.88rem;
+      }
+
       h1 {
-        max-width: 11ch;
-        font-size: 2.15rem;
-        line-height: 1.02;
+        max-width: 14ch;
+        font-size: 1.9rem;
+        line-height: 1.04;
       }
 
       .lead,
       .hero-note {
-        font-size: 0.95rem;
-        line-height: 1.5;
+        font-size: 0.9rem;
+        line-height: 1.42;
+      }
+
+      .hero-note {
+        display: none;
       }
 
       .summary-card {
-        padding: 18px;
-        gap: 8px;
-        border-radius: 20px;
+        padding: 14px 16px;
+        gap: 6px;
+        border-radius: 18px;
       }
 
       .summary-card strong {
-        font-size: 2.5rem;
+        font-size: 2.2rem;
       }
 
       .price-pill {
-        padding: 9px 16px;
-        font-size: 0.95rem;
+        padding: 8px 14px;
+        font-size: 0.9rem;
       }
 
       .info-band {
@@ -594,6 +611,27 @@ import { TelemedApiService } from '../core/telemed-api.service';
       .footer-cta {
         display: grid;
         grid-template-columns: 1fr;
+      }
+
+      .hero-actions {
+        gap: 10px;
+      }
+
+      .hero-actions .secondary-action {
+        display: none;
+      }
+
+      .primary-action,
+      .doctor-action {
+        padding: 13px 18px;
+        text-align: center;
+      }
+
+      .steps-section,
+      .reviews-section,
+      .faq-section,
+      .legal-footer {
+        gap: 16px;
       }
     }
   `
