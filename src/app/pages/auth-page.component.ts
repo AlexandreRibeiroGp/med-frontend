@@ -8,6 +8,7 @@ import { composeAddress } from '../core/address-form';
 import { AuthService } from '../core/auth.service';
 import { LegalDocumentResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
+import { AnalyticsService } from '../core/analytics.service';
 
 @Component({
   selector: 'app-auth-page',
@@ -36,8 +37,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
         </div>
 
         <div class="switcher">
-          <button type="button" [class.active]="mode() === 'login'" (click)="mode.set('login')">Entrar</button>
-          <button type="button" [class.active]="mode() === 'patient'" (click)="mode.set('patient')">Criar conta</button>
+          <button type="button" [class.active]="mode() === 'login'" (click)="openLoginMode()">Entrar</button>
+          <button type="button" [class.active]="mode() === 'patient'" (click)="openPatientSignup()">Criar conta</button>
         </div>
 
         <p *ngIf="message()" class="message">{{ message() }}</p>
@@ -565,6 +566,7 @@ export class AuthPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
   private readonly api = inject(TelemedApiService);
+  private readonly analytics = inject(AnalyticsService);
 
   readonly mode = signal<'login' | 'patient' | 'forgot' | 'reset'>('login');
   readonly loading = signal(false);
@@ -609,6 +611,10 @@ export class AuthPageComponent {
   readonly telemedicineConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
 
   constructor() {
+    this.analytics.trackOnce('auth_view', 'auth_page_view', {
+      mode: 'login'
+    });
+
     this.api.getPublicLegalDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (documents) => this.legalDocuments.set(documents),
       error: () => this.setError('Nao foi possivel carregar os documentos legais atuais.')
@@ -637,6 +643,7 @@ export class AuthPageComponent {
       return;
     }
 
+    this.analytics.track('login_submit');
     this.runRequest(this.authService.login(this.loginForm.getRawValue()), 'Login realizado com sucesso.', true);
   }
 
@@ -656,6 +663,7 @@ export class AuthPageComponent {
     }
 
     const raw = this.patientForm.getRawValue();
+    this.analytics.track('signup_submit');
     this.runRequest(
       this.api.registerPatient({
         fullName: raw.fullName,
@@ -682,6 +690,7 @@ export class AuthPageComponent {
       return;
     }
 
+    this.analytics.track('forgot_password_submit');
     this.runRequest(
       this.authService.forgotPassword(this.forgotPasswordForm.getRawValue()),
       'Se o e-mail estiver cadastrado, enviaremos as instrucoes de recuperacao.'
@@ -706,6 +715,7 @@ export class AuthPageComponent {
       return;
     }
 
+    this.analytics.track('reset_password_submit');
     this.runRequest(
       this.authService.resetPassword({
         token,
@@ -715,16 +725,32 @@ export class AuthPageComponent {
     );
   }
 
+  openLoginMode(): void {
+    this.mode.set('login');
+    this.error.set('');
+    this.message.set('');
+    this.analytics.track('auth_mode_login');
+  }
+
+  openPatientSignup(): void {
+    this.mode.set('patient');
+    this.error.set('');
+    this.message.set('');
+    this.analytics.track('auth_mode_signup');
+  }
+
   openForgotPassword(): void {
     this.mode.set('forgot');
     this.error.set('');
     this.message.set('');
+    this.analytics.track('forgot_password_open');
   }
 
   backToLogin(): void {
     this.mode.set('login');
     this.error.set('');
     this.message.set('');
+    this.analytics.track('auth_back_to_login');
     void this.router.navigate([], { queryParams: {}, replaceUrl: true });
   }
 
@@ -807,6 +833,7 @@ export class AuthPageComponent {
   }
 
   private trackPatientSignupConversion(): void {
+    this.analytics.track('signup_complete');
     const gtag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
     if (!gtag) {
       return;

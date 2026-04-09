@@ -8,6 +8,7 @@ declare global {
   interface Window {
     __MEDCALLON_RUNTIME__?: {
       iceServers?: RuntimeIceServer[] | string;
+      clarityProjectId?: string;
     };
   }
 }
@@ -59,4 +60,14 @@ export function resolveIceServers(): RuntimeIceServer[] {
   }
 
   return DEFAULT_ICE_SERVERS;
+}
+
+export function resolveClarityProjectId(): string | null {
+  const configured = window.__MEDCALLON_RUNTIME__?.clarityProjectId;
+  if (!configured || typeof configured !== 'string') {
+    return null;
+  }
+
+  const normalized = configured.trim();
+  return normalized.length ? normalized : null;
 }

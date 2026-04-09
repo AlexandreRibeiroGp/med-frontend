@@ -26,6 +26,7 @@ import { DoctorAgendaPanelComponent } from '../features/dashboard/doctor-agenda-
 import { HistoryPanelComponent } from '../features/dashboard/history-panel.component';
 import { PatientCarePanelComponent } from '../features/dashboard/patient-care-panel.component';
 import { ProfilePanelComponent } from '../features/dashboard/profile-panel.component';
+import { AnalyticsService } from '../core/analytics.service';
 
 function toOffsetIso(localDateTime: string): string {
   const [datePart, timePart] = localDateTime.split('T');
@@ -503,6 +504,7 @@ export class DashboardPageComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
+  private readonly analytics = inject(AnalyticsService);
   @ViewChild('checkoutCard') private checkoutCard?: ElementRef<HTMLElement>;
 
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history' | 'profile'>('history');
@@ -786,6 +788,10 @@ export class DashboardPageComponent {
       this.handleError('Informe sua profissao e o motivo da consulta antes de selecionar um horario.');
       return;
     }
+    this.analytics.track('booking_slot_select', {
+      slot_id: slot.id,
+      doctor_id: this.selectedDoctor()?.id ?? null
+    });
     this.pendingBookingSlot.set(slot);
     this.feedback.set('');
     this.error.set('');
@@ -795,6 +801,7 @@ export class DashboardPageComponent {
   }
 
   cancelCheckout(): void {
+    this.analytics.track('checkout_cancel');
     this.pendingBookingSlot.set(null);
     this.activePixPayment.set(null);
     this.stopPixPaymentPolling();
@@ -823,6 +830,11 @@ export class DashboardPageComponent {
       this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
       return;
     }
+    this.analytics.track('checkout_submit', {
+      payment_method: paymentMethod,
+      doctor_id: doctor.id,
+      slot_id: slot.id
+    });
     this.savePatientOccupationIfNeeded(occupation, () => {
       this.api
         .checkoutAppointment({
@@ -837,9 +849,14 @@ export class DashboardPageComponent {
         .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
           next: (checkout) => {
-            if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
-              this.activePixPayment.set(checkout.payment);
-              this.startPixPaymentPolling(checkout.payment.id, doctor);
+              if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
+                this.activePixPayment.set(checkout.payment);
+                this.analytics.track('pix_generated', {
+                  payment_id: checkout.payment.id,
+                  payment_method: checkout.payment.paymentMethod,
+                  doctor_id: doctor.id
+                });
+                this.startPixPaymentPolling(checkout.payment.id, doctor);
               this.setFeedback('Pix gerado com sucesso. Pague pelo QR Code ou pelo codigo copia e cola abaixo.');
               this.toast.success('Pix gerado', 'Conclua o pagamento para liberar automaticamente a consulta.');
               window.setTimeout(() => {
@@ -893,6 +910,11 @@ export class DashboardPageComponent {
       this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
       return;
     }
+    this.analytics.track('checkout_submit', {
+      payment_method: 'MOCK',
+      doctor_id: doctor.id,
+      slot_id: slot.id
+    });
     this.savePatientOccupationIfNeeded(occupation, () => {
       this.api
         .checkoutAppointment({
@@ -1243,6 +1265,7 @@ export class DashboardPageComponent {
 
     try {
       await navigator.clipboard.writeText(pixCode);
+      this.analytics.track('pix_code_copy');
       this.toast.success('Codigo copiado', 'O codigo Pix foi copiado para a area de transferencia.');
     } catch {
       this.toast.error('Falha ao copiar', 'Nao foi possivel copiar o codigo Pix automaticamente.');
@@ -1496,6 +1519,9 @@ export class DashboardPageComponent {
   }
 
   private trackPixApprovedConversion(payment: PaymentResponse): void {
+    this.analytics.track('pix_payment_confirmed', {
+      payment_id: payment.id
+    });
     if (this.trackedPurchaseConversions.has(payment.id)) {
       return;
     }

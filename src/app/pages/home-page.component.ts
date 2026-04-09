@@ -2,6 +2,7 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
+import { AnalyticsService } from '../core/analytics.service';
 import { DoctorResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 
@@ -14,20 +15,20 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preço acessível</p>
           <p class="brand-kicker">MedCallOn</p>
-          <a routerLink="/auth" class="price-pill">Consulta R$ 49,90</a>
+          <a routerLink="/auth" class="price-pill" (click)="trackCta('price_pill_click')">Consulta R$ 49,90</a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
           <p class="lead">
             Atendimento com clínico geral por telemedicina, pagamento por Pix e acesso pela plataforma da MedCallOn.
           </p>
           <p class="hero-note">Receita e atestado podem ser emitidos quando houver indicação clínica.</p>
           <div class="hero-actions">
-            <a routerLink="/auth" class="primary-action">Agendar consulta</a>
+            <a routerLink="/auth" class="primary-action" (click)="trackCta('hero_schedule_click')">Agendar consulta</a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
           </div>
         </div>
 
         <div class="hero-visual">
-          <a routerLink="/auth" class="summary-card">
+          <a routerLink="/auth" class="summary-card" (click)="trackCta('summary_card_click')">
             <p class="summary-label">Resumo da consulta</p>
             <strong>R$ 49,90</strong>
             <ul>
@@ -69,7 +70,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
             <p class="doctor-meta">CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clínico geral' : doctor.specialty }}</p>
             <p>{{ doctor.biography || 'Atendimento online pela plataforma da MedCallOn.' }}</p>
           </div>
-          <a routerLink="/auth" class="doctor-action">Seguir para o cadastro</a>
+          <a routerLink="/auth" class="doctor-action" (click)="trackCta('doctor_card_click')">Seguir para o cadastro</a>
         </article>
 
         <div class="doctors-grid" *ngIf="doctors().length > 1">
@@ -186,7 +187,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <footer class="legal-footer">
         <div class="footer-cta">
           <p class="section-tag">Comece agora</p>
-          <a routerLink="/auth" class="primary-action">Agendar consulta</a>
+          <a routerLink="/auth" class="primary-action" (click)="trackCta('footer_schedule_click')">Agendar consulta</a>
         </div>
         <a href="mailto:mmedcallon@gmail.com">mmedcallon@gmail.com</a>
         <a routerLink="/legal/privacidade">Política de Privacidade</a>
@@ -555,10 +556,30 @@ import { TelemedApiService } from '../core/telemed-api.service';
 export class HomePageComponent {
   private readonly api = inject(TelemedApiService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly analytics = inject(AnalyticsService);
   readonly featuredDoctor = signal<DoctorResponse | null>(null);
   readonly doctors = signal<DoctorResponse[]>([]);
+  private scrollMilestones = new Set<number>();
 
   constructor() {
+    this.analytics.trackOnce('home_view', 'landing_view', { landing: 'home' });
+    const handleScroll = () => {
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) {
+        return;
+      }
+      const percent = Math.round((window.scrollY / maxScroll) * 100);
+      [25, 50, 75].forEach((milestone) => {
+        if (percent >= milestone && !this.scrollMilestones.has(milestone)) {
+          this.scrollMilestones.add(milestone);
+          this.analytics.track(`scroll_${milestone}`, { percent_scrolled: milestone, landing: 'home' });
+        }
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    this.destroyRef.onDestroy(() => window.removeEventListener('scroll', handleScroll));
+
     this.api
       .getDoctors()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -574,6 +595,10 @@ export class HomePageComponent {
           this.doctors.set([]);
         }
       });
+  }
+
+  trackCta(eventName: string): void {
+    this.analytics.track(eventName, { landing: 'home' });
   }
 }
 
