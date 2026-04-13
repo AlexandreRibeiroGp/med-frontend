@@ -1,10 +1,11 @@
 ﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AnalyticsService } from '../core/analytics.service';
 import { DoctorResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
+import { filter } from 'rxjs';
 
 @Component({
   selector: 'app-home-page',
@@ -18,9 +19,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <a routerLink="/auth" class="price-pill" (click)="trackCta('price_pill_click')">Consulta R$ 49,90</a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
           <p class="lead">
-            Atendimento com clínico geral por telemedicina, pagamento por Pix e acesso pela plataforma da MedCallOn.
+            Atendimento online com acesso simples pela plataforma da MedCallOn e jornada direta para quem busca orientação profissional a distância.
           </p>
-          <p class="hero-note">Receita e atestado podem ser emitidos quando houver indicação clínica.</p>
+          <p class="hero-note">Atendimento realizado por profissional habilitado conforme avaliação do caso.</p>
           <div class="hero-actions">
             <a routerLink="/auth" class="primary-action" (click)="trackCta('hero_schedule_click')">Agendar consulta</a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
@@ -29,12 +30,12 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
         <div class="hero-visual">
           <a routerLink="/auth" class="summary-card" (click)="trackCta('summary_card_click')">
-            <p class="summary-label">Resumo da consulta</p>
+            <p class="summary-label">Atendimento online</p>
             <strong>R$ 49,90</strong>
             <ul>
-              <li>Clinico geral online</li>
+              <li>Profissional habilitado</li>
               <li>Pagamento por Pix</li>
-              <li>Atendimento remoto</li>
+              <li>Acesso pela plataforma</li>
             </ul>
           </a>
         </div>
@@ -177,12 +178,12 @@ import { TelemedApiService } from '../core/telemed-api.service';
             <h3>Como pago?</h3>
             <p>O pagamento é feito por Pix para liberar o atendimento.</p>
           </article>
-          <article>
-            <h3>Receita e atestado são garantidos?</h3>
-            <p>Podem ser emitidos quando houver indicação clínica.</p>
-          </article>
-        </div>
-      </section>
+            <article>
+              <h3>Como funciona o atendimento?</h3>
+              <p>Você realiza o cadastro, confirma o pagamento e segue para a consulta pela plataforma.</p>
+            </article>
+          </div>
+        </section>
 
       <footer class="legal-footer">
         <div class="footer-cta">
@@ -640,12 +641,21 @@ export class HomePageComponent {
   private readonly api = inject(TelemedApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly analytics = inject(AnalyticsService);
+  private readonly router = inject(Router);
   readonly featuredDoctor = signal<DoctorResponse | null>(null);
   readonly doctors = signal<DoctorResponse[]>([]);
   private scrollMilestones = new Set<number>();
 
   constructor() {
-    this.analytics.trackOnce('home_view', 'landing_view', { landing: 'home' });
+    this.analytics.trackOnce('home_view', 'landing_view', { landing: this.currentLanding() });
+    this.router.events
+      .pipe(
+        filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => {
+        this.scrollMilestones.clear();
+      });
     const handleScroll = () => {
       const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
       if (maxScroll <= 0) {
@@ -655,7 +665,7 @@ export class HomePageComponent {
       [25, 50, 75].forEach((milestone) => {
         if (percent >= milestone && !this.scrollMilestones.has(milestone)) {
           this.scrollMilestones.add(milestone);
-          this.analytics.track(`scroll_${milestone}`, { percent_scrolled: milestone, landing: 'home' });
+          this.analytics.track(`scroll_${milestone}`, { percent_scrolled: milestone, landing: this.currentLanding() });
         }
       });
     };
@@ -681,7 +691,11 @@ export class HomePageComponent {
   }
 
   trackCta(eventName: string): void {
-    this.analytics.track(eventName, { landing: 'home' });
+    this.analytics.track(eventName, { landing: this.currentLanding() });
+  }
+
+  private currentLanding(): string {
+    return this.router.url.startsWith('/consulta-online') ? 'consulta-online' : 'home';
   }
 }
 

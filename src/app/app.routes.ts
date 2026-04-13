@@ -15,6 +15,7 @@ export const routes: Routes = [
     component: AppShellComponent,
     children: [
       { path: '', pathMatch: 'full', component: HomePageComponent },
+      { path: 'consulta-online', component: HomePageComponent },
       { path: 'legal/:document', component: LegalPageComponent },
       { path: 'auth', component: AuthPageComponent, canActivate: [guestGuard] },
       { path: 'dashboard', component: DashboardPageComponent, canActivate: [authGuard] },

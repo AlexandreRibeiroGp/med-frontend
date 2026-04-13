@@ -17,23 +17,23 @@ import { AnalyticsService } from '../core/analytics.service';
     <div class="shell">
       <section class="panel forms">
         <a routerLink="/" class="back">Voltar</a>
-        <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
-        <div class="hero-copy">
-          <p class="tag">Portal clinico</p>
-          <h1>Entre ou crie sua conta</h1>
-          <p>Crie sua conta, pague com Pix e avance para uma consulta online em um fluxo claro e organizado.</p>
-        </div>
+          <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
+          <div class="hero-copy">
+            <p class="tag">Portal clinico</p>
+            <h1>Entre ou crie sua conta</h1>
+            <p>Crie sua conta e avance para um atendimento online em um fluxo claro e organizado.</p>
+          </div>
 
-        <div class="price-banner">
-          <span>Consulta online</span>
-          <strong>R$ 49,90</strong>
-          <small>Pagamento por Pix para liberar seu atendimento.</small>
-        </div>
+          <div class="price-banner">
+            <span>Consulta online</span>
+            <strong>R$ 49,90</strong>
+            <small>Confirme sua reserva para seguir com o atendimento.</small>
+          </div>
 
         <div class="assurance-strip">
           <span>MedCallOn</span>
           <span>Profissionais com CRM</span>
-          <span>Receita e atestado quando necessario</span>
+          <span>Atendimento por plataforma propria</span>
         </div>
 
         <div class="switcher">
@@ -140,8 +140,8 @@ import { AnalyticsService } from '../core/analytics.service';
             <strong>Resumo antes do pagamento</strong>
             <ul>
               <li>Consulta online por R$ 49,90</li>
-              <li>Pagamento por Pix para liberar o atendimento</li>
-              <li>Receita e atestado quando houver indicacao clinica</li>
+              <li>Fluxo direto para confirmar o atendimento</li>
+              <li>Acesso pela plataforma da MedCallOn</li>
             </ul>
           </div>
 
