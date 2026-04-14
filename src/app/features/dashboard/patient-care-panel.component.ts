@@ -8,57 +8,50 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
   imports: [CommonModule, ReactiveFormsModule, DatePipe],
   template: `
     <section class="patient-flow">
-      <article class="card doctor-card">
-        <div class="section-head">
-          <p class="eyebrow">Medicos disponiveis</p>
-          <h3>Escolha um medico com horario aberto</h3>
-          <p class="price-note">Consulta por Pix: <strong>R$ 49,90</strong></p>
-        </div>
-
-        <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
-          <button
-            type="button"
-            class="doctor-tile"
-            [class.active]="selectedDoctor()?.id === doctor.id"
-            *ngFor="let doctor of doctors()"
-            (click)="doctorSelected.emit(doctor)"
-          >
-            <div class="doctor-tile-header">
-              <div class="doctor-avatar">
-                <img *ngIf="doctor.profilePhotoUrl; else doctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
-                <ng-template #doctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
-              </div>
-              <div class="doctor-text">
-                <strong>{{ doctor.user.fullName }}</strong>
-                <span>{{ specialtyLabel(doctor.specialty) }}</span>
-                <small>{{ doctor.crm }}</small>
-              </div>
-            </div>
-          </button>
-        </div>
-      </article>
-
       <article class="card schedule-card" *ngIf="selectedDoctor() as doctor">
         <div class="section-head">
           <p class="eyebrow">Agendamento</p>
-          <h3>Descreva o atendimento e escolha o horário</h3>
+          <h3>Escolha o horario e siga para o pagamento</h3>
           <p class="price-note">Valor da consulta: <strong>R$ 49,90</strong></p>
         </div>
 
-        <label class="notes-field">
-          <span>Profissao</span>
-          <input [formControl]="patientOccupation()" placeholder="Informe sua profissao" />
-          <small>Esse dado sera enviado para o medico junto com o agendamento.</small>
-        </label>
+        <section class="selected-doctor-banner">
+          <div class="doctor-tile-header">
+            <div class="doctor-avatar">
+              <img *ngIf="doctor.profilePhotoUrl; else selectedDoctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+              <ng-template #selectedDoctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
+            </div>
+            <div class="doctor-text">
+              <strong>{{ doctor.user.fullName }}</strong>
+              <span>{{ specialtyLabel(doctor.specialty) }}</span>
+              <small>CRM {{ doctor.crm }}</small>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="swap-button"
+            (click)="showDoctorPicker.set(!showDoctorPicker())"
+          >
+            {{ showDoctorPicker() ? 'Fechar lista de medicos' : 'Trocar medico' }}
+          </button>
+        </section>
 
-        <label class="notes-field">
-          <span>Motivo da consulta</span>
-          <textarea
-            [formControl]="consultationReason()"
-            placeholder="Descreva o problema, sintomas ou o motivo da consulta"
-          ></textarea>
-          <small>Esse texto será enviado junto com o agendamento para o médico.</small>
-        </label>
+        <section class="consultation-fields">
+          <label class="notes-field compact-field">
+            <span>Profissao</span>
+            <input [formControl]="patientOccupation()" placeholder="Informe sua profissao" />
+            <small>Esse dado sera enviado para o medico junto com o agendamento.</small>
+          </label>
+
+          <label class="notes-field">
+            <span>Motivo da consulta</span>
+            <textarea
+              [formControl]="consultationReason()"
+              placeholder="Descreva o problema, sintomas ou o motivo da consulta"
+            ></textarea>
+            <small>Esse texto sera enviado junto com o agendamento para o medico.</small>
+          </label>
+        </section>
 
         <div class="date-strip" *ngIf="availableDates().length; else emptySlots">
           <button
@@ -89,6 +82,36 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
           Informe sua profissao e o motivo da consulta para liberar a escolha do horario.
         </p>
       </article>
+
+      <article class="card doctor-card" *ngIf="!selectedDoctor() || showDoctorPicker()">
+        <div class="section-head">
+          <p class="eyebrow">Medicos disponiveis</p>
+          <h3>{{ selectedDoctor() ? 'Escolha outro medico' : 'Escolha um medico com horario aberto' }}</h3>
+          <p class="price-note">Consulta por Pix: <strong>R$ 49,90</strong></p>
+        </div>
+
+        <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
+          <button
+            type="button"
+            class="doctor-tile"
+            [class.active]="selectedDoctor()?.id === doctor.id"
+            *ngFor="let doctor of doctors()"
+            (click)="selectDoctorFromPanel(doctor)"
+          >
+            <div class="doctor-tile-header">
+              <div class="doctor-avatar">
+                <img *ngIf="doctor.profilePhotoUrl; else doctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
+                <ng-template #doctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
+              </div>
+              <div class="doctor-text">
+                <strong>{{ doctor.user.fullName }}</strong>
+                <span>{{ specialtyLabel(doctor.specialty) }}</span>
+                <small>CRM {{ doctor.crm }}</small>
+              </div>
+            </div>
+          </button>
+        </div>
+      </article>
     </section>
 
     <ng-template #emptyDoctors>
@@ -96,7 +119,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     </ng-template>
 
     <ng-template #emptySlots>
-      <p class="empty-state">Esse médico ainda não publicou horários disponíveis.</p>
+      <p class="empty-state">Esse medico ainda nao publicou horarios disponiveis.</p>
     </ng-template>
   `,
   styles: `
@@ -134,14 +157,11 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     }
     .doctor-tile,
     .date-strip button,
-    .slot-grid button {
-      padding: 12px 14px;
+    .slot-grid button,
+    .swap-button {
       border: 0;
       border-radius: 14px;
-      background: #f6f1e8;
-      color: #112027;
       font: inherit;
-      font-weight: 700;
       cursor: pointer;
     }
     input {
@@ -151,6 +171,16 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       padding: 14px 16px;
       background: white;
       font: inherit;
+    }
+    .selected-doctor-banner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 14px;
+      border-radius: 18px;
+      background: rgba(14, 123, 131, 0.08);
+      margin-bottom: 14px;
     }
     .doctor-grid {
       display: grid;
@@ -163,6 +193,10 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       align-content: start;
       text-align: left;
       min-height: 108px;
+      padding: 12px 14px;
+      background: #f6f1e8;
+      color: #112027;
+      font-weight: 700;
       transition: transform 120ms ease, background 120ms ease;
     }
     .doctor-tile-header {
@@ -202,6 +236,19 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .doctor-tile small {
       color: #5b6a70;
     }
+    .swap-button {
+      padding: 10px 14px;
+      background: #112027;
+      color: white;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .consultation-fields {
+      display: grid;
+      grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr);
+      gap: 14px;
+      align-items: start;
+    }
     .date-strip {
       display: flex;
       gap: 8px;
@@ -215,6 +262,9 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       gap: 1px;
       text-align: center;
       padding: 10px 8px;
+      background: #f6f1e8;
+      color: #112027;
+      font-weight: 700;
     }
     .date-strip button.active {
       background: linear-gradient(135deg, #112027, #183039);
@@ -234,13 +284,16 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .notes-field {
       display: grid;
       gap: 8px;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
       color: #112027;
       font-weight: 700;
     }
+    .compact-field input {
+      min-height: 52px;
+    }
     textarea {
       width: 100%;
-      min-height: 110px;
+      min-height: 88px;
       border: 1px solid #d8dfdf;
       border-radius: 16px;
       padding: 14px 16px;
@@ -258,15 +311,18 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     }
     .slot-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(78px, 1fr));
-      gap: 6px;
+      grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+      gap: 8px;
     }
     .slot-grid button {
       display: grid;
       gap: 2px;
       text-align: center;
-      min-height: 52px;
-      padding: 9px 6px;
+      min-height: 56px;
+      padding: 10px 8px;
+      background: #f6f1e8;
+      color: #112027;
+      font-weight: 700;
     }
     .slot-grid button.active {
       background: linear-gradient(135deg, #ff8e54, #d94f04);
@@ -291,6 +347,59 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       margin: 0;
       color: #5b6a70;
     }
+    @media (max-width: 768px) {
+      .patient-flow {
+        gap: 14px;
+      }
+      .card {
+        padding: 16px;
+        border-radius: 22px;
+      }
+      .section-head {
+        margin-bottom: 12px;
+      }
+      .section-head h3 {
+        font-size: 1.25rem;
+      }
+      .selected-doctor-banner {
+        display: grid;
+        gap: 12px;
+        padding: 12px;
+        margin-bottom: 14px;
+      }
+      .consultation-fields {
+        grid-template-columns: 1fr;
+        gap: 0;
+      }
+      .doctor-grid {
+        display: flex;
+        gap: 10px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+        scroll-snap-type: x proximity;
+        margin-inline: -2px;
+      }
+      .doctor-tile {
+        min-width: 250px;
+        min-height: auto;
+        padding: 14px;
+        scroll-snap-align: start;
+      }
+      .doctor-avatar {
+        width: 52px;
+        height: 52px;
+      }
+      .swap-button {
+        width: 100%;
+      }
+      input,
+      textarea {
+        font-size: 16px;
+      }
+      .slot-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
   `
 })
 export class PatientCarePanelComponent {
@@ -304,6 +413,7 @@ export class PatientCarePanelComponent {
   readonly consultationReason = input.required<FormControl<string>>();
   readonly patientOccupation = input.required<FormControl<string>>();
   readonly selectedDate = signal('');
+  readonly showDoctorPicker = signal(false);
   private readonly localDateKeyFormatter = new Intl.DateTimeFormat('sv-SE', {
     timeZone: 'America/Sao_Paulo',
     year: 'numeric',
@@ -346,6 +456,11 @@ export class PatientCarePanelComponent {
   readonly doctorSelected = output<DoctorResponse>();
   readonly slotBooked = output<AvailabilitySlotResponse>();
 
+  selectDoctorFromPanel(doctor: DoctorResponse): void {
+    this.showDoctorPicker.set(false);
+    this.doctorSelected.emit(doctor);
+  }
+
   specialtyLabel(value: string): string {
     return value === 'GERAL' || value === 'GENERALISTA' ? 'Generalista' : value;
   }
@@ -364,6 +479,12 @@ export class PatientCarePanelComponent {
       }
       if (!dates.some((dateOption) => dateOption.value === this.selectedDate())) {
         this.selectedDate.set(firstDate);
+      }
+    });
+
+    effect(() => {
+      if (this.selectedDoctor()) {
+        this.showDoctorPicker.set(false);
       }
     });
   }
