@@ -69,7 +69,7 @@ function monthKeyInSaoPaulo(date: Date): string {
   template: `
     <div class="dashboard">
       <aside class="sidebar">
-        <div>
+        <div class="sidebar-summary">
           <p class="label">Sessao ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
@@ -77,16 +77,20 @@ function monthKeyInSaoPaulo(date: Date): string {
 
         <div class="sidebar-block">
           <p class="label">Navegacao</p>
-          <button type="button" [class.active]="section() === primarySection()" (click)="section.set(primarySection())">
+          <button
+            type="button"
+            [class.active]="section() === primarySection()"
+            (click)="navigateToSection(primarySection())"
+          >
             {{ primarySectionLabel() }}
           </button>
-          <button type="button" [class.active]="section() === 'calls'" (click)="section.set('calls')">
+          <button type="button" [class.active]="section() === 'calls'" (click)="navigateToSection('calls')">
             Sala de atendimento
           </button>
-          <button type="button" [class.active]="section() === 'history'" (click)="section.set('history')">
+          <button type="button" [class.active]="section() === 'history'" (click)="navigateToSection('history')">
             Documentos
           </button>
-          <button type="button" [class.active]="section() === 'profile'" (click)="section.set('profile')">
+          <button type="button" [class.active]="section() === 'profile'" (click)="navigateToSection('profile')">
             Meu perfil
           </button>
           <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administracao</a>
@@ -117,20 +121,21 @@ function monthKeyInSaoPaulo(date: Date): string {
         <p *ngIf="feedback()" class="feedback">{{ feedback() }}</p>
         <p *ngIf="error()" class="error">{{ error() }}</p>
 
-        <app-patient-care-panel
-          *ngIf="section() === primarySection() && auth.role() === 'PATIENT'"
-          [patientProfile]="patientProfile()"
-          [specialties]="specialties()"
-          [doctors]="doctors()"
-          [selectedDoctor]="selectedDoctor()"
-          [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
-          [selectedSlotId]="pendingBookingSlot()?.id ?? null"
-          [specialtyFilter]="specialtyFilter"
-          [consultationReason]="consultationReason"
-          [patientOccupation]="patientOccupation"
-          (doctorSelected)="selectDoctor($event)"
-          (slotBooked)="bookSlot($event)"
-        />
+        <section *ngIf="section() === primarySection() && auth.role() === 'PATIENT'" #careSection class="panel-anchor">
+          <app-patient-care-panel
+            [patientProfile]="patientProfile()"
+            [specialties]="specialties()"
+            [doctors]="doctors()"
+            [selectedDoctor]="selectedDoctor()"
+            [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
+            [selectedSlotId]="pendingBookingSlot()?.id ?? null"
+            [specialtyFilter]="specialtyFilter"
+            [consultationReason]="consultationReason"
+            [patientOccupation]="patientOccupation"
+            (doctorSelected)="selectDoctor($event)"
+            (slotBooked)="bookSlot($event)"
+          />
+        </section>
 
         <section
           *ngIf="
@@ -220,17 +225,18 @@ function monthKeyInSaoPaulo(date: Date): string {
           </section>
         </section>
 
-        <app-doctor-agenda-panel
-          *ngIf="section() === primarySection() && auth.role() === 'DOCTOR'"
-          [availabilityForm]="availabilityForm"
-          [deleteRangeForm]="deleteRangeForm"
-          [availability]="visibleAvailability()"
-          (createAvailability)="createAvailability()"
-          (removeAvailabilityRange)="removeAvailabilityRange()"
-          (removeAvailability)="removeAvailability($event)"
-        />
+        <section *ngIf="section() === primarySection() && auth.role() === 'DOCTOR'" #agendaSection class="panel-anchor">
+          <app-doctor-agenda-panel
+            [availabilityForm]="availabilityForm"
+            [deleteRangeForm]="deleteRangeForm"
+            [availability]="visibleAvailability()"
+            (createAvailability)="createAvailability()"
+            (removeAvailabilityRange)="removeAvailabilityRange()"
+            (removeAvailability)="removeAvailability($event)"
+          />
+        </section>
 
-        <section *ngIf="section() === 'calls'" class="calls-board">
+        <section *ngIf="section() === 'calls'" #callsSection class="calls-board panel-anchor">
           <app-call-queue-panel
             [appointments]="callableAppointments()"
             [role]="auth.role()"
@@ -240,29 +246,31 @@ function monthKeyInSaoPaulo(date: Date): string {
           />
         </section>
 
-        <app-profile-panel
-          *ngIf="section() === 'profile' && auth.role() !== 'ADMIN'"
-          [role]="auth.role()!"
-          [patientProfile]="patientProfile()"
-          [doctorProfile]="doctorProfile()"
-          [patientForm]="patientProfileForm"
-          [doctorForm]="doctorProfileForm"
-          (savePatient)="savePatientProfile()"
-          (saveDoctor)="saveDoctorProfile()"
-          (uploadDoctorPhoto)="uploadDoctorPhoto($event)"
-        />
+        <section *ngIf="section() === 'profile' && auth.role() !== 'ADMIN'" #profileSection class="panel-anchor">
+          <app-profile-panel
+            [role]="auth.role()!"
+            [patientProfile]="patientProfile()"
+            [doctorProfile]="doctorProfile()"
+            [patientForm]="patientProfileForm"
+            [doctorForm]="doctorProfileForm"
+            (savePatient)="savePatientProfile()"
+            (saveDoctor)="saveDoctorProfile()"
+            (uploadDoctorPhoto)="uploadDoctorPhoto($event)"
+          />
+        </section>
 
-        <app-history-panel
-          *ngIf="section() === 'history'"
-          [appointments]="appointments()"
-          [medicalRecords]="medicalRecords()"
-          [role]="auth.role()"
-          [recordForm]="recordForm"
-          (createRecord)="createMedicalRecord()"
-          (generatePrescriptionPdf)="generatePrescriptionPdf($event)"
-          (startPrescriptionSignature)="startPrescriptionSignature($event)"
-          (signedPrescriptionFileChanged)="uploadSignedPrescription($event)"
-        />
+        <section *ngIf="section() === 'history'" #historySection class="panel-anchor">
+          <app-history-panel
+            [appointments]="appointments()"
+            [medicalRecords]="medicalRecords()"
+            [role]="auth.role()"
+            [recordForm]="recordForm"
+            (createRecord)="createMedicalRecord()"
+            (generatePrescriptionPdf)="generatePrescriptionPdf($event)"
+            (startPrescriptionSignature)="startPrescriptionSignature($event)"
+            (signedPrescriptionFileChanged)="uploadSignedPrescription($event)"
+          />
+        </section>
       </main>
     </div>
   `,
@@ -341,6 +349,7 @@ function monthKeyInSaoPaulo(date: Date): string {
       box-sizing: border-box;
     }
     .content { display: grid; gap: 18px; min-width: 0; }
+    .panel-anchor { display: block; }
     .hero-card {
       border-radius: 28px;
       background: rgba(255, 253, 249, 0.86);
@@ -490,7 +499,46 @@ function monthKeyInSaoPaulo(date: Date): string {
     }
     @media (max-width: 1100px) {
       .dashboard { grid-template-columns: 1fr; }
-      .sidebar { position: static; top: auto; }
+      .sidebar {
+        position: fixed;
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        top: auto;
+        z-index: 40;
+        padding: 12px;
+        border-radius: 22px;
+        gap: 0;
+        background: rgba(17, 32, 39, 0.94);
+        box-shadow: 0 18px 46px rgba(17, 32, 39, 0.28);
+        backdrop-filter: blur(12px);
+      }
+      .sidebar-summary,
+      .logout,
+      .sidebar .label {
+        display: none;
+      }
+      .sidebar-block {
+        padding: 0;
+        background: transparent;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 8px;
+      }
+      .sidebar-block button,
+      .sidebar-block a {
+        min-height: 56px;
+        padding: 10px 8px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.82rem;
+        line-height: 1.2;
+      }
+      .content {
+        padding-bottom: 112px;
+      }
       .calls-board { grid-template-columns: 1fr; }
     }
   `
@@ -505,6 +553,11 @@ export class DashboardPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   private readonly analytics = inject(AnalyticsService);
+  @ViewChild('careSection') private careSection?: ElementRef<HTMLElement>;
+  @ViewChild('agendaSection') private agendaSection?: ElementRef<HTMLElement>;
+  @ViewChild('callsSection') private callsSection?: ElementRef<HTMLElement>;
+  @ViewChild('historySection') private historySection?: ElementRef<HTMLElement>;
+  @ViewChild('profileSection') private profileSection?: ElementRef<HTMLElement>;
   @ViewChild('checkoutCard') private checkoutCard?: ElementRef<HTMLElement>;
 
   readonly section = signal<'care' | 'agenda' | 'calls' | 'history' | 'profile'>('history');
@@ -732,6 +785,13 @@ export class DashboardPageComponent {
     return 'Janela encerrada';
   };
 
+  navigateToSection(target: 'care' | 'agenda' | 'calls' | 'history' | 'profile'): void {
+    this.section.set(target);
+    window.setTimeout(() => {
+      this.scrollToSection(target);
+    }, 80);
+  }
+
   logout(): void {
     this.callService.disconnect();
     this.auth.logout();
@@ -777,6 +837,28 @@ export class DashboardPageComponent {
         },
         error: () => this.handleError('Nao foi possivel carregar os medicos.')
       });
+  }
+
+  private scrollToSection(target: 'care' | 'agenda' | 'calls' | 'history' | 'profile'): void {
+    const sectionMap: Record<'care' | 'agenda' | 'calls' | 'history' | 'profile', ElementRef<HTMLElement> | undefined> = {
+      care: this.careSection,
+      agenda: this.agendaSection,
+      calls: this.callsSection,
+      history: this.historySection,
+      profile: this.profileSection
+    };
+
+    const element = sectionMap[target]?.nativeElement;
+    if (!element) {
+      return;
+    }
+
+    const top = element.getBoundingClientRect().top + window.scrollY - this.scrollOffset();
+    window.scrollTo({ top, behavior: 'smooth' });
+  }
+
+  private scrollOffset(): number {
+    return window.innerWidth <= 1100 ? 74 : 96;
   }
 
   selectDoctor(doctor: DoctorResponse): void {
