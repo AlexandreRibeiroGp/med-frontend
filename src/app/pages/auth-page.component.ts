@@ -16,12 +16,12 @@ import { AnalyticsService } from '../core/analytics.service';
   template: `
     <div class="shell">
       <section class="panel forms">
-        <a routerLink="/" class="back">Voltar</a>
+        <a routerLink="/" [queryParams]="backQueryParams()" class="back">Voltar</a>
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           <div class="hero-copy">
             <p class="tag">Portal clinico</p>
-            <h1>Entre ou crie sua conta</h1>
-            <p>Crie sua conta e avance para um atendimento online em um fluxo claro e organizado.</p>
+            <h1>{{ authHeadline() }}</h1>
+            <p>{{ authDescription() }}</p>
           </div>
 
           <div class="price-banner">
@@ -46,7 +46,7 @@ import { AnalyticsService } from '../core/analytics.service';
 
         <form *ngIf="mode() === 'login'" [formGroup]="loginForm" (ngSubmit)="submitLogin()">
           <div class="form-copy">
-            <h2>Acesse sua conta</h2>
+            <h2>{{ loginTitle() }}</h2>
           </div>
           <input formControlName="email" placeholder="E-mail" type="email" />
           <p *ngIf="controlError(loginForm, 'email') as error" class="field-error">{{ error }}</p>
@@ -84,8 +84,8 @@ import { AnalyticsService } from '../core/analytics.service';
 
         <form *ngIf="mode() === 'patient'" [formGroup]="patientForm" (ngSubmit)="submitPatient()">
           <div class="form-copy">
-            <h2>Crie sua conta de paciente</h2>
-            <p>Preencha seus dados para seguir com mais confianca para o pagamento e para a consulta.</p>
+            <h2>Crie sua conta para continuar</h2>
+            <p>{{ signupDescription() }}</p>
           </div>
           <div class="trust-banner">
             <strong>Antes de continuar</strong>
@@ -641,6 +641,9 @@ export class AuthPageComponent {
   readonly error = signal('');
   readonly message = signal('');
   readonly resetToken = signal('');
+  readonly contextDoctorId = signal<number | null>(null);
+  readonly contextDoctorName = signal('');
+  readonly contextSource = signal('');
   readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
   private errorTimer: number | null = null;
   private messageTimer: number | null = null;
@@ -690,7 +693,14 @@ export class AuthPageComponent {
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const token = params.get('token')?.trim() ?? '';
+      const doctorId = Number(params.get('doctorId'));
+      const doctorName = params.get('doctorName')?.trim() ?? '';
+      const source = params.get('source')?.trim() ?? '';
+
       this.resetToken.set(token);
+      this.contextDoctorId.set(Number.isFinite(doctorId) ? doctorId : null);
+      this.contextDoctorName.set(doctorName);
+      this.contextSource.set(source);
       if (token) {
         this.mode.set('reset');
         this.error.set('');
@@ -819,7 +829,38 @@ export class AuthPageComponent {
     this.error.set('');
     this.message.set('');
     this.analytics.track('auth_back_to_login');
-    void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+    void this.router.navigate([], { queryParams: this.authQueryParams(), replaceUrl: true });
+  }
+
+  backQueryParams(): Record<string, string> {
+    const source = this.contextSource();
+    if (!source || source === 'home') {
+      return {};
+    }
+
+    return { source };
+  }
+
+  authHeadline(): string {
+    return this.contextDoctorName()
+      ? `Continue para consultar com ${this.contextDoctorName()}.`
+      : 'Entre ou crie sua conta';
+  }
+
+  authDescription(): string {
+    return this.contextDoctorName()
+      ? 'Falta so seu cadastro para continuar para o painel, selecionar o horario e concluir o pagamento.'
+      : 'Crie sua conta e avance para um atendimento online em um fluxo claro e organizado.';
+  }
+
+  loginTitle(): string {
+    return this.contextDoctorName() ? 'Entre para continuar sua consulta' : 'Acesse sua conta';
+  }
+
+  signupDescription(): string {
+    return this.contextDoctorName()
+      ? `Crie sua conta para seguir com ${this.contextDoctorName()} e liberar o proximo passo da consulta.`
+      : 'Preencha seus dados para seguir com mais confianca para o pagamento e para a consulta.';
   }
 
   passwordConfirmationError(): string {
@@ -835,6 +876,26 @@ export class AuthPageComponent {
     return this.legalDocuments()
       .filter((document) => document.documentType === 'TERMS_OF_USE' || document.documentType === 'PRIVACY_POLICY')
       .map((document) => document.id);
+  }
+
+  private authQueryParams(): Record<string, string> {
+    const queryParams: Record<string, string> = {};
+
+    if (this.contextDoctorId() !== null) {
+      queryParams['doctorId'] = String(this.contextDoctorId());
+    }
+    if (this.contextDoctorName()) {
+      queryParams['doctorName'] = this.contextDoctorName();
+    }
+    if (this.contextSource()) {
+      queryParams['source'] = this.contextSource();
+    }
+
+    return queryParams;
+  }
+
+  private dashboardQueryParams(): Record<string, string> {
+    return this.authQueryParams();
   }
 
   controlError(form: { get(path: string): AbstractControl | null }, controlName: string): string {
@@ -876,17 +937,22 @@ export class AuthPageComponent {
           }
           this.setMessage(success);
           if (redirect) {
-            void this.router.navigateByUrl('/dashboard');
+            void this.router.navigate(['/dashboard'], { queryParams: this.dashboardQueryParams() });
             return;
           }
           this.mode.set('login');
-          this.loginForm.reset();
+          const patientEmail = this.patientForm.getRawValue().email ?? '';
+          this.loginForm.reset({
+            email: patientEmail,
+            password: ''
+          });
           this.forgotPasswordForm.reset();
           this.resetPasswordForm.reset();
           this.patientForm.reset();
           this.termsConsentControl.reset(false);
           this.telemedicineConsentControl.reset(false);
-          void this.router.navigate([], { queryParams: {}, replaceUrl: true });
+          this.setMessage('Cadastro concluido. Entre para continuar sua consulta.');
+          void this.router.navigate([], { queryParams: this.authQueryParams(), replaceUrl: true });
         },
         error: (error: { error?: { message?: string } }) => {
           const apiMessage = error.error?.message?.trim();

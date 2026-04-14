@@ -524,6 +524,8 @@ export class DashboardPageComponent {
   readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
   readonly doctorProfile = signal<DoctorResponse | null>(null);
+  readonly pendingDoctorId = signal<number | null>(null);
+  readonly pendingDoctorName = signal('');
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
   private readonly trackedPurchaseConversions = new Set<number>();
@@ -650,6 +652,16 @@ export class DashboardPageComponent {
     });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const paymentStatus = params.get('paymentStatus');
+      const doctorId = Number(params.get('doctorId'));
+      const doctorName = params.get('doctorName')?.trim() ?? '';
+
+      this.pendingDoctorId.set(Number.isFinite(doctorId) ? doctorId : null);
+      this.pendingDoctorName.set(doctorName);
+
+      if (this.auth.role() === 'PATIENT' && Number.isFinite(doctorId)) {
+        this.section.set('care');
+      }
+
       if (paymentStatus === 'success') {
         this.setFeedback('Pagamento confirmado. A consulta sera liberada assim que o backend receber a notificacao do Mercado Pago.');
       } else if (paymentStatus === 'pending') {
@@ -753,6 +765,7 @@ export class DashboardPageComponent {
                 );
 
                 this.doctors.set(availableDoctors);
+                this.applyPendingDoctorSelection(availableDoctors);
                 if (this.selectedDoctor() && !availableDoctors.some((doctor) => doctor.id === this.selectedDoctor()?.id)) {
                   this.selectedDoctor.set(null);
                   this.selectedDoctorSlots.set([]);
@@ -776,6 +789,31 @@ export class DashboardPageComponent {
         next: (slots) => this.selectedDoctorSlots.set(slots),
         error: () => this.handleError('Nao foi possivel carregar os horarios deste medico.')
       });
+  }
+
+  private applyPendingDoctorSelection(doctors: DoctorResponse[]): void {
+    const pendingDoctorId = this.pendingDoctorId();
+    if (pendingDoctorId === null) {
+      return;
+    }
+
+    const doctor = doctors.find((item) => item.id === pendingDoctorId);
+    if (!doctor) {
+      return;
+    }
+
+    if (this.selectedDoctor()?.id !== doctor.id) {
+      this.selectDoctor(doctor);
+    }
+
+    this.pendingDoctorId.set(null);
+    this.pendingDoctorName.set('');
+    void this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { doctorId: null, doctorName: null, source: null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
   }
 
   bookSlot(slot: AvailabilitySlotResponse): void {

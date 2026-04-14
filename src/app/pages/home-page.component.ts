@@ -16,20 +16,39 @@ import { filter } from 'rxjs';
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preço acessível</p>
           <p class="brand-kicker">MedCallOn</p>
-          <a routerLink="/auth" class="price-pill" (click)="trackCta('price_pill_click')">Consulta R$ 49,90</a>
+          <a
+            routerLink="/auth"
+            [queryParams]="defaultAuthQueryParams()"
+            class="price-pill"
+            (click)="trackCta('price_pill_click')"
+          >
+            Continuar para cadastro
+          </a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
           <p class="lead">
             Atendimento online com acesso simples pela plataforma da MedCallOn e jornada direta para quem busca orientação profissional a distância.
           </p>
           <p class="hero-note">Atendimento realizado por profissional habilitado conforme avaliação do caso.</p>
           <div class="hero-actions">
-            <a routerLink="/auth" class="primary-action" (click)="trackCta('hero_schedule_click')">Agendar consulta</a>
+            <a
+              routerLink="/auth"
+              [queryParams]="defaultAuthQueryParams()"
+              class="primary-action"
+              (click)="trackCta('hero_schedule_click')"
+            >
+              Continuar para cadastro
+            </a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
           </div>
         </div>
 
         <div class="hero-visual">
-          <a routerLink="/auth" class="summary-card" (click)="trackCta('summary_card_click')">
+          <a
+            routerLink="/auth"
+            [queryParams]="defaultAuthQueryParams()"
+            class="summary-card"
+            (click)="trackCta('summary_card_click')"
+          >
             <p class="summary-label">Atendimento online</p>
             <strong>R$ 49,90</strong>
             <ul>
@@ -67,11 +86,25 @@ import { filter } from 'rxjs';
             <span *ngIf="!doctor.profilePhotoUrl">{{ doctor.user.fullName.charAt(0) }}</span>
           </div>
           <div class="doctor-copy">
-            <h3>{{ doctor.user.fullName }}</h3>
+            <a
+              routerLink="/auth"
+              [queryParams]="authQueryParamsForDoctor(doctor)"
+              class="doctor-name-link"
+              (click)="trackCta('doctor_card_click')"
+            >
+              {{ doctor.user.fullName }}
+            </a>
             <p class="doctor-meta">CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clínico geral' : doctor.specialty }}</p>
             <p>{{ doctor.biography || 'Atendimento online pela plataforma da MedCallOn.' }}</p>
           </div>
-          <a routerLink="/auth" class="doctor-action" (click)="trackCta('doctor_card_click')">Seguir para o cadastro</a>
+          <a
+            routerLink="/auth"
+            [queryParams]="authQueryParamsForDoctor(doctor)"
+            class="doctor-action"
+            (click)="trackCta('doctor_card_click')"
+          >
+            Continuar com {{ doctor.user.fullName.split(' ')[0] }}
+          </a>
         </article>
 
         <div class="doctors-grid" *ngIf="doctors().length > 1">
@@ -188,7 +221,14 @@ import { filter } from 'rxjs';
       <footer class="legal-footer">
         <div class="footer-cta">
           <p class="section-tag">Comece agora</p>
-          <a routerLink="/auth" class="primary-action" (click)="trackCta('footer_schedule_click')">Agendar consulta</a>
+          <a
+            routerLink="/auth"
+            [queryParams]="defaultAuthQueryParams()"
+            class="primary-action"
+            (click)="trackCta('footer_schedule_click')"
+          >
+            Continuar para cadastro
+          </a>
         </div>
         <a href="mailto:mmedcallon@gmail.com">mmedcallon@gmail.com</a>
         <a routerLink="/legal/privacidade">Política de Privacidade</a>
@@ -308,6 +348,14 @@ import { filter } from 'rxjs';
       border: 1px solid rgba(23, 49, 58, 0.18);
       color: #17313a;
       background: #ffffff;
+    }
+
+    .doctor-name-link {
+      color: #17313a;
+      font-size: 1.9rem;
+      font-weight: 700;
+      line-height: 1.1;
+      text-decoration: none;
     }
 
     .summary-card {
@@ -692,6 +740,22 @@ export class HomePageComponent {
 
   trackCta(eventName: string): void {
     this.analytics.track(eventName, { landing: this.currentLanding() });
+  }
+
+  defaultAuthQueryParams(): Record<string, string> {
+    return {
+      source: this.currentLanding(),
+      intent: 'consulta'
+    };
+  }
+
+  authQueryParamsForDoctor(doctor: DoctorResponse): Record<string, string> {
+    return {
+      source: this.currentLanding(),
+      intent: 'consulta',
+      doctorId: String(doctor.id),
+      doctorName: doctor.user.fullName
+    };
   }
 
   private currentLanding(): string {
