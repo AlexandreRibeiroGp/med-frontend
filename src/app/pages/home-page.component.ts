@@ -22,13 +22,13 @@ import { filter } from 'rxjs';
             class="price-pill"
             (click)="trackCta('price_pill_click')"
           >
-            Continuar para cadastro
+            Quero me consultar
           </a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
           <p class="lead">
             Atendimento online com acesso simples pela plataforma da MedCallOn e jornada direta para quem busca orientação profissional a distância.
           </p>
-          <p class="hero-note">Atendimento realizado por profissional habilitado conforme avaliação do caso.</p>
+          <p class="hero-note">Consulta médica online de forma simples e segura.</p>
           <div class="hero-actions">
             <a
               routerLink="/auth"
@@ -36,7 +36,7 @@ import { filter } from 'rxjs';
               class="primary-action"
               (click)="trackCta('hero_schedule_click')"
             >
-              Continuar para cadastro
+              Quero me consultar
             </a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
           </div>
@@ -70,56 +70,9 @@ import { filter } from 'rxjs';
           <p>Cadastro, pagamento e entrada na consulta em um fluxo curto, pensado para quem precisa resolver rápido.</p>
         </article>
         <article class="info-card">
-          <h2>Informacoes claras</h2>
+          <h2>Informações claras</h2>
           <p>Valor da consulta, forma de pagamento e funcionamento da jornada explicados logo no início.</p>
         </article>
-      </section>
-
-      <section class="doctor-section" *ngIf="featuredDoctor() as doctor">
-        <div class="section-head">
-          <p class="section-tag">Médico disponível</p>
-        </div>
-
-        <article class="doctor-card">
-          <div class="doctor-photo">
-            <img *ngIf="doctor.profilePhotoUrl" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
-            <span *ngIf="!doctor.profilePhotoUrl">{{ doctor.user.fullName.charAt(0) }}</span>
-          </div>
-          <div class="doctor-copy">
-            <a
-              routerLink="/auth"
-              [queryParams]="authQueryParamsForDoctor(doctor)"
-              class="doctor-name-link"
-              (click)="trackCta('doctor_card_click')"
-            >
-              {{ doctor.user.fullName }}
-            </a>
-            <p class="doctor-meta">CRM {{ doctor.crm }} · {{ doctor.specialty === 'GENERALISTA' || doctor.specialty === 'GERAL' ? 'Clínico geral' : doctor.specialty }}</p>
-            <p>{{ doctor.biography || 'Atendimento online pela plataforma da MedCallOn.' }}</p>
-          </div>
-          <a
-            routerLink="/auth"
-            [queryParams]="authQueryParamsForDoctor(doctor)"
-            class="doctor-action"
-            (click)="trackCta('doctor_card_click')"
-          >
-            Continuar com {{ doctor.user.fullName.split(' ')[0] }}
-          </a>
-        </article>
-
-        <div class="doctors-grid" *ngIf="doctors().length > 1">
-          <article class="doctor-card doctor-card--compact" *ngFor="let item of doctors()">
-            <div class="doctor-photo">
-              <img *ngIf="item.profilePhotoUrl" [src]="item.profilePhotoUrl" [alt]="item.user.fullName" />
-              <span *ngIf="!item.profilePhotoUrl">{{ item.user.fullName.charAt(0) }}</span>
-            </div>
-            <div class="doctor-copy">
-              <h3>{{ item.user.fullName }}</h3>
-              <p class="doctor-meta">CRM {{ item.crm }} · {{ item.specialty === 'GENERALISTA' || item.specialty === 'GERAL' ? 'Clínico geral' : item.specialty }}</p>
-              <p>{{ item.biography || 'Atendimento por telemedicina com foco em orientação clínica e jornada objetiva.' }}</p>
-            </div>
-          </article>
-        </div>
       </section>
 
       <section class="steps-section" id="como-funciona">
@@ -227,7 +180,7 @@ import { filter } from 'rxjs';
             class="primary-action"
             (click)="trackCta('footer_schedule_click')"
           >
-            Continuar para cadastro
+            Quero me consultar
           </a>
         </div>
         <a href="mailto:mmedcallon@gmail.com">mmedcallon@gmail.com</a>
