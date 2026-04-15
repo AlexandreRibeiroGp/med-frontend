@@ -25,10 +25,7 @@ import { filter } from 'rxjs';
             Quero me consultar
           </a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
-          <p class="lead">
-            Atendimento online com acesso simples pela plataforma da MedCallOn e jornada direta para quem busca orientação profissional a distância.
-          </p>
-          <p class="hero-note">Consulta médica online de forma simples e segura.</p>
+            <p class="hero-note">Consulta médica online de forma simples e segura.</p>
           <div class="hero-actions">
             <a
               routerLink="/auth"
