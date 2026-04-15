@@ -62,16 +62,16 @@ import { filter } from 'rxjs';
 
       <section class="info-band">
         <article class="info-card">
-          <h2>Atendimento para sintomas comuns</h2>
-          <p>Gripe, febre, dor de garganta, virose, mal-estar e outras queixas clínicas de baixa complexidade.</p>
+          <h2>Cuidado Médico com agilidade, segurança e excelência, de onde você estiver</h2>
+          <p>Atendimento online com médicos generalistas preparados para avaliar queixas comuns, como dor de garganta, dor de cabeça, dor lombar, febre, diarreia e vômitos.</p>
         </article>
         <article class="info-card">
-          <h2>Processo simples</h2>
-          <p>Cadastro, pagamento e entrada na consulta em um fluxo curto, pensado para quem precisa resolver rápido.</p>
+          <h2>Cuidar da sua saúde nunca foi tão fácil</h2>
+          <p>Cadastre-se em poucos minutos, escolha o melhor dia e horário, realize o pagamento com segurança e acesse sua consulta online na nossa plataforma. Atendimento com hora marcada, sem filas e com total comodidade.</p>
         </article>
         <article class="info-card">
-          <h2>Informações claras</h2>
-          <p>Valor da consulta, forma de pagamento e funcionamento da jornada explicados logo no início.</p>
+          <h2>Excelência médica ao seu alcance</h2>
+          <p>Conte com profissionais qualificados e habilitados, prontos para oferecer uma avaliação completa, orientação precisa e conduta adequada para o seu caso, com a confiança e o cuidado que você merece.</p>
         </article>
       </section>
 
