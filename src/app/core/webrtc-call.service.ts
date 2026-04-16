@@ -25,9 +25,7 @@ export class WebRtcCallService {
   readonly micEnabled = signal(true);
   readonly cameraEnabled = signal(true);
   readonly state = signal<'idle' | 'preparing' | 'ready' | 'connecting' | 'connected' | 'reconnecting' | 'failed'>('idle');
-  readonly remoteParticipantPresent = computed(() =>
-    this.signaling.roomState().participants.some((participant) => participant !== this.signaling.clientId)
-  );
+  readonly remoteParticipantPresent = computed(() => this.signaling.roomState().participantCount > 1);
   readonly connectivityLabel = computed(() => {
     if (this.signaling.status() !== 'connected') {
       return 'Sinalização offline';
@@ -73,7 +71,7 @@ export class WebRtcCallService {
       }
 
       for (const event of [...events].reverse()) {
-        if (event.appointmentId !== roomId || this.handledIds.has(event.id) || event.sender === this.signaling.clientId) {
+        if (event.appointmentId !== roomId || this.handledIds.has(event.id) || this.isOwnEvent(event)) {
           continue;
         }
         this.handledIds.add(event.id);
@@ -122,7 +120,7 @@ export class WebRtcCallService {
         return;
       }
       await peer.setLocalDescription(offer);
-      this.signaling.publish('offer', JSON.stringify(offer));
+      this.signaling.publish('offer', this.wrapRtcPayload(offer));
     } finally {
       this.makingOffer = false;
     }
@@ -200,7 +198,7 @@ export class WebRtcCallService {
 
     peer.onicecandidate = (event) => {
       if (event.candidate) {
-        this.signaling.publish('candidate', JSON.stringify(event.candidate.toJSON()));
+        this.signaling.publish('candidate', this.wrapRtcPayload(event.candidate.toJSON()));
       }
     };
 
@@ -257,7 +255,7 @@ export class WebRtcCallService {
     }
 
     if (event.type === 'join') {
-      this.remoteParticipantId = this.extractClientId(event.payload) ?? event.sender;
+      this.remoteParticipantId = this.getEventClientId(event);
       this.toast.info('Participante na sala', 'O outro lado entrou na consulta.', 2500);
       if (!this.localStream()) {
         this.state.set('ready');
@@ -279,7 +277,7 @@ export class WebRtcCallService {
     const peer = this.ensurePeerConnection();
 
     if (event.type === 'offer') {
-      const description = new RTCSessionDescription(JSON.parse(event.payload));
+      const description = new RTCSessionDescription(this.unwrapRtcPayload<RTCSessionDescriptionInit>(event.payload));
       const readyForOffer =
         !this.makingOffer && (peer.signalingState === 'stable' || this.isSettingRemoteAnswerPending);
       const offerCollision = description.type === 'offer' && !readyForOffer;
@@ -290,26 +288,29 @@ export class WebRtcCallService {
 
       this.state.set('connecting');
       await peer.setRemoteDescription(description);
+      this.remoteParticipantId = this.getEventClientId(event);
       await this.flushPendingIceCandidates(peer);
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
-      this.signaling.publish('answer', JSON.stringify(answer));
+      this.signaling.publish('answer', this.wrapRtcPayload(answer));
       return;
     }
 
     if (event.type === 'answer') {
       this.isSettingRemoteAnswerPending = true;
       try {
-        await peer.setRemoteDescription(new RTCSessionDescription(JSON.parse(event.payload)));
+        await peer.setRemoteDescription(new RTCSessionDescription(this.unwrapRtcPayload<RTCSessionDescriptionInit>(event.payload)));
       } finally {
         this.isSettingRemoteAnswerPending = false;
       }
+      this.remoteParticipantId = this.getEventClientId(event);
       await this.flushPendingIceCandidates(peer);
       return;
     }
 
     if (event.type === 'candidate') {
-      const candidate = JSON.parse(event.payload) as RTCIceCandidateInit;
+      const candidate = this.unwrapRtcPayload<RTCIceCandidateInit>(event.payload);
+      this.remoteParticipantId = this.getEventClientId(event);
       if (!peer.remoteDescription) {
         this.pendingIceCandidates.push(candidate);
         return;
@@ -338,6 +339,30 @@ export class WebRtcCallService {
   private extractClientId(payload: string): string | null {
     const parsed = this.parsePayload<{ clientId?: string }>(payload);
     return parsed?.clientId ?? null;
+  }
+
+  private isOwnEvent(event: CallEvent): boolean {
+    const eventClientId = this.getEventClientId(event);
+    return eventClientId === this.signaling.clientId;
+  }
+
+  private getEventClientId(event: CallEvent): string | null {
+    return this.extractClientId(event.payload) ?? event.sender;
+  }
+
+  private wrapRtcPayload<T>(data: T): string {
+    return JSON.stringify({
+      clientId: this.signaling.clientId,
+      data
+    });
+  }
+
+  private unwrapRtcPayload<T>(payload: string): T {
+    const wrapped = this.parsePayload<{ clientId?: string; data?: T }>(payload);
+    if (wrapped && wrapped.data !== undefined) {
+      return wrapped.data;
+    }
+    return JSON.parse(payload) as T;
   }
 
   private parsePayload<T>(payload: string): T | null {

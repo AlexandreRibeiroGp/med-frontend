@@ -70,8 +70,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
             type="button"
             *ngFor="let slot of slotsForSelectedDate()"
             [class.active]="selectedSlotId() === slot.id"
-            [disabled]="!canBookSlot()"
-            (click)="slotBooked.emit(slot)"
+            (click)="handleSlotSelection(slot)"
           >
             <strong>{{ slot.startAt | date: 'HH:mm' }}</strong>
             <span>{{ slot.endAt | date: 'HH:mm' }}</span>
@@ -459,6 +458,17 @@ export class PatientCarePanelComponent {
   selectDoctorFromPanel(doctor: DoctorResponse): void {
     this.showDoctorPicker.set(false);
     this.doctorSelected.emit(doctor);
+  }
+
+  handleSlotSelection(slot: AvailabilitySlotResponse): void {
+    if (!this.canBookSlot()) {
+      this.patientOccupation().markAsTouched();
+      this.consultationReason().markAsTouched();
+      window.alert('Preencha sua profissao e o motivo da consulta antes de selecionar um horario.');
+      return;
+    }
+
+    this.slotBooked.emit(slot);
   }
 
   specialtyLabel(value: string): string {
