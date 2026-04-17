@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { concatMap, from, last } from 'rxjs';
 import { AppointmentResponse, AppointmentStatus } from '../../core/models';
 import { CallEvent, CallSignalingService } from '../../core/call-signaling.service';
 import { TelemedApiService } from '../../core/telemed-api.service';
@@ -407,7 +408,7 @@ export class CallRoomPanelComponent {
   }
 
   completeAppointment(): void {
-    this.syncStatus('COMPLETED', true);
+    this.finishAppointment();
   }
 
   leaveRoom(): void {
@@ -467,6 +468,52 @@ export class CallRoomPanelComponent {
           this.toast.error('Falha ao atualizar consulta', `Nao foi possivel mover a consulta para ${status}.`);
         }
       });
+  }
+
+  private finishAppointment(): void {
+    const appointment = this.appointment();
+    if (!appointment || appointment.status === 'COMPLETED') {
+      if (appointment?.status === 'COMPLETED') {
+        this.leaveRoom();
+      }
+      return;
+    }
+
+    const transitionPlan = this.buildCompletionPlan(appointment.status);
+    if (!transitionPlan.length) {
+      this.leaveRoom();
+      return;
+    }
+
+    this.syncedStatus.set('COMPLETED');
+    from(transitionPlan)
+      .pipe(
+        concatMap((status) => this.api.updateAppointmentStatus(appointment.id, status)),
+        last(),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: () => this.leaveRoom(),
+        error: () => {
+          this.syncedStatus.set(null);
+          this.toast.error('Falha ao atualizar consulta', 'Nao foi possivel encerrar a consulta.');
+        }
+      });
+  }
+
+  private buildCompletionPlan(currentStatus: AppointmentStatus): AppointmentStatus[] {
+    switch (currentStatus) {
+      case 'SCHEDULED':
+        return ['CONFIRMED', 'IN_PROGRESS', 'COMPLETED'];
+      case 'CONFIRMED':
+        return ['IN_PROGRESS', 'COMPLETED'];
+      case 'IN_PROGRESS':
+        return ['COMPLETED'];
+      case 'PENDING_PAYMENT':
+      case 'CANCELLED':
+      case 'COMPLETED':
+        return [];
+    }
   }
 
   private toChatMessage(event: CallEvent): ChatMessage {

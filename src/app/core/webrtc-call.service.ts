@@ -277,6 +277,7 @@ export class WebRtcCallService {
     const peer = this.ensurePeerConnection();
 
     if (event.type === 'offer') {
+      this.remoteParticipantId = this.getEventClientId(event);
       const description = new RTCSessionDescription(this.unwrapRtcPayload<RTCSessionDescriptionInit>(event.payload));
       const readyForOffer =
         !this.makingOffer && (peer.signalingState === 'stable' || this.isSettingRemoteAnswerPending);
@@ -288,7 +289,6 @@ export class WebRtcCallService {
 
       this.state.set('connecting');
       await peer.setRemoteDescription(description);
-      this.remoteParticipantId = this.getEventClientId(event);
       await this.flushPendingIceCandidates(peer);
       const answer = await peer.createAnswer();
       await peer.setLocalDescription(answer);
