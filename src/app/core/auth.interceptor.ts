@@ -7,11 +7,15 @@ import { AuthService } from './auth.service';
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  const token = authService.token();
   const isPublicAuthRequest = req.url.includes('/api/auth/login')
     || req.url.includes('/api/auth/forgot-password')
     || req.url.includes('/api/auth/reset-password')
     || req.url.includes('/api/auth/register/');
+
+  if (req.url.includes('/api/') && !isPublicAuthRequest && !authService.validateSession()) {
+    void router.navigateByUrl('/auth');
+  }
+  const token = authService.token();
 
   if (!token || isPublicAuthRequest) {
     return next(req);

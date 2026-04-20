@@ -19,6 +19,7 @@ export class WebRtcCallService {
   private makingOffer = false;
   private ignoreOffer = false;
   private isSettingRemoteAnswerPending = false;
+  private mediaReadyAnnounced = false;
 
   readonly localStream = signal<MediaStream | null>(null);
   readonly remoteStream = signal<MediaStream | null>(null);
@@ -68,6 +69,7 @@ export class WebRtcCallService {
         this.currentRoomId = roomId;
         this.handledIds.clear();
         this.remoteParticipantId = null;
+        this.mediaReadyAnnounced = false;
       }
 
       for (const event of [...events].reverse()) {
@@ -80,6 +82,13 @@ export class WebRtcCallService {
           this.toast.error('Falha na sala', 'Não foi possível processar um evento da videochamada.');
         });
       }
+    });
+
+    effect(() => {
+      this.signaling.status();
+      this.localStream();
+      this.signaling.currentRoom();
+      this.announceMediaReady(true);
     });
   }
 
@@ -101,6 +110,7 @@ export class WebRtcCallService {
     this.cameraEnabled.set(stream.getVideoTracks().some((track) => track.enabled));
     this.attachStreams();
     this.state.set('ready');
+    this.announceMediaReady();
   }
 
   bindVideos(localVideo: HTMLVideoElement | null, remoteVideo: HTMLVideoElement | null): void {
@@ -164,6 +174,7 @@ export class WebRtcCallService {
     this.makingOffer = false;
     this.ignoreOffer = false;
     this.isSettingRemoteAnswerPending = false;
+    this.mediaReadyAnnounced = false;
     this.state.set('idle');
     this.reconnectAttempts = 0;
   }
@@ -260,6 +271,15 @@ export class WebRtcCallService {
       if (!this.localStream()) {
         this.state.set('ready');
       }
+      this.announceMediaReady();
+      if (this.localStream() && this.shouldInitiateOffer() && !this.makingOffer) {
+        await this.startCall();
+      }
+      return;
+    }
+
+    if (event.type === 'media-ready') {
+      this.remoteParticipantId = this.getEventClientId(event);
       if (this.localStream() && this.shouldInitiateOffer() && !this.makingOffer) {
         await this.startCall();
       }
@@ -339,6 +359,15 @@ export class WebRtcCallService {
   private extractClientId(payload: string): string | null {
     const parsed = this.parsePayload<{ clientId?: string }>(payload);
     return parsed?.clientId ?? null;
+  }
+
+  private announceMediaReady(force = false): void {
+    if (!this.localStream() || this.signaling.status() !== 'connected' || (!force && this.mediaReadyAnnounced)) {
+      return;
+    }
+
+    this.mediaReadyAnnounced = true;
+    this.signaling.publish('media-ready', JSON.stringify({ clientId: this.signaling.clientId }));
   }
 
   private isOwnEvent(event: CallEvent): boolean {
@@ -519,6 +548,7 @@ export class WebRtcCallService {
     this.makingOffer = false;
     this.ignoreOffer = false;
     this.isSettingRemoteAnswerPending = false;
+    this.mediaReadyAnnounced = false;
     this.reconnectAttempts = 0;
     if (this.reconnectTimeoutId) {
       clearTimeout(this.reconnectTimeoutId);

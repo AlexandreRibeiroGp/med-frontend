@@ -582,6 +582,7 @@ export class DashboardPageComponent {
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
   private readonly trackedPurchaseConversions = new Set<number>();
+  private readonly handledConfirmedPixPayments = new Set<number>();
   readonly currentTime = signal(Date.now());
   private pixPaymentPollingId: number | null = null;
   readonly visibleSelectedDoctorSlots = computed(() =>
@@ -1615,14 +1616,7 @@ export class DashboardPageComponent {
         next: (payment) => {
           this.activePixPayment.set(payment);
           if (payment.paymentStatus === 'CONFIRMED') {
-            this.trackPixApprovedConversion(payment);
-            this.stopPixPaymentPolling();
-            this.pendingBookingSlot.set(null);
-            this.consultationReason.reset('');
-            this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
-            this.toast.success('Pagamento confirmado', 'A consulta ja esta liberada para atendimento.');
-            this.selectDoctor(doctor);
-            this.loadBaseData();
+            this.handleConfirmedPixPayment(payment, doctor);
             return;
           }
 
@@ -1638,20 +1632,36 @@ export class DashboardPageComponent {
         });
   }
 
+  private handleConfirmedPixPayment(payment: PaymentResponse, doctor: DoctorResponse): void {
+    this.stopPixPaymentPolling();
+    if (this.handledConfirmedPixPayments.has(payment.id)) {
+      return;
+    }
+
+    this.handledConfirmedPixPayments.add(payment.id);
+    this.trackPixApprovedConversion(payment);
+    this.pendingBookingSlot.set(null);
+    this.consultationReason.reset('');
+    this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
+    this.toast.success('Pagamento confirmado', 'A consulta ja esta liberada para atendimento.');
+    this.selectDoctor(doctor);
+    this.loadBaseData();
+  }
+
   private trackPixApprovedConversion(payment: PaymentResponse): void {
-    this.analytics.track('pix_payment_confirmed', {
-      payment_id: payment.id
-    });
     if (this.trackedPurchaseConversions.has(payment.id)) {
       return;
     }
 
+    this.trackedPurchaseConversions.add(payment.id);
+    this.analytics.track('pix_payment_confirmed', {
+      payment_id: payment.id
+    });
     const gtag = (window as typeof window & { gtag?: (...args: unknown[]) => void }).gtag;
     if (!gtag) {
       return;
     }
 
-    this.trackedPurchaseConversions.add(payment.id);
     gtag('event', 'conversion', {
       send_to: 'AW-18059561380/kaUFCNTV4pccEKSTvKND',
       transaction_id: String(payment.id)

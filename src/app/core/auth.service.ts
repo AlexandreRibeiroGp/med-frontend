@@ -24,12 +24,14 @@ interface MessageResponse {
 const API_URL = '/api';
 const TOKEN_KEY = 'med_front_token';
 const USER_KEY = 'med_front_user';
+const EXPIRES_AT_KEY = 'med_front_expires_at';
+const LAST_ACTIVITY_KEY = 'med_front_last_activity_at';
 const OWNER_EMAIL = 'alexandreribeirogp@gmail.com';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
-  private readonly tokenState = signal<string | null>(localStorage.getItem(TOKEN_KEY));
+  private readonly tokenState = signal<string | null>(this.readToken());
   private readonly userState = signal<AuthResponse['user'] | null>(this.readUser());
 
   readonly token = this.tokenState.asReadonly();
@@ -55,19 +57,76 @@ export class AuthService {
   logout(): void {
     this.tokenState.set(null);
     this.userState.set(null);
+    this.clearStoredSession();
+  }
+
+  private clearStoredSession(): void {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(USER_KEY);
+    sessionStorage.removeItem(EXPIRES_AT_KEY);
+    sessionStorage.removeItem(LAST_ACTIVITY_KEY);
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(EXPIRES_AT_KEY);
+  }
+
+  validateSession(): boolean {
+    if (!this.tokenState()) {
+      return false;
+    }
+
+    if (this.isStoredSessionExpired()) {
+      this.logout();
+      return false;
+    }
+
+    return true;
   }
 
   private persistSession(response: AuthResponse): void {
+    const expiresAt = Date.now() + Math.max(response.expiresIn, 0) * 1000;
     this.tokenState.set(response.accessToken);
     this.userState.set(response.user);
-    localStorage.setItem(TOKEN_KEY, response.accessToken);
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user));
+    sessionStorage.setItem(TOKEN_KEY, response.accessToken);
+    sessionStorage.setItem(USER_KEY, JSON.stringify(response.user));
+    sessionStorage.setItem(EXPIRES_AT_KEY, String(expiresAt));
+    sessionStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now()));
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(EXPIRES_AT_KEY);
+  }
+
+  private readToken(): string | null {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(EXPIRES_AT_KEY);
+    if (this.isStoredSessionExpired()) {
+      this.clearStoredSession();
+      return null;
+    }
+    return sessionStorage.getItem(TOKEN_KEY);
   }
 
   private readUser(): AuthResponse['user'] | null {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as AuthResponse['user']) : null;
+    if (this.isStoredSessionExpired()) {
+      return null;
+    }
+    const raw = sessionStorage.getItem(USER_KEY);
+    try {
+      return raw ? (JSON.parse(raw) as AuthResponse['user']) : null;
+    } catch {
+      this.logout();
+      return null;
+    }
+  }
+
+  private isStoredSessionExpired(): boolean {
+    const rawExpiresAt = sessionStorage.getItem(EXPIRES_AT_KEY);
+    if (!rawExpiresAt) {
+      return sessionStorage.getItem(TOKEN_KEY) !== null;
+    }
+
+    const expiresAt = Number(rawExpiresAt);
+    return !Number.isFinite(expiresAt) || Date.now() >= expiresAt;
   }
 }

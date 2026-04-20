@@ -6,13 +6,13 @@ import { Role } from './models';
 export const authGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  return authService.isAuthenticated() ? true : router.createUrlTree(['/auth']);
+  return authService.validateSession() ? true : router.createUrlTree(['/auth']);
 };
 
 export const guestGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
-  return authService.isAuthenticated() ? router.createUrlTree(['/dashboard']) : true;
+  return authService.validateSession() ? router.createUrlTree(['/dashboard']) : true;
 };
 
 export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
@@ -20,7 +20,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   const router = inject(Router);
   const allowedRoles = (route.data['roles'] as Role[] | undefined) ?? [];
 
-  if (!authService.isAuthenticated()) {
+  if (!authService.validateSession()) {
     return router.createUrlTree(['/auth']);
   }
 
@@ -35,7 +35,7 @@ export const ownerGuard: CanActivateFn = () => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  if (!authService.isAuthenticated()) {
+  if (!authService.validateSession()) {
     return router.createUrlTree(['/auth']);
   }
 
