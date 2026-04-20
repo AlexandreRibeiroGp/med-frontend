@@ -12,7 +12,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     || req.url.includes('/api/auth/reset-password')
     || req.url.includes('/api/auth/register/');
 
-  if (req.url.includes('/api/') && !isPublicAuthRequest && !authService.validateSession()) {
+  const hasStoredSession = !!authService.token();
+  if (req.url.includes('/api/') && !isPublicAuthRequest && hasStoredSession && !authService.validateSession()) {
     void router.navigateByUrl('/auth');
   }
   const token = authService.token();
