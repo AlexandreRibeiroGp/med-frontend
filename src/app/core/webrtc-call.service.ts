@@ -472,11 +472,12 @@ export class WebRtcCallService {
   }
 
   private async requestMediaWithFallback(): Promise<MediaStream> {
+    const constraints = this.mediaConstraints();
     try {
-      return await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      return await navigator.mediaDevices.getUserMedia(constraints);
     } catch (combinedError) {
       const audioResult = await this.tryGetUserMedia({ audio: true, video: false });
-      const videoResult = await this.tryGetUserMedia({ audio: false, video: true });
+      const videoResult = await this.tryGetUserMedia({ audio: false, video: constraints.video });
       const fallbackStream = new MediaStream();
 
       audioResult.stream?.getAudioTracks().forEach((track) => fallbackStream.addTrack(track));
@@ -501,6 +502,22 @@ export class WebRtcCallService {
 
       throw this.buildMediaAccessError(combinedError, audioResult.error, videoResult.error);
     }
+  }
+
+  private mediaConstraints(): MediaStreamConstraints {
+    return {
+      audio: {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: true
+      },
+      video: {
+        facingMode: 'user',
+        width: { ideal: 640, max: 960 },
+        height: { ideal: 360, max: 540 },
+        frameRate: { ideal: 15, max: 24 }
+      }
+    };
   }
 
   private async tryGetUserMedia(constraints: MediaStreamConstraints): Promise<{ stream: MediaStream | null; error: unknown }> {

@@ -26,6 +26,7 @@ function generateClientId(): string {
 @Injectable({ providedIn: 'root' })
 export class CallSignalingService {
   private client: Client | null = null;
+  private heartbeatIntervalId: number | null = null;
   private readonly selfId = `client-${generateClientId()}`;
   private activeAppointmentId = signal<number | null>(null);
   private connectionState = signal<'disconnected' | 'connecting' | 'connected'>('disconnected');
@@ -66,6 +67,7 @@ export class CallSignalingService {
         this.connectionState.set('connected');
         client.subscribe(`/topic/calls/${appointmentId}`, (message) => this.handleMessage(message));
         this.publish('join', JSON.stringify({ message: 'participante entrou', clientId: this.selfId }));
+        this.startHeartbeat();
       },
       onStompError: () => {
         this.connectionState.set('disconnected');
@@ -101,6 +103,7 @@ export class CallSignalingService {
   }
 
   disconnect(sendLeave = true): void {
+    this.stopHeartbeat();
     if (sendLeave && this.client?.connected) {
       this.publish('leave', JSON.stringify({ message: 'participante saiu', clientId: this.selfId }));
     }
@@ -112,6 +115,21 @@ export class CallSignalingService {
     this.activeAppointmentId.set(null);
     this.roomStateValue.set({ participantCount: 0, participants: [] });
     this.roomLimitReachedValue.set(false);
+  }
+
+  private startHeartbeat(): void {
+    this.stopHeartbeat();
+    this.heartbeatIntervalId = window.setInterval(() => {
+      this.publish('heartbeat', JSON.stringify({ clientId: this.selfId }));
+    }, 10000);
+  }
+
+  private stopHeartbeat(): void {
+    if (this.heartbeatIntervalId === null) {
+      return;
+    }
+    window.clearInterval(this.heartbeatIntervalId);
+    this.heartbeatIntervalId = null;
   }
 
   private handleMessage(message: IMessage): void {

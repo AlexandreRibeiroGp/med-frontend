@@ -364,9 +364,13 @@ export class CallRoomPanelComponent {
       this.toast.error('Sala indisponivel', 'A consulta ja esta com dois participantes conectados.');
     });
 
+    window.addEventListener('pagehide', this.closeRoomSilently);
+    window.addEventListener('beforeunload', this.closeRoomSilently);
+
     this.destroyRef.onDestroy(() => {
-      void this.rtc.disconnect();
-      this.rtc.stopMedia();
+      window.removeEventListener('pagehide', this.closeRoomSilently);
+      window.removeEventListener('beforeunload', this.closeRoomSilently);
+      this.closeRoomSilently();
     });
   }
 
@@ -412,9 +416,7 @@ export class CallRoomPanelComponent {
   }
 
   leaveRoom(): void {
-    this.signaling.disconnect();
-    void this.rtc.disconnect();
-    this.rtc.stopMedia();
+    this.closeRoomSilently();
     this.toast.info('Sala encerrada', 'A conexao local foi finalizada.', 2500);
   }
 
@@ -446,6 +448,12 @@ export class CallRoomPanelComponent {
 
     this.signaling.connect(appointment.id);
   }
+
+  private readonly closeRoomSilently = (): void => {
+    this.signaling.disconnect();
+    void this.rtc.disconnect();
+    this.rtc.stopMedia();
+  };
 
   private syncStatus(status: AppointmentStatus, endRoomAfter = false): void {
     const appointment = this.appointment();
