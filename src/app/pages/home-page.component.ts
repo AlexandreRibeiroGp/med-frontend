@@ -1,10 +1,8 @@
 ﻿import { CommonModule } from '@angular/common';
-import { Component, DestroyRef, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { AnalyticsService } from '../core/analytics.service';
-import { DoctorResponse } from '../core/models';
-import { TelemedApiService } from '../core/telemed-api.service';
 import { filter } from 'rxjs';
 
 @Component({
@@ -16,33 +14,16 @@ import { filter } from 'rxjs';
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preço acessível</p>
           <p class="brand-kicker">MedCallOn</p>
-          <a
-            routerLink="/auth"
-            [queryParams]="defaultAuthQueryParams()"
-            class="price-pill"
-            (click)="trackCta('price_pill_click')"
-          >
-            Quero me consultar
-          </a>
           <h1>Consulta médica online com atendimento simples e seguro.</h1>
             <p class="hero-note">Consulta médica online de forma simples e segura.</p>
           <div class="hero-actions">
-            <a
-              routerLink="/auth"
-              [queryParams]="defaultAuthQueryParams()"
-              class="primary-action"
-              (click)="trackCta('hero_schedule_click')"
-            >
-              Quero me consultar
-            </a>
             <a href="#como-funciona" class="secondary-action">Como funciona</a>
           </div>
         </div>
 
         <div class="hero-visual">
           <a
-            routerLink="/auth"
-            [queryParams]="defaultAuthQueryParams()"
+            routerLink="/comece"
             class="summary-card"
             (click)="trackCta('summary_card_click')"
           >
@@ -172,8 +153,7 @@ import { filter } from 'rxjs';
         <div class="footer-cta">
           <p class="section-tag">Comece agora</p>
           <a
-            routerLink="/auth"
-            [queryParams]="defaultAuthQueryParams()"
+            routerLink="/comece"
             class="primary-action"
             (click)="trackCta('footer_schedule_click')"
           >
@@ -636,12 +616,9 @@ import { filter } from 'rxjs';
   `
 })
 export class HomePageComponent {
-  private readonly api = inject(TelemedApiService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly analytics = inject(AnalyticsService);
   private readonly router = inject(Router);
-  readonly featuredDoctor = signal<DoctorResponse | null>(null);
-  readonly doctors = signal<DoctorResponse[]>([]);
   private scrollMilestones = new Set<number>();
 
   constructor() {
@@ -671,41 +648,10 @@ export class HomePageComponent {
     window.addEventListener('scroll', handleScroll, { passive: true });
     this.destroyRef.onDestroy(() => window.removeEventListener('scroll', handleScroll));
 
-    this.api
-      .getDoctors()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (doctors) => {
-          const availableDoctors = doctors.filter((doctor) => doctor.telemedicineEnabled);
-          const telemedicineDoctor = availableDoctors[0] ?? doctors[0] ?? null;
-          this.doctors.set((availableDoctors.length ? availableDoctors : doctors).slice(0, 3));
-          this.featuredDoctor.set(telemedicineDoctor);
-        },
-        error: () => {
-          this.featuredDoctor.set(null);
-          this.doctors.set([]);
-        }
-      });
   }
 
   trackCta(eventName: string): void {
     this.analytics.track(eventName, { landing: this.currentLanding() });
-  }
-
-  defaultAuthQueryParams(): Record<string, string> {
-    return {
-      source: this.currentLanding(),
-      intent: 'consulta'
-    };
-  }
-
-  authQueryParamsForDoctor(doctor: DoctorResponse): Record<string, string> {
-    return {
-      source: this.currentLanding(),
-      intent: 'consulta',
-      doctorId: String(doctor.id),
-      doctorName: doctor.user.fullName
-    };
   }
 
   private currentLanding(): string {

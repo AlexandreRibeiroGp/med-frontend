@@ -6,7 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize } from 'rxjs';
 import { composeAddress } from '../core/address-form';
 import { AuthService } from '../core/auth.service';
-import { DoctorResponse, LegalDocumentResponse } from '../core/models';
+import { LegalDocumentResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 import { AnalyticsService } from '../core/analytics.service';
 
@@ -175,40 +175,6 @@ import { AnalyticsService } from '../core/analytics.service';
         </div>
       </section>
 
-      <aside class="panel doctors-panel">
-        <p class="showcase-tag">Medicos disponiveis</p>
-        <h2>Veja nossos medicos disponiveis e siga para sua consulta.</h2>
-        <p class="showcase-copy">
-          Cadastre-se para escolher um horario, pagar por Pix e entrar na sala de atendimento. Se voce ja tem conta,
-          entre para continuar do ponto em que parou.
-        </p>
-
-        <div class="doctor-list" *ngIf="doctors().length; else emptyDoctors">
-          <article class="doctor-card" *ngFor="let doctor of doctors()">
-            <div class="doctor-photo">
-              <img *ngIf="doctor.profilePhotoUrl; else doctorInitial" [src]="doctor.profilePhotoUrl" [alt]="doctor.user.fullName" />
-              <ng-template #doctorInitial>{{ doctor.user.fullName.charAt(0) }}</ng-template>
-            </div>
-            <div>
-              <strong>{{ doctor.user.fullName }}</strong>
-              <span>{{ specialtyLabel(doctor.specialty) }}</span>
-              <small>CRM {{ doctor.crm }}</small>
-            </div>
-          </article>
-        </div>
-
-        <ng-template #emptyDoctors>
-          <div class="empty-doctors">
-            <strong>Medicos em atualizacao</strong>
-            <p>Voce ainda pode criar sua conta e acompanhar os horarios assim que forem publicados.</p>
-          </div>
-        </ng-template>
-
-        <div class="doctors-actions">
-          <button type="button" (click)="openPatientSignup()">Quero me cadastrar</button>
-          <button type="button" class="outline-button" (click)="openLoginMode()">Ja tenho conta</button>
-        </div>
-      </aside>
     </div>
   `,
   styles: `
@@ -226,12 +192,8 @@ import { AnalyticsService } from '../core/analytics.service';
     }
 
     .shell {
-      width: min(1180px, 100%);
+      width: min(760px, 100%);
       margin: 0 auto;
-      display: grid;
-      grid-template-columns: minmax(0, 760px) minmax(320px, 1fr);
-      gap: 22px;
-      align-items: start;
     }
 
     .panel {
@@ -255,8 +217,7 @@ import { AnalyticsService } from '../core/analytics.service';
       text-decoration: none;
     }
 
-    .tag,
-    .showcase-tag {
+    .tag {
       color: #20b8b2;
     }
 
@@ -338,110 +299,6 @@ import { AnalyticsService } from '../core/analytics.service';
       color: #4c6168;
       font-size: 0.88rem;
       font-weight: 700;
-    }
-
-    .doctors-panel {
-      position: sticky;
-      top: 24px;
-      display: grid;
-      gap: 16px;
-      padding: 28px;
-      background:
-        radial-gradient(circle at top right, rgba(37, 193, 187, 0.22), transparent 34%),
-        #f8fbfb;
-    }
-
-    .doctors-panel h2 {
-      margin: 0;
-      font-size: clamp(1.8rem, 3vw, 2.8rem);
-      line-height: 1;
-      letter-spacing: -0.04em;
-      color: #17313a;
-    }
-
-    .showcase-copy {
-      margin: 0;
-      color: #617b82;
-      line-height: 1.6;
-    }
-
-    .doctor-list {
-      display: grid;
-      gap: 12px;
-    }
-
-    .doctor-card,
-    .empty-doctors {
-      display: grid;
-      grid-template-columns: auto 1fr;
-      gap: 12px;
-      align-items: center;
-      padding: 14px;
-      border-radius: 20px;
-      background: #ffffff;
-      border: 1px solid rgba(23, 49, 58, 0.07);
-    }
-
-    .doctor-photo {
-      width: 62px;
-      height: 62px;
-      border-radius: 18px;
-      overflow: hidden;
-      display: grid;
-      place-items: center;
-      background: #1f666b;
-      color: #ffffff;
-      font-size: 1.35rem;
-      font-weight: 800;
-      text-transform: uppercase;
-    }
-
-    .doctor-photo img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .doctor-card strong,
-    .empty-doctors strong {
-      display: block;
-      color: #17313a;
-      line-height: 1.2;
-    }
-
-    .doctor-card span,
-    .doctor-card small,
-    .empty-doctors p {
-      display: block;
-      color: #617b82;
-      margin-top: 3px;
-    }
-
-    .empty-doctors {
-      grid-template-columns: 1fr;
-    }
-
-    .doctors-actions {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-    }
-
-    .doctors-actions button {
-      border: 0;
-      border-radius: 999px;
-      padding: 13px 16px;
-      font: inherit;
-      font-weight: 800;
-      cursor: pointer;
-      background: #25c1bb;
-      color: #ffffff;
-    }
-
-    .doctors-actions .outline-button {
-      background: #ffffff;
-      color: #17313a;
-      border: 1px solid rgba(23, 49, 58, 0.14);
     }
 
     .journey-steps {
@@ -679,12 +536,6 @@ import { AnalyticsService } from '../core/analytics.service';
     @media (max-width: 980px) {
       .shell {
         width: min(760px, 100%);
-        grid-template-columns: 1fr;
-      }
-
-      .doctors-panel {
-        position: static;
-        order: -1;
       }
     }
 
@@ -696,35 +547,6 @@ import { AnalyticsService } from '../core/analytics.service';
 
       .shell {
         width: 100%;
-      }
-
-      .doctors-panel {
-        padding: 18px 14px;
-        border-radius: 22px;
-      }
-
-      .doctors-panel h2 {
-        font-size: 1.45rem;
-        line-height: 1.08;
-      }
-
-      .showcase-copy {
-        font-size: 0.92rem;
-      }
-
-      .doctor-list {
-        display: flex;
-        overflow-x: auto;
-        gap: 10px;
-        padding-bottom: 2px;
-      }
-
-      .doctor-card {
-        min-width: 230px;
-      }
-
-      .doctors-actions {
-        grid-template-columns: 1fr;
       }
 
       .brand-logo {
@@ -828,7 +650,6 @@ export class AuthPageComponent {
   readonly contextDoctorName = signal('');
   readonly contextSource = signal('');
   readonly legalDocuments = signal<LegalDocumentResponse[]>([]);
-  readonly doctors = signal<DoctorResponse[]>([]);
   private errorTimer: number | null = null;
   private messageTimer: number | null = null;
 
@@ -875,17 +696,13 @@ export class AuthPageComponent {
       error: () => this.setError('Nao foi possivel carregar os documentos legais atuais.')
     });
 
-    this.api.getDoctors().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (doctors) => this.doctors.set(doctors.filter((doctor) => doctor.telemedicineEnabled).slice(0, 4)),
-      error: () => this.doctors.set([])
-    });
-
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const token = params.get('token')?.trim() ?? '';
       const doctorId = Number(params.get('doctorId'));
       const doctorName = params.get('doctorName')?.trim() ?? '';
       const source = params.get('source')?.trim() ?? '';
       const intent = params.get('intent')?.trim() ?? '';
+      const mode = params.get('mode')?.trim() ?? '';
 
       this.resetToken.set(token);
       this.contextDoctorId.set(Number.isFinite(doctorId) ? doctorId : null);
@@ -901,7 +718,11 @@ export class AuthPageComponent {
       if (this.mode() === 'reset') {
         this.mode.set('login');
       }
-      if (intent === 'consulta' && this.mode() === 'login') {
+      if (mode === 'patient') {
+        this.mode.set('patient');
+      } else if (mode === 'login') {
+        this.mode.set('login');
+      } else if (intent === 'consulta' && this.mode() === 'login') {
         this.mode.set('patient');
       }
     });
@@ -1054,10 +875,6 @@ export class AuthPageComponent {
     return this.contextDoctorName()
       ? `Crie sua conta para seguir com ${this.contextDoctorName()} e liberar o proximo passo da consulta.`
       : 'Preencha seus dados para seguir com mais confianca para o pagamento e para a consulta.';
-  }
-
-  specialtyLabel(value: string): string {
-    return value === 'GERAL' || value === 'GENERALISTA' ? 'Generalista' : value;
   }
 
   passwordConfirmationError(): string {

@@ -30,7 +30,7 @@ import { filter, map, startWith } from 'rxjs';
             <a href="#como-funciona">Como funciona</a>
             <a href="#faq">FAQ</a>
             <a routerLink="/auth">Entrar</a>
-            <a routerLink="/auth" class="cta-link">Quero me consultar</a>
+            <a routerLink="/comece" class="cta-link">Quero me consultar</a>
           </div>
         </ng-template>
       </header>
@@ -43,13 +43,13 @@ import { filter, map, startWith } from 'rxjs';
         <span>{{ roleLabel() }}</span>
       </section>
 
-      <main class="content" [class.auth-content]="isAuthRoute()">
+      <main class="content" [class.auth-content]="isAuthRoute() || isStartRoute()">
         <router-outlet />
       </main>
 
       <a
-        *ngIf="!auth.isAuthenticated() && !isAuthRoute()"
-        routerLink="/auth"
+        *ngIf="!auth.isAuthenticated() && !isAuthRoute() && !isStartRoute()"
+        routerLink="/comece"
         class="mobile-cta"
       >
         Quero me consultar
@@ -382,6 +382,14 @@ export class AppShellComponent {
       startWith(this.router.url.startsWith('/auth'))
     ),
     { initialValue: this.router.url.startsWith('/auth') }
+  );
+  readonly isStartRoute = toSignal(
+    this.router.events.pipe(
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd),
+      map(() => this.router.url.startsWith('/comece')),
+      startWith(this.router.url.startsWith('/comece'))
+    ),
+    { initialValue: this.router.url.startsWith('/comece') }
   );
 
   readonly roleLabel = computed(() => {

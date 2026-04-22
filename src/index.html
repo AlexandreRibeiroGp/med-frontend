@@ -5,6 +5,9 @@
   <title>MedCallOn | Consulta Medica Online com Atendimento Imediato</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="MedCallOn">
+  <meta name="theme-color" content="#25c1bb">
   <meta
     name="description"
     content="Consulta medica online com atendimento rapido, pagamento por Pix e receita ou atestado quando necessario. Agende sua consulta na MedCallOn."
@@ -20,12 +23,57 @@
   >
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://medcallon.com.br/">
+  <meta property="og:site_name" content="MedCallOn">
+  <meta property="og:image" content="https://medcallon.com.br/medcallon.png">
+  <meta property="og:locale" content="pt_BR">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="MedCallOn | Consulta Medica Online com Atendimento Imediato">
   <meta
     name="twitter:description"
     content="Consulta medica online com atendimento rapido, pagamento por Pix e receita ou atestado quando necessario."
   >
+  <meta name="twitter:image" content="https://medcallon.com.br/medcallon.png">
+  <link rel="canonical" href="https://medcallon.com.br/">
+  <script id="medcallon-jsonld" type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": ["Organization", "MedicalBusiness"],
+          "@id": "https://medcallon.com.br/#organization",
+          "name": "MedCallOn",
+          "url": "https://medcallon.com.br/",
+          "logo": "https://medcallon.com.br/medcallon.png",
+          "email": "mmedcallon@gmail.com",
+          "areaServed": "BR",
+          "medicalSpecialty": "PrimaryCare"
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://medcallon.com.br/#website",
+          "name": "MedCallOn",
+          "url": "https://medcallon.com.br/",
+          "publisher": {
+            "@id": "https://medcallon.com.br/#organization"
+          },
+          "inLanguage": "pt-BR"
+        },
+        {
+          "@type": "MedicalWebPage",
+          "@id": "https://medcallon.com.br/#webpage",
+          "url": "https://medcallon.com.br/",
+          "name": "Consulta medica online",
+          "description": "Consulta medica online com cadastro, pagamento por Pix e atendimento pela plataforma.",
+          "isPartOf": {
+            "@id": "https://medcallon.com.br/#website"
+          },
+          "publisher": {
+            "@id": "https://medcallon.com.br/#organization"
+          }
+        }
+      ]
+    }
+  </script>
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-18059561380"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
