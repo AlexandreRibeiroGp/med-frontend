@@ -162,9 +162,12 @@ export class WebRtcCallService {
       void this.restoreMissingTrack('video');
       return;
     }
-    const enabled = !this.cameraEnabled();
-    this.localStream()?.getVideoTracks().forEach((track) => (track.enabled = enabled));
-    this.cameraEnabled.set(enabled);
+    if (this.cameraEnabled()) {
+      this.disableVideoTrack();
+      return;
+    }
+
+    void this.restoreMissingTrack('video');
   }
 
   async reconnect(): Promise<void> {
@@ -614,11 +617,43 @@ export class WebRtcCallService {
     }
 
     if (this.peerConnection) {
-      this.peerConnection.addTrack(newTrack, updatedStream);
+      const sender = this.findSender(kind);
+      if (sender) {
+        await sender.replaceTrack(newTrack);
+      } else {
+        this.peerConnection.addTrack(newTrack, updatedStream);
+      }
       await this.startCall(true);
     }
 
     this.attachStreams();
+  }
+
+  private disableVideoTrack(): void {
+    const currentStream = this.localStream();
+    if (!currentStream) {
+      this.cameraEnabled.set(false);
+      return;
+    }
+
+    currentStream.getVideoTracks().forEach((track) => {
+      track.stop();
+      currentStream.removeTrack(track);
+    });
+
+    this.localStream.set(new MediaStream(currentStream.getTracks()));
+    this.cameraEnabled.set(false);
+
+    const sender = this.findSender('video');
+    if (sender) {
+      void sender.replaceTrack(null);
+    }
+
+    this.attachStreams();
+  }
+
+  private findSender(kind: 'audio' | 'video'): RTCRtpSender | null {
+    return this.peerConnection?.getSenders().find((sender) => sender.track?.kind === kind) ?? null;
   }
 
   private mediaConstraints(): MediaStreamConstraints {
