@@ -592,13 +592,9 @@ export class DashboardPageComponent {
     this.availability().filter((slot) => new Date(slot.endAt).getTime() > this.currentTime())
   );
   readonly callableAppointments = computed(() =>
-    this.appointments().filter(
-      (appointment) =>
-        appointment.status !== 'PENDING_PAYMENT' &&
-        appointment.status !== 'CANCELLED' &&
-        appointment.status !== 'COMPLETED' &&
-        this.canJoinAppointment(appointment)
-    )
+    this.appointments()
+      .filter((appointment) => this.shouldShowInCallQueue(appointment))
+      .sort((left, right) => new Date(left.scheduledAt).getTime() - new Date(right.scheduledAt).getTime())
   );
   readonly currentMonthKey = computed(() => monthKeyInSaoPaulo(new Date(this.currentTime())));
   readonly completedAppointmentsCount = computed(() =>
@@ -774,6 +770,18 @@ export class DashboardPageComponent {
     const lateWindow = 2 * 60 * 60 * 1000;
     return now >= scheduledAt - earlyWindow && now <= scheduledAt + lateWindow;
   };
+
+  private shouldShowInCallQueue(appointment: AppointmentResponse): boolean {
+    if (appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED') {
+      return false;
+    }
+
+    if (this.auth.role() === 'DOCTOR') {
+      return appointment.paymentStatus === 'CONFIRMED';
+    }
+
+    return appointment.status !== 'PENDING_PAYMENT';
+  }
 
   readonly joinAvailabilityLabel = (appointment: AppointmentResponse): string => {
     const scheduledAt = new Date(appointment.scheduledAt).getTime();
