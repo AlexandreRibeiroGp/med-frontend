@@ -9,6 +9,7 @@ export class WebRtcCallService {
   private remoteStreamValue = new MediaStream();
   private localVideo: HTMLVideoElement | null = null;
   private remoteVideo: HTMLVideoElement | null = null;
+  private remoteAudio: HTMLAudioElement | null = null;
   private handledIds = new Set<string>();
   private pendingIceCandidates: RTCIceCandidateInit[] = [];
   private currentRoomId: number | null = null;
@@ -113,9 +114,14 @@ export class WebRtcCallService {
     this.announceMediaReady();
   }
 
-  bindVideos(localVideo: HTMLVideoElement | null, remoteVideo: HTMLVideoElement | null): void {
+  bindMediaElements(
+    localVideo: HTMLVideoElement | null,
+    remoteVideo: HTMLVideoElement | null,
+    remoteAudio: HTMLAudioElement | null
+  ): void {
     this.localVideo = localVideo;
     this.remoteVideo = remoteVideo;
+    this.remoteAudio = remoteAudio;
     this.attachStreams();
   }
 
@@ -185,6 +191,7 @@ export class WebRtcCallService {
     this.remoteStream.set(null);
     this.localVideo = null;
     this.remoteVideo = null;
+    this.remoteAudio = null;
   }
 
   private ensurePeerConnection(forceRestart = false): RTCPeerConnection {
@@ -201,11 +208,19 @@ export class WebRtcCallService {
     }
 
     const peer = new RTCPeerConnection({
-      iceServers: this.iceServers
+      iceServers: this.iceServers,
+      bundlePolicy: 'max-bundle',
+      iceCandidatePoolSize: 2
     });
 
     const stream = this.localStream();
     stream?.getTracks().forEach((track) => peer.addTrack(track, stream));
+    if (!stream?.getAudioTracks().length) {
+      peer.addTransceiver('audio', { direction: 'recvonly' });
+    }
+    if (!stream?.getVideoTracks().length) {
+      peer.addTransceiver('video', { direction: 'recvonly' });
+    }
 
     peer.onicecandidate = (event) => {
       if (event.candidate) {
@@ -218,6 +233,10 @@ export class WebRtcCallService {
         if (!this.remoteStreamValue.getTracks().some((existing) => existing.id === track.id)) {
           this.remoteStreamValue.addTrack(track);
         }
+        track.onunmute = () => {
+          this.remoteStream.set(this.remoteStreamValue);
+          this.attachStreams();
+        };
       });
       this.remoteStream.set(this.remoteStreamValue);
       this.state.set('connected');
@@ -460,14 +479,32 @@ export class WebRtcCallService {
 
   private attachStreams(): void {
     if (this.localVideo && this.localStream()) {
+      this.localVideo.autoplay = true;
+      this.localVideo.playsInline = true;
+      this.localVideo.setAttribute('autoplay', 'true');
+      this.localVideo.setAttribute('playsinline', 'true');
+      this.localVideo.setAttribute('webkit-playsinline', 'true');
       this.localVideo.srcObject = this.localStream();
       this.localVideo.muted = true;
       void this.localVideo.play().catch(() => undefined);
     }
 
     if (this.remoteVideo) {
+      this.remoteVideo.autoplay = true;
+      this.remoteVideo.playsInline = true;
+      this.remoteVideo.setAttribute('autoplay', 'true');
+      this.remoteVideo.setAttribute('playsinline', 'true');
+      this.remoteVideo.setAttribute('webkit-playsinline', 'true');
+      this.remoteVideo.muted = false;
       this.remoteVideo.srcObject = this.remoteStream();
       void this.remoteVideo.play().catch(() => undefined);
+    }
+
+    if (this.remoteAudio) {
+      this.remoteAudio.autoplay = true;
+      this.remoteAudio.muted = false;
+      this.remoteAudio.srcObject = this.remoteStream();
+      void this.remoteAudio.play().catch(() => undefined);
     }
   }
 

@@ -48,6 +48,7 @@ interface ChatMessage {
                 <figcaption>Participante remoto</figcaption>
                 <video #remoteVideo playsinline autoplay></video>
               </figure>
+              <audio #remoteAudio autoplay></audio>
             </div>
 
             <div class="control-bar">
@@ -296,6 +297,7 @@ export class CallRoomPanelComponent {
   private readonly destroyRef = inject(DestroyRef);
   private readonly localVideo = viewChild<ElementRef<HTMLVideoElement>>('localVideo');
   private readonly remoteVideo = viewChild<ElementRef<HTMLVideoElement>>('remoteVideo');
+  private readonly remoteAudio = viewChild<ElementRef<HTMLAudioElement>>('remoteAudio');
   private readonly chatMessagesContainer = viewChild<ElementRef<HTMLDivElement>>('chatMessages');
   private readonly syncedStatus = signal<AppointmentStatus | null>(null);
   chatDraft = '';
@@ -324,7 +326,8 @@ export class CallRoomPanelComponent {
     effect(() => {
       const local = this.localVideo()?.nativeElement ?? null;
       const remote = this.remoteVideo()?.nativeElement ?? null;
-      this.rtc.bindVideos(local, remote);
+      const remoteAudio = this.remoteAudio()?.nativeElement ?? null;
+      this.rtc.bindMediaElements(local, remote, remoteAudio);
     });
 
     effect(() => {
