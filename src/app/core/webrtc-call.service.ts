@@ -109,6 +109,7 @@ export class WebRtcCallService {
     this.localStream.set(stream);
     this.micEnabled.set(stream.getAudioTracks().some((track) => track.enabled));
     this.cameraEnabled.set(stream.getVideoTracks().some((track) => track.enabled));
+    this.warnAboutMissingDevices(stream);
     this.attachStreams();
     this.state.set('ready');
     this.announceMediaReady();
@@ -131,7 +132,11 @@ export class WebRtcCallService {
     this.state.set(forceRestart ? 'reconnecting' : 'connecting');
     try {
       this.makingOffer = true;
-      const offer = await peer.createOffer({ iceRestart: forceRestart });
+      const offer = await peer.createOffer({
+        iceRestart: forceRestart,
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: true
+      });
       if (peer.signalingState !== 'stable') {
         return;
       }
@@ -143,12 +148,20 @@ export class WebRtcCallService {
   }
 
   toggleMicrophone(): void {
+    if (!this.localStream()?.getAudioTracks().length && !this.micEnabled()) {
+      void this.restoreMissingTrack('audio');
+      return;
+    }
     const enabled = !this.micEnabled();
     this.localStream()?.getAudioTracks().forEach((track) => (track.enabled = enabled));
     this.micEnabled.set(enabled);
   }
 
   toggleCamera(): void {
+    if (!this.localStream()?.getVideoTracks().length && !this.cameraEnabled()) {
+      void this.restoreMissingTrack('video');
+      return;
+    }
     const enabled = !this.cameraEnabled();
     this.localStream()?.getVideoTracks().forEach((track) => (track.enabled = enabled));
     this.cameraEnabled.set(enabled);
@@ -229,7 +242,12 @@ export class WebRtcCallService {
     };
 
     peer.ontrack = (event) => {
-      event.streams[0].getTracks().forEach((track) => {
+      const incomingTracks =
+        event.streams.length > 0
+          ? event.streams.flatMap((streamEntry) => streamEntry.getTracks())
+          : [event.track];
+
+      incomingTracks.forEach((track) => {
         if (!this.remoteStreamValue.getTracks().some((existing) => existing.id === track.id)) {
           this.remoteStreamValue.addTrack(track);
         }
@@ -539,6 +557,68 @@ export class WebRtcCallService {
 
       throw this.buildMediaAccessError(combinedError, audioResult.error, videoResult.error);
     }
+  }
+
+  private warnAboutMissingDevices(stream: MediaStream): void {
+    const missingDevices: string[] = [];
+    if (!stream.getAudioTracks().length) {
+      missingDevices.push('microfone');
+    }
+    if (!stream.getVideoTracks().length) {
+      missingDevices.push('camera');
+    }
+    if (!missingDevices.length) {
+      return;
+    }
+
+    this.toast.info(
+      'Permissao parcial',
+      `A chamada foi iniciada sem ${missingDevices.join(' e ')}. Use os botoes para tentar ativar novamente.`
+    );
+  }
+
+  private async restoreMissingTrack(kind: 'audio' | 'video'): Promise<void> {
+    const currentStream = this.localStream();
+    if (!currentStream) {
+      await this.prepareMedia();
+      return;
+    }
+
+    const constraints: MediaStreamConstraints =
+      kind === 'audio'
+        ? { audio: true, video: false }
+        : { audio: false, video: this.mediaConstraints().video };
+
+    const result = await this.tryGetUserMedia(constraints);
+    const newTrack =
+      kind === 'audio'
+        ? result.stream?.getAudioTracks()[0] ?? null
+        : result.stream?.getVideoTracks()[0] ?? null;
+
+    if (!newTrack) {
+      this.toast.error(
+        'Dispositivo indisponivel',
+        kind === 'audio'
+          ? 'Nao foi possivel ativar o microfone neste dispositivo.'
+          : 'Nao foi possivel ativar a camera neste dispositivo.'
+      );
+      return;
+    }
+
+    const updatedStream = new MediaStream([...currentStream.getTracks(), newTrack]);
+    this.localStream.set(updatedStream);
+    if (kind === 'audio') {
+      this.micEnabled.set(true);
+    } else {
+      this.cameraEnabled.set(true);
+    }
+
+    if (this.peerConnection) {
+      this.peerConnection.addTrack(newTrack, updatedStream);
+      await this.startCall(true);
+    }
+
+    this.attachStreams();
   }
 
   private mediaConstraints(): MediaStreamConstraints {
