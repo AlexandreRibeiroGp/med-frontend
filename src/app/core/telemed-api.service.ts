@@ -188,6 +188,10 @@ export class TelemedApiService {
     return this.http.get<PatientProfileResponse>(`${API_URL}/patients/me`);
   }
 
+  getPatientProfileById(patientProfileId: number): Observable<PatientProfileResponse> {
+    return this.http.get<PatientProfileResponse>(`${API_URL}/patients/${patientProfileId}`);
+  }
+
   updateCurrentPatientProfile(payload: {
     fullName: string;
     phoneNumber?: string | null;

@@ -1,7 +1,7 @@
 ﻿import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { AppointmentResponse, MedicalRecordResponse, Role } from '../../core/models';
+import { AppointmentResponse, MedicalRecordResponse, PatientProfileResponse, Role } from '../../core/models';
 import { TelemedApiService } from '../../core/telemed-api.service';
 
 @Component({
@@ -41,18 +41,40 @@ import { TelemedApiService } from '../../core/telemed-api.service';
 
       <article class="card wide" *ngIf="role() === 'DOCTOR'">
         <h3>Salvar documento</h3>
-        <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
-          <select formControlName="appointmentId">
+        <form [formGroup]="recordForm()">
+          <select formControlName="appointmentId" (change)="appointmentSelected.emit(selectedAppointmentId())">
             <option value="">Selecione a consulta</option>
             <option *ngFor="let appointment of appointments()" [value]="appointment.id">
               #{{ appointment.id }} - {{ appointment.patientName }}
             </option>
           </select>
-          <textarea formControlName="diagnosis" placeholder="Observação ou diagnóstico (opcional)"></textarea>
-          <textarea formControlName="prescription" placeholder="Link da receita para o paciente"></textarea>
-          <textarea formControlName="clinicalNotes" placeholder="Prontuário clínico (opcional)"></textarea>
-          <small class="helper-text">Cole o link da receita. O paciente verá esse link na aba de documentos.</small>
-          <button type="submit" class="upload">Salvar documento</button>
+
+          <div class="patient-card" *ngIf="selectedPatientProfile() as patient">
+            <strong>Dados do paciente</strong>
+            <div class="patient-grid">
+              <span><strong>Nome:</strong> {{ patient.user.fullName }}</span>
+              <span><strong>E-mail:</strong> {{ patient.user.email }}</span>
+              <span><strong>Telefone:</strong> {{ patient.user.phoneNumber || 'Não informado' }}</span>
+              <span><strong>Documento:</strong> {{ patient.documentNumber || 'Não informado' }}</span>
+              <span><strong>Nascimento:</strong> {{ patient.birthDate ? (patient.birthDate | date: 'dd/MM/yyyy') : 'Não informado' }}</span>
+              <span><strong>Convênio:</strong> {{ patient.healthInsurance || 'Não informado' }}</span>
+              <span><strong>Profissão:</strong> {{ patient.profession || 'Não informado' }}</span>
+              <span class="full-row"><strong>Endereço:</strong> {{ patient.address || 'Não informado' }}</span>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <label class="section-label" for="prescription-link">Link da receita</label>
+            <textarea id="prescription-link" formControlName="prescription" placeholder="Cole aqui o link da receita para o paciente"></textarea>
+            <small class="helper-text">O paciente verá esse link na aba de documentos.</small>
+            <button type="button" class="upload" (click)="savePrescriptionLink.emit()">Enviar link</button>
+          </div>
+
+          <div class="form-section">
+            <label class="section-label" for="clinical-notes">Prontuário clínico</label>
+            <textarea id="clinical-notes" formControlName="clinicalNotes" placeholder="Digite aqui o prontuário da consulta"></textarea>
+            <button type="button" class="upload secondary" (click)="saveClinicalNotes.emit()">Salvar prontuário</button>
+          </div>
         </form>
       </article>
     </section>
@@ -82,6 +104,31 @@ import { TelemedApiService } from '../../core/telemed-api.service';
     span { display: block; color: #516268; }
     .helper-text {
       font-size: 0.92rem;
+    }
+    .patient-card {
+      border-radius: 20px;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      background: #f8faf8;
+      padding: 16px 18px;
+      display: grid;
+      gap: 12px;
+    }
+    .patient-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px 18px;
+    }
+    .full-row {
+      grid-column: 1 / -1;
+    }
+    .form-section {
+      display: grid;
+      gap: 10px;
+      padding-top: 4px;
+    }
+    .section-label {
+      font-weight: 700;
+      color: #112027;
     }
     .download {
       width: fit-content;
@@ -121,6 +168,9 @@ import { TelemedApiService } from '../../core/telemed-api.service';
       font-weight: 700;
       cursor: pointer;
     }
+    .upload.secondary {
+      background: linear-gradient(135deg, #1d6f75, #0e7b83);
+    }
     .download[disabled] {
       opacity: 0.55;
       cursor: not-allowed;
@@ -129,7 +179,10 @@ import { TelemedApiService } from '../../core/telemed-api.service';
       margin: 0;
       color: #516268;
     }
-    @media (max-width: 900px) { .board { grid-template-columns: 1fr; } }
+    @media (max-width: 900px) {
+      .board { grid-template-columns: 1fr; }
+      .patient-grid { grid-template-columns: 1fr; }
+    }
   `
 })
 export class HistoryPanelComponent {
@@ -139,7 +192,10 @@ export class HistoryPanelComponent {
   readonly medicalRecords = input<MedicalRecordResponse[]>([]);
   readonly role = input<Role | null>(null);
   readonly recordForm = input.required<FormGroup>();
-  readonly createRecord = output<void>();
+  readonly selectedPatientProfile = input<PatientProfileResponse | null>(null);
+  readonly appointmentSelected = output<number | null>();
+  readonly savePrescriptionLink = output<void>();
+  readonly saveClinicalNotes = output<void>();
   readonly generatePrescriptionPdf = output<number>();
   readonly startPrescriptionSignature = output<number>();
   readonly signedPrescriptionFileChanged = output<{ recordId: number; file: File | null }>();
@@ -159,6 +215,15 @@ export class HistoryPanelComponent {
       default:
         return status;
     }
+  };
+
+  readonly selectedAppointmentId = (): number | null => {
+    const value = this.recordForm().get('appointmentId')?.value;
+    if (!value) {
+      return null;
+    }
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
   };
 
   openPrescription(record: MedicalRecordResponse): void {

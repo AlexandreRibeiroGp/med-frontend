@@ -93,7 +93,7 @@ function monthKeyInSaoPaulo(date: Date): string {
           <button type="button" [class.active]="section() === 'profile'" (click)="navigateToSection('profile')">
             Meu perfil
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administracao</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -102,9 +102,9 @@ function monthKeyInSaoPaulo(date: Date): string {
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">Operacao assistida</p>
+            <p class="eyebrow">Operação assistida</p>
             <h1>{{ headline() }}</h1>
-            <p>{{ subheadline() }}</p>
+            <p *ngIf="subheadline()">{{ subheadline() }}</p>
           </div>
           <div class="stats" *ngIf="auth.role() !== 'PATIENT'">
             <div>
@@ -151,7 +151,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             <p class="eyebrow">Pagamento</p>
             <h3>Concluir reserva com {{ checkoutDoctor.user.fullName }}</h3>
             <p>
-              Horario selecionado:
+              Horário selecionado:
               <strong>{{ pendingBookingSlot()?.startAt | date: 'dd/MM HH:mm' }}</strong>
             </p>
             <p>
@@ -159,7 +159,7 @@ function monthKeyInSaoPaulo(date: Date): string {
               <strong>{{ auth.user()?.fullName }}</strong>
             </p>
             <p>
-              Profissao:
+              Profissão:
               <strong>{{ patientOccupation.value }}</strong>
             </p>
             <p>
@@ -170,19 +170,19 @@ function monthKeyInSaoPaulo(date: Date): string {
                 Valor da consulta:
                 <strong>{{ checkoutAmountLabel() }}</strong>
               </p>
-            <p class="muted">A consulta so sera liberada depois da confirmacao do pagamento.</p>
+            <p class="muted">A consulta só será liberada depois da confirmação do pagamento.</p>
             <label class="consent-line">
               <input type="checkbox" [formControl]="checkoutConsentControl" />
               <span>
-                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuario
-                eletronico e com os
+                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuário
+                eletrônico e com os
                 <a routerLink="/legal/termos">Termos de Uso</a>
                 e a
-                <a routerLink="/legal/privacidade">Politica de Privacidade</a>.
+                <a routerLink="/legal/privacidade">Política de Privacidade</a>.
               </span>
             </label>
             <p *ngIf="checkoutConsentControl.touched && checkoutConsentControl.invalid" class="field-error">
-              O consentimento para telemedicina e obrigatorio antes do pagamento.
+              O consentimento para telemedicina é obrigatório antes do pagamento.
             </p>
           </div>
 
@@ -198,7 +198,7 @@ function monthKeyInSaoPaulo(date: Date): string {
                 <p class="eyebrow">Pix gerado</p>
                 <h4>Finalize o pagamento sem sair da MedCallOn</h4>
                 <p class="muted">
-                  O QR Code e o codigo copia e cola ficam ativos ate
+                  O QR Code e o código copia e cola ficam ativos até
                   <strong>{{ pixPayment.expiresAt | date: 'dd/MM HH:mm' }}</strong>.
                 </p>
               </div>
@@ -210,11 +210,11 @@ function monthKeyInSaoPaulo(date: Date): string {
                 alt="QR Code Pix"
               />
 
-              <label class="pix-panel__label" for="pix-code">Codigo copia e cola</label>
+              <label class="pix-panel__label" for="pix-code">Código copia e cola</label>
               <textarea id="pix-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
 
               <div class="pix-panel__actions">
-                <button type="button" class="copy" (click)="copyPixCode()">Copiar codigo Pix</button>
+                <button type="button" class="copy" (click)="copyPixCode()">Copiar código Pix</button>
               </div>
 
               <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
@@ -265,7 +265,10 @@ function monthKeyInSaoPaulo(date: Date): string {
             [medicalRecords]="medicalRecords()"
             [role]="auth.role()"
             [recordForm]="recordForm"
-            (createRecord)="createMedicalRecord()"
+            [selectedPatientProfile]="selectedRecordPatientProfile()"
+            (appointmentSelected)="handleRecordAppointmentSelection($event)"
+            (savePrescriptionLink)="savePrescriptionLink()"
+            (saveClinicalNotes)="saveClinicalNotes()"
             (generatePrescriptionPdf)="generatePrescriptionPdf($event)"
             (startPrescriptionSignature)="startPrescriptionSignature($event)"
             (signedPrescriptionFileChanged)="uploadSignedPrescription($event)"
@@ -576,6 +579,7 @@ export class DashboardPageComponent {
   readonly appointmentsUnavailable = signal(false);
   readonly medicalRecordsUnavailable = signal(false);
   readonly patientProfile = signal<PatientProfileResponse | null>(null);
+  readonly selectedRecordPatientProfile = signal<PatientProfileResponse | null>(null);
   readonly doctorProfile = signal<DoctorResponse | null>(null);
   readonly pendingDoctorId = signal<number | null>(null);
   readonly pendingDoctorName = signal('');
@@ -670,25 +674,25 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-      return 'Medico';
+        return 'Médico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
     }
     return 'Paciente';
   });
-  readonly headline = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Painel de atendimento medico' : 'Painel de jornada do paciente'
-  );
-  readonly subheadline = computed(() =>
-    this.auth.role() === 'DOCTOR'
-      ? 'Cadastre horarios, acompanhe consultas e publique prontuarios.'
-      : 'Busque especialistas, reserve horarios e acompanhe seu historico clinico.'
-  );
-  readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
-  readonly primarySectionLabel = computed(() =>
-    this.auth.role() === 'DOCTOR' ? 'Agenda do medico' : 'Descobrir medicos'
-  );
+    readonly headline = computed(() =>
+      this.auth.role() === 'DOCTOR' ? 'Painel de atendimento médico' : 'Painel do paciente'
+    );
+    readonly subheadline = computed(() =>
+      this.auth.role() === 'DOCTOR'
+        ? 'Cadastre horários, acompanhe consultas e publique prontuários.'
+        : ''
+    );
+    readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
+    readonly primarySectionLabel = computed(() =>
+      this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : 'Descobrir médicos'
+    );
   readonly allowMockPayment = false;
   constructor() {
     this.section.set(this.primarySection());
@@ -772,13 +776,21 @@ export class DashboardPageComponent {
   };
 
   private shouldShowInCallQueue(appointment: AppointmentResponse): boolean {
-    if (appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED') {
-      return false;
-    }
+      const scheduledAt = new Date(appointment.scheduledAt).getTime();
+      const now = this.currentTime();
+      const lateWindow = 2 * 60 * 60 * 1000;
 
-    if (this.auth.role() === 'DOCTOR') {
-      return appointment.paymentStatus === 'CONFIRMED';
-    }
+      if (appointment.status === 'CANCELLED' || appointment.status === 'COMPLETED') {
+        return false;
+      }
+
+      if (scheduledAt + lateWindow < now) {
+        return false;
+      }
+  
+      if (this.auth.role() === 'DOCTOR') {
+        return appointment.paymentStatus === 'CONFIRMED';
+      }
 
     return appointment.status !== 'PENDING_PAYMENT';
   }
@@ -841,10 +853,10 @@ export class DashboardPageComponent {
                   this.pendingBookingSlot.set(null);
                 }
               },
-              error: () => this.handleError('Nao foi possivel carregar os medicos disponiveis.')
+                error: () => this.handleError('Não foi possível carregar os médicos disponíveis.')
             });
         },
-        error: () => this.handleError('Nao foi possivel carregar os medicos.')
+          error: () => this.handleError('Não foi possível carregar os médicos.')
       });
   }
 
@@ -878,7 +890,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (slots) => this.selectedDoctorSlots.set(slots),
-        error: () => this.handleError('Nao foi possivel carregar os horarios deste medico.')
+        error: () => this.handleError('Não foi possível carregar os horários deste médico.')
       });
   }
 
@@ -1220,7 +1232,7 @@ export class DashboardPageComponent {
           this.toast.success('Perfil atualizado', 'Seus dados profissionais foram salvos.');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel atualizar o perfil do medico.');
+            this.handleError(error.error?.message ?? 'Não foi possível atualizar o perfil do médico.');
         }
       });
   }
@@ -1228,7 +1240,7 @@ export class DashboardPageComponent {
   uploadDoctorPhoto(file: File): void {
     const profile = this.doctorProfile();
     if (!profile) {
-      this.handleError('Nao foi possivel identificar o medico para enviar a foto.');
+        this.handleError('Não foi possível identificar o médico para enviar a foto.');
       return;
     }
 
@@ -1239,35 +1251,84 @@ export class DashboardPageComponent {
         next: (updatedProfile) => {
           this.doctorProfile.set(updatedProfile);
           this.setFeedback('Foto do perfil atualizada com sucesso.');
-          this.toast.success('Foto atualizada', 'A nova foto do medico ja esta disponivel.');
+            this.toast.success('Foto atualizada', 'A nova foto do médico já está disponível.');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel enviar a foto do medico.');
+            this.handleError(error.error?.message ?? 'Não foi possível enviar a foto do médico.');
         }
       });
   }
 
-  createMedicalRecord(): void {
-    if (this.recordForm.invalid) {
-      this.recordForm.markAllAsTouched();
+  handleRecordAppointmentSelection(appointmentId: number | null): void {
+    if (!appointmentId) {
+      this.selectedRecordPatientProfile.set(null);
+      this.recordForm.patchValue({ prescription: '', clinicalNotes: '' }, { emitEvent: false });
       return;
     }
 
-    const raw = this.recordForm.getRawValue();
+    const appointment = this.appointments().find((item) => item.id === appointmentId);
+    const existingRecord = this.findMedicalRecordByAppointmentId(appointmentId);
+
+    this.recordForm.patchValue(
+      {
+        prescription: existingRecord?.prescription ?? '',
+        clinicalNotes: existingRecord?.clinicalNotes ?? ''
+      },
+      { emitEvent: false }
+    );
+
+    if (!appointment) {
+      this.selectedRecordPatientProfile.set(null);
+      return;
+    }
+
     this.api
-        .createMedicalRecord({
-          appointmentId: Number(raw.appointmentId),
-          diagnosis: raw.diagnosis,
-          prescription: raw.prescription,
-          requiresDigitalSignature: raw.requiresDigitalSignature,
-          preferredCertificateType: raw.preferredCertificateType,
-          clinicalNotes: raw.clinicalNotes
-        })
+      .getPatientProfileById(appointment.patientProfileId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.finishRecordCreation('Documento salvo com receita emitida.'),
+        next: (profile) => this.selectedRecordPatientProfile.set(profile),
+        error: () => {
+          this.selectedRecordPatientProfile.set(null);
+          this.handleError('Não foi possível carregar os dados completos do paciente.');
+        }
+      });
+  }
+
+  savePrescriptionLink(): void {
+    const payload = this.buildMedicalRecordDraftPayload();
+    if (!payload) {
+      return;
+    }
+
+    if (!payload.prescription) {
+      this.handleError('Informe o link da receita antes de enviar.');
+      return;
+    }
+
+    this.api
+      .saveDraftMedicalRecord(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.finishRecordCreation('Link da receita enviado com sucesso.', false),
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel salvar o documento.');
+          this.handleError(error.error?.message ?? 'Não foi possível enviar o link da receita.');
+        }
+      });
+  }
+
+  saveClinicalNotes(): void {
+    const payload = this.buildMedicalRecordDraftPayload();
+    if (!payload) {
+      return;
+    }
+
+    this.api
+      .saveDraftMedicalRecord(payload)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => this.finishRecordCreation('Prontuário salvo com sucesso.', false),
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Não foi possível salvar o prontuário.');
         }
       });
   }
@@ -1297,7 +1358,7 @@ export class DashboardPageComponent {
           } else if (response.medicalRecord.preferredCertificateType === 'A3') {
             this.toast.info(
               'Assinador local pendente',
-              'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do medico.'
+                'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do médico.'
             );
           }
           this.setFeedback(response.message || 'Assinatura iniciada.');
@@ -1332,14 +1393,14 @@ export class DashboardPageComponent {
       this.toast.info(
         'Assinador aberto',
         response.medicalRecord.preferredCertificateType === 'A3'
-          ? 'O assinador local foi acionado para o medico selecionar o certificado A3.'
+            ? 'O assinador local foi acionado para o médico selecionar o certificado A3.'
           : 'O assinador local foi acionado para o fluxo A1.'
       );
     } catch {
       this.toast.info(
         'Bridge local nao encontrado',
         response.medicalRecord.preferredCertificateType === 'A3'
-          ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do medico.'
+            ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do médico.'
           : 'Nenhum assinador local A1 respondeu em 127.0.0.1:18999.'
       );
     }
@@ -1369,6 +1430,23 @@ export class DashboardPageComponent {
       const message = 'A sala sera liberada 15 minutos antes da consulta e segue disponivel ate 2 horas depois.';
       this.setFeedback(message);
       this.toast.info('Sala indisponivel', message);
+      return;
+    }
+
+    const urlTree = this.router.createUrlTree(['/calls', appointment.id], {
+      queryParams: { popup: '1' }
+    });
+    const relativeUrl = this.router.serializeUrl(urlTree);
+    const absoluteUrl = new URL(relativeUrl, window.location.origin).toString();
+    const popupWindow = window.open(
+      absoluteUrl,
+      'medcallon-call-room',
+      'popup=yes,width=560,height=900,left=80,top=80,resizable=yes,scrollbars=yes'
+    );
+
+    if (popupWindow) {
+      popupWindow.focus();
+      this.toast.success('Sala aberta', 'A consulta foi aberta em uma nova janela para você continuar usando o painel.');
       return;
     }
 
@@ -1545,7 +1623,7 @@ export class DashboardPageComponent {
                 error: () => this.handleError('Nao foi possivel carregar sua agenda.')
               });
           },
-          error: () => this.handleError('Nao foi possivel localizar os dados do medico.')
+          error: () => this.handleError('Não foi possível localizar os dados do médico.')
         });
     }
   }
@@ -1567,10 +1645,51 @@ export class DashboardPageComponent {
     this.feedbackTimer = window.setTimeout(() => this.feedback.set(''), 3000);
   }
 
-  private finishRecordCreation(message: string): void {
+  private buildMedicalRecordDraftPayload(): {
+    appointmentId: number;
+    diagnosis: string | null;
+    prescription: string | null;
+    requiresDigitalSignature: boolean;
+    preferredCertificateType: 'A1' | 'A3';
+    clinicalNotes: string | null;
+  } | null {
+    const raw = this.recordForm.getRawValue();
+    if (!raw.appointmentId) {
+      this.recordForm.get('appointmentId')?.markAsTouched();
+      this.handleError('Selecione a consulta antes de salvar o documento.');
+      return null;
+    }
+
+    const appointmentId = Number(raw.appointmentId);
+    const existingRecord = this.findMedicalRecordByAppointmentId(appointmentId);
+    return {
+      appointmentId,
+      diagnosis: existingRecord?.diagnosis ?? null,
+      prescription: raw.prescription?.trim() || existingRecord?.prescription || null,
+      requiresDigitalSignature: existingRecord?.requiresDigitalSignature ?? raw.requiresDigitalSignature,
+      preferredCertificateType: existingRecord?.preferredCertificateType ?? raw.preferredCertificateType,
+      clinicalNotes: raw.clinicalNotes?.trim() || null
+    };
+  }
+
+  private findMedicalRecordByAppointmentId(appointmentId: number): MedicalRecordResponse | null {
+    return this.medicalRecords().find((record) => record.appointmentId === appointmentId) ?? null;
+  }
+
+  private finishRecordCreation(message: string, resetAppointment = true): void {
     this.setFeedback(message);
     this.toast.success('Documento salvo', message);
-    this.recordForm.reset({ appointmentId: '', diagnosis: '', prescription: '', requiresDigitalSignature: false, preferredCertificateType: 'A3', clinicalNotes: '' });
+    this.recordForm.reset({
+      appointmentId: resetAppointment ? '' : this.recordForm.getRawValue().appointmentId,
+      diagnosis: '',
+      prescription: resetAppointment ? '' : this.recordForm.getRawValue().prescription,
+      requiresDigitalSignature: false,
+      preferredCertificateType: 'A3',
+      clinicalNotes: resetAppointment ? '' : this.recordForm.getRawValue().clinicalNotes
+    });
+    if (resetAppointment) {
+      this.selectedRecordPatientProfile.set(null);
+    }
     this.loadBaseData();
   }
 

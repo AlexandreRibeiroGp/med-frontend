@@ -11,8 +11,8 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
   selector: 'app-call-room-page',
   imports: [CommonModule, RouterLink, CallRoomPanelComponent],
   template: `
-    <div class="room-page">
-      <header class="topbar">
+    <div class="room-page" [class.compact]="compactMode()">
+      <header class="topbar" [class.compact]="compactMode()">
         <div class="topbar-brand">
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
@@ -25,7 +25,7 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
 
       <p *ngIf="error()" class="error">{{ error() }}</p>
 
-      <app-call-room-panel [appointment]="appointment()" />
+      <app-call-room-panel [appointment]="appointment()" [compactMode]="compactMode()" />
     </div>
   `,
   styles: `
@@ -46,12 +46,21 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       display: grid;
       gap: 18px;
     }
+    .room-page.compact {
+      max-width: 980px;
+      padding: 16px 14px 24px;
+      gap: 12px;
+    }
     .topbar {
       display: flex;
       justify-content: space-between;
       gap: 18px;
       align-items: end;
       flex-wrap: wrap;
+    }
+    .topbar.compact {
+      gap: 10px;
+      align-items: center;
     }
     .topbar-brand {
       display: flex;
@@ -65,6 +74,9 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       display: block;
       object-fit: contain;
     }
+    .compact .brand-logo {
+      height: 44px;
+    }
     .back-link {
       text-decoration: none;
       color: #112027;
@@ -73,6 +85,10 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       border-radius: 999px;
       padding: 12px 18px;
       font-weight: 700;
+    }
+    .compact .back-link {
+      padding: 10px 14px;
+      font-size: 0.92rem;
     }
     .eyebrow {
       margin: 0 0 8px;
@@ -85,6 +101,9 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
       margin: 0;
       font-size: clamp(1.8rem, 4vw, 3.2rem);
       line-height: 1;
+    }
+    .compact h1 {
+      font-size: clamp(1.35rem, 3vw, 2rem);
     }
     .error {
       margin: 0;
@@ -108,9 +127,11 @@ export class CallRoomPageComponent {
 
   readonly appointment = signal<AppointmentResponse | null>(null);
   readonly error = signal('');
+  readonly compactMode = signal(false);
   private errorTimer: number | null = null;
 
   constructor() {
+    this.compactMode.set(window.location.search.includes('popup=1') || !!window.opener || window.innerWidth <= 920);
     const navigationState = this.router.getCurrentNavigation()?.extras.state as { appointment?: AppointmentResponse } | undefined;
     const historyState = history.state as { appointment?: AppointmentResponse } | undefined;
     const preloadedAppointment = navigationState?.appointment ?? historyState?.appointment ?? null;

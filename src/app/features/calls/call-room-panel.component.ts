@@ -31,7 +31,7 @@ interface ChatMessage {
         </div>
       </div>
 
-      <div class="room-layout" [class.doctor-layout]="isDoctor()">
+      <div class="room-layout" [class.doctor-layout]="isDoctor()" [class.compact-mode]="compactMode()">
         <section class="media-column">
           <div class="entry-card" *ngIf="!rtc.localStream()">
             <h3>Entrar na chamada</h3>
@@ -184,6 +184,10 @@ interface ChatMessage {
       gap: 18px;
       align-items: start;
     }
+    .room-layout.compact-mode {
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 12px;
+    }
     .media-column {
       display: grid;
       gap: 18px;
@@ -207,6 +211,11 @@ interface ChatMessage {
       object-fit: cover;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
+    .compact-mode video {
+      min-height: 220px;
+      max-height: 280px;
+      border-radius: 22px;
+    }
     button {
       border: 0;
       border-radius: 999px;
@@ -226,6 +235,13 @@ interface ChatMessage {
       gap: 12px;
       justify-content: center;
     }
+    .compact-mode .control-bar {
+      gap: 10px;
+    }
+    .compact-mode button {
+      padding: 12px 14px;
+      font-size: 0.92rem;
+    }
     .notes-panel {
       display: grid;
       gap: 12px;
@@ -233,6 +249,10 @@ interface ChatMessage {
       border-radius: 24px;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .compact-mode .notes-panel {
+      padding: 14px;
+      border-radius: 20px;
     }
     .notes-header {
       display: flex;
@@ -257,6 +277,9 @@ interface ChatMessage {
       background: rgba(7, 12, 15, 0.6);
       box-sizing: border-box;
     }
+    .compact-mode .notes-panel textarea {
+      min-height: 160px;
+    }
     .chat-panel {
       border-radius: 28px;
       background: rgba(255, 255, 255, 0.05);
@@ -265,6 +288,10 @@ interface ChatMessage {
       grid-template-rows: auto minmax(260px, 1fr) auto;
       min-height: 100%;
       overflow: hidden;
+    }
+    .compact-mode .chat-panel {
+      border-radius: 22px;
+      grid-template-rows: auto minmax(220px, 1fr) auto;
     }
     .chat-header {
       padding: 20px 20px 12px;
@@ -285,6 +312,10 @@ interface ChatMessage {
       padding: 18px;
       max-height: 520px;
       overflow: auto;
+    }
+    .compact-mode .chat-messages {
+      max-height: 380px;
+      padding: 14px;
     }
     .chat-empty {
       color: rgba(255, 255, 255, 0.6);
@@ -348,6 +379,7 @@ interface ChatMessage {
 })
 export class CallRoomPanelComponent {
   readonly appointment = input<AppointmentResponse | null>(null);
+  readonly compactMode = input(false);
   readonly signaling = inject(CallSignalingService);
   readonly rtc = inject(WebRtcCallService);
   readonly auth = inject(AuthService);
