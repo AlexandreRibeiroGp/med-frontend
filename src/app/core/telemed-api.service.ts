@@ -141,6 +141,18 @@ export class TelemedApiService {
     return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records`, payload);
   }
 
+  saveDraftMedicalRecord(payload: {
+    appointmentId: number;
+    symptoms?: string | null;
+    diagnosis?: string | null;
+    prescription?: string | null;
+    requiresDigitalSignature?: boolean;
+    preferredCertificateType?: 'A1' | 'A3';
+    clinicalNotes?: string | null;
+  }) {
+    return this.http.post<MedicalRecordResponse>(`${API_URL}/medical-records/draft`, payload);
+  }
+
   uploadPrescription(recordId: number, file: File) {
     const formData = new FormData();
     formData.append('file', file);

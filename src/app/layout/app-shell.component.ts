@@ -15,7 +15,7 @@ import { filter, map, startWith } from 'rxjs';
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           <div class="brand-copy">
             <strong>MedCallOn</strong>
-            <span>Consulta medica online</span>
+            <span>Consulta médica online</span>
           </div>
         </a>
 
@@ -37,7 +37,7 @@ import { filter, map, startWith } from 'rxjs';
 
       <section class="context" *ngIf="auth.isAuthenticated() && !isAuthRoute()">
         <div>
-          <p class="eyebrow">Sessao ativa</p>
+          <p class="eyebrow">Sessão ativa</p>
           <strong>{{ auth.user()?.fullName }}</strong>
         </div>
         <span>{{ roleLabel() }}</span>
@@ -59,11 +59,11 @@ import { filter, map, startWith } from 'rxjs';
         <div class="cookie-copy">
           <strong>Utilizamos cookies</strong>
           <p>
-            Usamos cookies para melhorar sua navegacao, medir acesso e personalizar a experiencia da
+            Usamos cookies para melhorar sua navegação, medir acesso e personalizar a experiência da
             MedCallOn. Leia a
-            <a routerLink="/legal/privacidade">Politica de Privacidade</a>
+            <a routerLink="/legal/privacidade">Política de Privacidade</a>
             e a
-            <a routerLink="/legal/cookies">Politica de Cookies</a>.
+            <a routerLink="/legal/cookies">Política de Cookies</a>.
           </p>
         </div>
         <div class="cookie-actions">
@@ -398,7 +398,7 @@ export class AppShellComponent {
       return 'Administrador';
     }
     if (role === 'DOCTOR') {
-      return 'Medico';
+      return 'Médico';
     }
     if (role === 'PATIENT') {
       return 'Paciente';

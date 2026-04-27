@@ -3,7 +3,8 @@ import { Component, DestroyRef, ElementRef, computed, effect, inject, input, sig
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { concatMap, from, last } from 'rxjs';
-import { AppointmentResponse, AppointmentStatus } from '../../core/models';
+import { AuthService } from '../../core/auth.service';
+import { AppointmentResponse, AppointmentStatus, MedicalRecordResponse } from '../../core/models';
 import { CallEvent, CallSignalingService } from '../../core/call-signaling.service';
 import { TelemedApiService } from '../../core/telemed-api.service';
 import { ToastService } from '../../core/toast.service';
@@ -30,7 +31,7 @@ interface ChatMessage {
         </div>
       </div>
 
-      <div class="room-layout">
+      <div class="room-layout" [class.doctor-layout]="isDoctor()">
         <section class="media-column">
           <div class="entry-card" *ngIf="!rtc.localStream()">
             <h3>Entrar na chamada</h3>
@@ -53,10 +54,29 @@ interface ChatMessage {
 
             <div class="control-bar">
               <button type="button" (click)="toggleMicrophone()">{{ rtc.micEnabled() ? 'Mutar microfone' : 'Ativar microfone' }}</button>
-              <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar camera' : 'Ligar camera' }}</button>
+              <button type="button" (click)="toggleCamera()">{{ rtc.cameraEnabled() ? 'Desligar câmera' : 'Ligar câmera' }}</button>
               <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
               <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
             </div>
+
+            <section *ngIf="isDoctor()" class="notes-panel">
+              <div class="notes-header">
+                <div>
+                  <h3>Prontuário clínico</h3>
+                  <p>Digite durante a consulta e salve junto com a conversa do chat.</p>
+                </div>
+                <button type="button" class="secondary" (click)="saveMedicalRecordDraft()">
+                  Salvar prontuário
+                </button>
+              </div>
+              <textarea
+                [(ngModel)]="medicalNotesDraft"
+                name="medicalNotesDraft"
+                rows="8"
+                maxlength="4000"
+                placeholder="Anotações clínicas da consulta"
+              ></textarea>
+            </section>
           </ng-container>
 
           <div class="control-bar" *ngIf="!rtc.localStream()">
@@ -206,6 +226,37 @@ interface ChatMessage {
       gap: 12px;
       justify-content: center;
     }
+    .notes-panel {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .notes-header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .notes-header p {
+      margin: 6px 0 0;
+      color: rgba(255, 255, 255, 0.68);
+    }
+    .notes-panel textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font: inherit;
+      color: white;
+      background: rgba(7, 12, 15, 0.6);
+      box-sizing: border-box;
+    }
     .chat-panel {
       border-radius: 28px;
       background: rgba(255, 255, 255, 0.05);
@@ -286,12 +337,20 @@ interface ChatMessage {
       }
       .videos { grid-template-columns: 1fr; }
     }
+    .doctor-layout .videos {
+      gap: 12px;
+    }
+    .doctor-layout video {
+      min-height: 220px;
+      max-height: 280px;
+    }
   `
 })
 export class CallRoomPanelComponent {
   readonly appointment = input<AppointmentResponse | null>(null);
   readonly signaling = inject(CallSignalingService);
   readonly rtc = inject(WebRtcCallService);
+  readonly auth = inject(AuthService);
   private readonly api = inject(TelemedApiService);
   private readonly toast = inject(ToastService);
   private readonly destroyRef = inject(DestroyRef);
@@ -300,7 +359,10 @@ export class CallRoomPanelComponent {
   private readonly remoteAudio = viewChild<ElementRef<HTMLAudioElement>>('remoteAudio');
   private readonly chatMessagesContainer = viewChild<ElementRef<HTMLDivElement>>('chatMessages');
   private readonly syncedStatus = signal<AppointmentStatus | null>(null);
+  private readonly currentMedicalRecord = signal<MedicalRecordResponse | null>(null);
   chatDraft = '';
+  medicalNotesDraft = '';
+  readonly isDoctor = computed(() => this.auth.role() === 'DOCTOR');
   readonly chatMessagesList = computed<ChatMessage[]>(() =>
     this.signaling
       .events()
@@ -317,10 +379,15 @@ export class CallRoomPanelComponent {
         this.signaling.disconnect();
         void this.rtc.disconnect();
         this.syncedStatus.set(null);
+        this.currentMedicalRecord.set(null);
+        this.medicalNotesDraft = '';
         return;
       }
 
       this.connectRoom();
+      if (this.isDoctor()) {
+        this.loadMedicalRecordDraft(appointment.id);
+      }
     });
 
     effect(() => {
@@ -437,6 +504,35 @@ export class CallRoomPanelComponent {
     this.chatDraft = '';
   }
 
+  saveMedicalRecordDraft(): void {
+    const appointment = this.appointment();
+    if (!appointment || !this.isDoctor()) {
+      return;
+    }
+
+    const currentRecord = this.currentMedicalRecord();
+    this.api
+      .saveDraftMedicalRecord({
+        appointmentId: appointment.id,
+        diagnosis: currentRecord?.diagnosis ?? null,
+        prescription: currentRecord?.prescription ?? null,
+        requiresDigitalSignature: currentRecord?.requiresDigitalSignature ?? false,
+        preferredCertificateType: (currentRecord?.preferredCertificateType as 'A1' | 'A3' | undefined) ?? 'A3',
+        clinicalNotes: this.composeClinicalNotes()
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (record) => {
+          this.currentMedicalRecord.set(record);
+          this.medicalNotesDraft = this.extractDoctorNotes(record.clinicalNotes);
+          this.toast.success('Prontuário salvo', 'As anotações e o chat da consulta foram registrados.', 2500);
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.toast.error('Falha ao salvar prontuário', error.error?.message ?? 'Não foi possível salvar o prontuário.');
+        }
+      });
+  }
+
   private connectRoom(): void {
     const appointment = this.appointment();
     if (!appointment) {
@@ -544,5 +640,55 @@ export class CallRoomPanelComponent {
     } catch {
       return null;
     }
+  }
+
+  private loadMedicalRecordDraft(appointmentId: number): void {
+    this.api
+      .getMedicalRecords()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (records) => {
+          const record = records.find((item) => item.appointmentId === appointmentId) ?? null;
+          this.currentMedicalRecord.set(record);
+          this.medicalNotesDraft = this.extractDoctorNotes(record?.clinicalNotes ?? null);
+        },
+        error: () => undefined
+      });
+  }
+
+  private composeClinicalNotes(): string {
+    const notes = this.medicalNotesDraft.trim();
+    const chatTranscript = this.buildChatTranscript();
+    if (notes && chatTranscript) {
+      return `Prontuário clínico:\n${notes}\n\nChat da consulta:\n${chatTranscript}`;
+    }
+    if (notes) {
+      return notes;
+    }
+    return chatTranscript;
+  }
+
+  private buildChatTranscript(): string {
+    return [...this.chatMessagesList()]
+      .reverse()
+      .map((message) => {
+        const author = message.mine ? 'Médico' : 'Paciente';
+        const timeLabel = message.sentAt ? new Date(message.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
+        return `[${timeLabel}] ${author}: ${message.text}`;
+      })
+      .join('\n');
+  }
+
+  private extractDoctorNotes(clinicalNotes: string | null): string {
+    if (!clinicalNotes) {
+      return '';
+    }
+
+    const divider = '\n\nChat da consulta:\n';
+    if (clinicalNotes.startsWith('Prontuário clínico:\n')) {
+      return clinicalNotes.replace('Prontuário clínico:\n', '').split(divider)[0].trim();
+    }
+
+    return clinicalNotes.split(divider)[0].trim();
   }
 }

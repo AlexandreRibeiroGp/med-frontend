@@ -19,9 +19,8 @@ import { AnalyticsService } from '../core/analytics.service';
         <a routerLink="/" [queryParams]="backQueryParams()" class="back">Voltar</a>
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           <div class="hero-copy">
-            <p class="tag">Portal clinico</p>
+            <p class="tag">Portal clínico</p>
             <h1>{{ authHeadline() }}</h1>
-            <p>{{ authDescription() }}</p>
           </div>
 
           <div class="price-banner">
@@ -54,7 +53,7 @@ import { AnalyticsService } from '../core/analytics.service';
           <p *ngIf="controlError(loginForm, 'password') as error" class="field-error">{{ error }}</p>
           <button [disabled]="loading()" type="submit">Entrar</button>
           <button type="button" class="text-link" (click)="openForgotPassword()">Esqueci minha senha</button>
-          <p class="helper-text">Se voce e medico, use o e-mail e a senha cadastrados pela administracao da clinica.</p>
+          <p class="helper-text">Se você é médico, use o e-mail e a senha cadastrados pela administração da clínica.</p>
         </form>
 
         <form *ngIf="mode() === 'forgot'" [formGroup]="forgotPasswordForm" (ngSubmit)="submitForgotPassword()">

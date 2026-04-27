@@ -12,8 +12,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <main class="start-page">
       <section class="hero-card">
         <a routerLink="/" class="back-link">Voltar</a>
-        <p class="eyebrow">Medicos disponiveis</p>
-        <h1>Veja nossos medicos disponiveis e siga para sua consulta.</h1>
+        <p class="eyebrow">Médicos disponíveis</p>
+        <h1>Veja nossos médicos disponíveis e siga para sua consulta.</h1>
         <p class="lead">
           Cadastre-se para escolher um horario, pagar por Pix e entrar na sala de atendimento.
           Se voce ja tem conta, entre para continuar do ponto em que parou.
@@ -35,21 +35,21 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
         <ng-template #emptyDoctors>
           <article class="empty-doctors">
-            <strong>Medicos em atualizacao</strong>
-            <p>Voce ainda pode criar sua conta e acompanhar os horarios assim que forem publicados.</p>
+            <strong>Médicos em atualização</strong>
+            <p>Você ainda pode criar sua conta e acompanhar os horários assim que forem publicados.</p>
           </article>
         </ng-template>
 
         <div class="actions">
           <a routerLink="/auth" [queryParams]="signupQueryParams()" class="primary">Quero me cadastrar</a>
-          <a routerLink="/auth" [queryParams]="loginQueryParams()" class="secondary">Ja tenho conta</a>
+          <a routerLink="/auth" [queryParams]="loginQueryParams()" class="secondary">Já tenho conta</a>
         </div>
       </section>
 
       <aside class="summary-card">
         <span>Consulta online</span>
         <strong>R$ 49,90</strong>
-        <p>Fluxo simples: cadastro, escolha do horario, Pix e sala de atendimento.</p>
+        <p>Fluxo simples: cadastro, escolha do horário, Pix e sala de atendimento.</p>
       </aside>
     </main>
   `,

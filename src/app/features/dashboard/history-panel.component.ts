@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+﻿import { CommonModule, DatePipe } from '@angular/common';
 import { Component, inject, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { AppointmentResponse, MedicalRecordResponse, Role } from '../../core/models';
@@ -14,65 +14,33 @@ import { TelemedApiService } from '../../core/telemed-api.service';
         <div class="timeline">
           <div *ngFor="let appointment of appointments()" class="timeline-item">
             <strong>{{ appointment.scheduledAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
-            <span>
-              {{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }}
-              · {{ appointmentStatusLabel(appointment.status) }}
-            </span>
+            <span>{{ role() === 'DOCTOR' ? appointment.patientName : appointment.doctorName }} · {{ appointmentStatusLabel(appointment.status) }}</span>
             <span class="helper-text" *ngIf="appointment.notes">Motivo: {{ appointment.notes }}</span>
           </div>
         </div>
       </article>
 
       <article class="card">
-        <h3>{{ role() === 'PATIENT' ? 'Receitas disponiveis' : 'Receitas enviadas' }}</h3>
+        <h3>{{ role() === 'PATIENT' ? 'Receitas disponíveis' : 'Receitas enviadas' }}</h3>
         <div class="timeline" *ngIf="medicalRecords().length; else emptyState">
           <div *ngFor="let record of medicalRecords()" class="timeline-item">
             <strong>{{ record.createdAt | date: 'dd/MM/yyyy HH:mm' }}</strong>
             <span>{{ role() === 'DOCTOR' ? record.patientName : record.doctorName }}</span>
-
-            <ng-container *ngIf="role() === 'PATIENT'; else doctorView">
-              <span class="helper-text">
-                {{ patientPrescriptionStatus(record) }}
-              </span>
-              <button
-                type="button"
-                class="download"
-                [disabled]="!record.hasPrescriptionFile"
-                (click)="downloadPrescription(record)"
-              >
-                {{ record.hasPrescriptionFile ? 'Baixar receita' : 'Sem receita disponivel' }}
-              </button>
-            </ng-container>
-
-            <ng-template #doctorView>
-              <span class="helper-text">{{ doctorPrescriptionStatus(record) }}</span>
-              <div class="actions">
-                <button type="button" class="download" [disabled]="!record.hasPrescriptionFile" (click)="downloadPrescription(record)">
-                  {{ record.hasPrescriptionFile ? 'Baixar PDF' : 'Sem PDF' }}
-                </button>
-                <button type="button" class="download secondary" (click)="generatePrescriptionPdf.emit(record.id)">
-                  Gerar PDF
-                </button>
-                <button
-                  *ngIf="record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED'"
-                  type="button"
-                  class="download secondary"
-                  (click)="startPrescriptionSignature.emit(record.id)"
-                >
-                  Assinar digitalmente
-                </button>
-              </div>
-              <label *ngIf="record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED'" class="upload-box compact">
-                <span>Enviar PDF assinado pelo provedor ICP-Brasil</span>
-                <input type="file" accept=".pdf" (change)="handleSignedFileChange(record.id, $event)" />
-              </label>
-            </ng-template>
+            <span class="helper-text">{{ role() === 'DOCTOR' ? doctorPrescriptionStatus(record) : patientPrescriptionStatus(record) }}</span>
+            <button
+              type="button"
+              class="download"
+              [disabled]="!hasAccessiblePrescription(record)"
+              (click)="openPrescription(record)"
+            >
+              {{ prescriptionActionLabel(record) }}
+            </button>
           </div>
         </div>
       </article>
 
       <article class="card wide" *ngIf="role() === 'DOCTOR'">
-        <h3>Emitir receita</h3>
+        <h3>Salvar documento</h3>
         <form [formGroup]="recordForm()" (ngSubmit)="createRecord.emit()">
           <select formControlName="appointmentId">
             <option value="">Selecione a consulta</option>
@@ -80,25 +48,17 @@ import { TelemedApiService } from '../../core/telemed-api.service';
               #{{ appointment.id }} - {{ appointment.patientName }}
             </option>
           </select>
-          <textarea formControlName="diagnosis" placeholder="Observacao ou diagnostico (opcional)"></textarea>
-          <textarea formControlName="prescription" placeholder="Texto da receita ou orientacoes ao paciente"></textarea>
-          <textarea formControlName="clinicalNotes" placeholder="Observacoes clinicas internas (opcional)"></textarea>
-          <label class="signature-checkbox">
-            <input type="checkbox" formControlName="requiresDigitalSignature" />
-            <span>Receita controlada ou com exigencia de assinatura ICP-Brasil</span>
-          </label>
-          <select *ngIf="recordForm().get('requiresDigitalSignature')?.value" formControlName="preferredCertificateType">
-            <option value="A3">Certificado A3 no computador do medico</option>
-            <option value="A1">Certificado A1 ou certificado em nuvem</option>
-          </select>
-          <small class="helper-text">O PDF sai com nome, endereco e profissao do paciente salvos no cadastro.</small>
-          <button type="submit" class="upload">Salvar e emitir</button>
+          <textarea formControlName="diagnosis" placeholder="Observação ou diagnóstico (opcional)"></textarea>
+          <textarea formControlName="prescription" placeholder="Link da receita para o paciente"></textarea>
+          <textarea formControlName="clinicalNotes" placeholder="Prontuário clínico (opcional)"></textarea>
+          <small class="helper-text">Cole o link da receita. O paciente verá esse link na aba de documentos.</small>
+          <button type="submit" class="upload">Salvar documento</button>
         </form>
       </article>
     </section>
 
     <ng-template #emptyState>
-      <p class="empty-state">Nenhum documento emitido ate o momento.</p>
+      <p class="empty-state">Nenhum documento emitido até o momento.</p>
     </ng-template>
   `,
   styles: `
@@ -134,15 +94,6 @@ import { TelemedApiService } from '../../core/telemed-api.service';
       font-weight: 700;
       cursor: pointer;
     }
-    .secondary {
-      background: #f6f1e8;
-      color: #112027;
-    }
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
     form {
       display: grid;
       gap: 12px;
@@ -158,25 +109,6 @@ import { TelemedApiService } from '../../core/telemed-api.service';
     textarea {
       min-height: 96px;
       resize: vertical;
-    }
-    .upload-box {
-      border: 1px dashed #d8dfdf;
-      border-radius: 20px;
-      padding: 14px 16px;
-      background: #fff;
-      display: grid;
-      gap: 8px;
-    }
-    .compact {
-      margin-top: 10px;
-      padding: 12px 14px;
-    }
-    .signature-checkbox {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: #112027;
-      font-weight: 600;
     }
     .upload {
       width: fit-content;
@@ -229,7 +161,13 @@ export class HistoryPanelComponent {
     }
   };
 
-  downloadPrescription(record: MedicalRecordResponse): void {
+  openPrescription(record: MedicalRecordResponse): void {
+    const prescriptionLink = this.extractPrescriptionLink(record);
+    if (prescriptionLink) {
+      window.open(prescriptionLink, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
     if (!record.hasPrescriptionFile) {
       return;
     }
@@ -250,32 +188,47 @@ export class HistoryPanelComponent {
   }
 
   patientPrescriptionStatus(record: MedicalRecordResponse): string {
-    if (!record.hasPrescriptionFile) {
-      return 'Aguardando o medico gerar a receita.';
+    if (this.extractPrescriptionLink(record)) {
+      return 'Receita disponível por link.';
     }
-    if (record.requiresDigitalSignature && record.prescriptionSignatureStatus !== 'SIGNED') {
-      return 'Receita gerada e aguardando assinatura digital do medico.';
+    if (!record.hasPrescriptionFile) {
+      return 'Aguardando o médico gerar a receita.';
     }
     return 'Receita pronta para download.';
   }
 
   doctorPrescriptionStatus(record: MedicalRecordResponse): string {
-    if (record.prescriptionSignatureStatus === 'SIGNED') {
-      return `Receita assinada${record.prescriptionSignatureProvider ? ' via ' + record.prescriptionSignatureProvider : ''}.`;
-    }
-    if (record.prescriptionSignatureStatus === 'PENDING_PROVIDER') {
-      return record.preferredCertificateType === 'A3'
-        ? 'Assinatura A3 em andamento. O provedor deve abrir o seletor local do certificado do medico.'
-        : 'Assinatura A1 em andamento no provedor ICP-Brasil.';
+    if (this.extractPrescriptionLink(record)) {
+      return 'Link da receita salvo e disponível para o paciente.';
     }
     if (record.hasPrescriptionFile) {
-      return `PDF da receita gerado e pronto para assinatura ${record.preferredCertificateType}.`;
+      return 'PDF da receita disponível para download.';
     }
-    return 'Nenhum PDF de receita gerado ainda.';
+    return 'Nenhuma receita salva ainda.';
+  }
+
+  hasAccessiblePrescription(record: MedicalRecordResponse): boolean {
+    return !!this.extractPrescriptionLink(record) || record.hasPrescriptionFile;
+  }
+
+  prescriptionActionLabel(record: MedicalRecordResponse): string {
+    if (this.extractPrescriptionLink(record)) {
+      return 'Abrir receita';
+    }
+    return record.hasPrescriptionFile ? 'Baixar receita' : 'Sem receita disponível';
   }
 
   handleSignedFileChange(recordId: number, event: Event): void {
     const input = event.target as HTMLInputElement | null;
     this.signedPrescriptionFileChanged.emit({ recordId, file: input?.files?.[0] ?? null });
+  }
+
+  private extractPrescriptionLink(record: MedicalRecordResponse): string | null {
+    const value = record.prescription?.trim() ?? '';
+    if (!value) {
+      return null;
+    }
+
+    return value.startsWith('http://') || value.startsWith('https://') ? value : null;
   }
 }
