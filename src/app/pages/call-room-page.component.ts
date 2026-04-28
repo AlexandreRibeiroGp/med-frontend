@@ -12,7 +12,7 @@ import { CallRoomPanelComponent } from '../features/calls/call-room-panel.compon
   imports: [CommonModule, RouterLink, CallRoomPanelComponent],
   template: `
     <div class="room-page" [class.compact]="compactMode()">
-      <header class="topbar" [class.compact]="compactMode()">
+      <header class="topbar" [class.compact]="compactMode()" *ngIf="!embeddedMode()">
         <div class="topbar-brand">
           <img src="/medcallon.png" alt="MedCallOn" class="brand-logo" />
           <a routerLink="/dashboard" class="back-link">Voltar para o painel</a>
@@ -128,10 +128,15 @@ export class CallRoomPageComponent {
   readonly appointment = signal<AppointmentResponse | null>(null);
   readonly error = signal('');
   readonly compactMode = signal(false);
+  readonly embeddedMode = signal(false);
   private errorTimer: number | null = null;
 
   constructor() {
-    this.compactMode.set(window.location.search.includes('popup=1') || !!window.opener || window.innerWidth <= 920);
+    const search = window.location.search;
+    const isEmbedded = search.includes('embed=1');
+    const isPopup = search.includes('popup=1') || !!window.opener;
+    this.embeddedMode.set(isEmbedded);
+    this.compactMode.set(isEmbedded || isPopup || window.innerWidth <= 920);
     const navigationState = this.router.getCurrentNavigation()?.extras.state as { appointment?: AppointmentResponse } | undefined;
     const historyState = history.state as { appointment?: AppointmentResponse } | undefined;
     const preloadedAppointment = navigationState?.appointment ?? historyState?.appointment ?? null;

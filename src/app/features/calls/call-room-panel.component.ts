@@ -1,10 +1,10 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, computed, effect, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { concatMap, from, last } from 'rxjs';
 import { AuthService } from '../../core/auth.service';
-import { AppointmentResponse, AppointmentStatus, MedicalRecordResponse } from '../../core/models';
+import { AppointmentResponse, AppointmentStatus } from '../../core/models';
 import { CallEvent, CallSignalingService } from '../../core/call-signaling.service';
 import { TelemedApiService } from '../../core/telemed-api.service';
 import { ToastService } from '../../core/toast.service';
@@ -31,18 +31,18 @@ interface ChatMessage {
         </div>
       </div>
 
-      <div class="room-layout" [class.doctor-layout]="isDoctor()" [class.compact-mode]="compactMode()">
+      <div class="room-layout" [class.compact-mode]="compactMode()">
         <section class="media-column">
           <div class="entry-card" *ngIf="!rtc.localStream()">
             <h3>Entrar na chamada</h3>
-            <p>A sala foi aberta. Se preferir, voce pode falar com o medico ou paciente apenas pelo chat.</p>
-            <button type="button" (click)="enterCall()">Ativar camera e microfone</button>
+            <p>A sala foi aberta. Se preferir, você pode falar apenas pelo chat.</p>
+            <button type="button" (click)="enterCall()">Ativar câmera e microfone</button>
           </div>
 
           <ng-container *ngIf="rtc.localStream()">
             <div class="videos">
               <figure>
-                <figcaption>Voce</figcaption>
+                <figcaption>Você</figcaption>
                 <video #localVideo playsinline autoplay muted></video>
               </figure>
               <figure>
@@ -58,25 +58,6 @@ interface ChatMessage {
               <button type="button" class="secondary" [disabled]="appointment()?.status === 'COMPLETED'" (click)="completeAppointment()">Encerrar consulta</button>
               <button type="button" class="danger" (click)="leaveRoom()">Sair da sala</button>
             </div>
-
-            <section *ngIf="isDoctor()" class="notes-panel">
-              <div class="notes-header">
-                <div>
-                  <h3>Prontuário clínico</h3>
-                  <p>Digite durante a consulta e salve junto com a conversa do chat.</p>
-                </div>
-                <button type="button" class="secondary" (click)="saveMedicalRecordDraft()">
-                  Salvar prontuário
-                </button>
-              </div>
-              <textarea
-                [(ngModel)]="medicalNotesDraft"
-                name="medicalNotesDraft"
-                rows="8"
-                maxlength="4000"
-                placeholder="Anotações clínicas da consulta"
-              ></textarea>
-            </section>
           </ng-container>
 
           <div class="control-bar" *ngIf="!rtc.localStream()">
@@ -89,7 +70,7 @@ interface ChatMessage {
           <div class="chat-header">
             <div>
               <h3>Chat da consulta</h3>
-              <p>Use o texto se nao quiser abrir camera ou microfone.</p>
+              <p>Use o texto se não quiser abrir câmera ou microfone.</p>
             </div>
           </div>
 
@@ -99,7 +80,7 @@ interface ChatMessage {
             </div>
 
             <article *ngFor="let message of chatMessagesList()" class="chat-message" [class.mine]="message.mine">
-              <span class="chat-author">{{ message.mine ? 'Voce' : 'Participante' }}</span>
+              <span class="chat-author">{{ message.mine ? 'Você' : 'Participante' }}</span>
               <p>{{ message.text }}</p>
               <time *ngIf="message.sentAt">{{ message.sentAt | date: 'HH:mm' }}</time>
             </article>
@@ -242,44 +223,6 @@ interface ChatMessage {
       padding: 12px 14px;
       font-size: 0.92rem;
     }
-    .notes-panel {
-      display: grid;
-      gap: 12px;
-      padding: 18px;
-      border-radius: 24px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-    }
-    .compact-mode .notes-panel {
-      padding: 14px;
-      border-radius: 20px;
-    }
-    .notes-header {
-      display: flex;
-      align-items: start;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .notes-header p {
-      margin: 6px 0 0;
-      color: rgba(255, 255, 255, 0.68);
-    }
-    .notes-panel textarea {
-      width: 100%;
-      min-height: 220px;
-      resize: vertical;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 18px;
-      padding: 14px 16px;
-      font: inherit;
-      color: white;
-      background: rgba(7, 12, 15, 0.6);
-      box-sizing: border-box;
-    }
-    .compact-mode .notes-panel textarea {
-      min-height: 160px;
-    }
     .chat-panel {
       border-radius: 28px;
       background: rgba(255, 255, 255, 0.05);
@@ -368,13 +311,6 @@ interface ChatMessage {
       }
       .videos { grid-template-columns: 1fr; }
     }
-    .doctor-layout .videos {
-      gap: 12px;
-    }
-    .doctor-layout video {
-      min-height: 220px;
-      max-height: 280px;
-    }
   `
 })
 export class CallRoomPanelComponent {
@@ -391,10 +327,7 @@ export class CallRoomPanelComponent {
   private readonly remoteAudio = viewChild<ElementRef<HTMLAudioElement>>('remoteAudio');
   private readonly chatMessagesContainer = viewChild<ElementRef<HTMLDivElement>>('chatMessages');
   private readonly syncedStatus = signal<AppointmentStatus | null>(null);
-  private readonly currentMedicalRecord = signal<MedicalRecordResponse | null>(null);
   chatDraft = '';
-  medicalNotesDraft = '';
-  readonly isDoctor = computed(() => this.auth.role() === 'DOCTOR');
   readonly chatMessagesList = computed<ChatMessage[]>(() =>
     this.signaling
       .events()
@@ -411,15 +344,10 @@ export class CallRoomPanelComponent {
         this.signaling.disconnect();
         void this.rtc.disconnect();
         this.syncedStatus.set(null);
-        this.currentMedicalRecord.set(null);
-        this.medicalNotesDraft = '';
         return;
       }
 
       this.connectRoom();
-      if (this.isDoctor()) {
-        this.loadMedicalRecordDraft(appointment.id);
-      }
     });
 
     effect(() => {
@@ -445,7 +373,7 @@ export class CallRoomPanelComponent {
       if (!appointment || !socketReady || appointment.status !== 'SCHEDULED') {
         return;
       }
-      this.syncStatus('CONFIRMED', false);
+      this.syncStatus('CONFIRMED');
     });
 
     effect(() => {
@@ -456,14 +384,14 @@ export class CallRoomPanelComponent {
       if (appointment.status === 'IN_PROGRESS' || appointment.status === 'COMPLETED') {
         return;
       }
-      this.syncStatus('IN_PROGRESS', false);
+      this.syncStatus('IN_PROGRESS');
     });
 
     effect(() => {
       if (!this.signaling.roomLimitReached()) {
         return;
       }
-      this.toast.error('Sala indisponivel', 'A consulta ja esta com dois participantes conectados.');
+      this.toast.error('Sala indisponível', 'A consulta já está com dois participantes conectados.');
     });
 
     window.addEventListener('pagehide', this.closeRoomSilently);
@@ -500,7 +428,7 @@ export class CallRoomPanelComponent {
       await this.rtc.prepareMedia();
       await this.rtc.maybeStartCall();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Nao foi possivel acessar camera e microfone.';
+      const message = error instanceof Error ? error.message : 'Não foi possível acessar câmera e microfone.';
       this.toast.error('Falha de dispositivo', message);
     }
   }
@@ -519,7 +447,10 @@ export class CallRoomPanelComponent {
 
   leaveRoom(): void {
     this.closeRoomSilently();
-    this.toast.info('Sala encerrada', 'A conexao local foi finalizada.', 2500);
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage('medcallon-close-floating-call', window.location.origin);
+    }
+    this.toast.info('Sala encerrada', 'A conexão local foi finalizada.', 2500);
   }
 
   canSendChat(): boolean {
@@ -534,35 +465,6 @@ export class CallRoomPanelComponent {
 
     this.signaling.publish('chat', JSON.stringify({ text }));
     this.chatDraft = '';
-  }
-
-  saveMedicalRecordDraft(): void {
-    const appointment = this.appointment();
-    if (!appointment || !this.isDoctor()) {
-      return;
-    }
-
-    const currentRecord = this.currentMedicalRecord();
-    this.api
-      .saveDraftMedicalRecord({
-        appointmentId: appointment.id,
-        diagnosis: currentRecord?.diagnosis ?? null,
-        prescription: currentRecord?.prescription ?? null,
-        requiresDigitalSignature: currentRecord?.requiresDigitalSignature ?? false,
-        preferredCertificateType: (currentRecord?.preferredCertificateType as 'A1' | 'A3' | undefined) ?? 'A3',
-        clinicalNotes: this.composeClinicalNotes()
-      })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (record) => {
-          this.currentMedicalRecord.set(record);
-          this.medicalNotesDraft = this.extractDoctorNotes(record.clinicalNotes);
-          this.toast.success('Prontuário salvo', 'As anotações e o chat da consulta foram registrados.', 2500);
-        },
-        error: (error: { error?: { message?: string } }) => {
-          this.toast.error('Falha ao salvar prontuário', error.error?.message ?? 'Não foi possível salvar o prontuário.');
-        }
-      });
   }
 
   private connectRoom(): void {
@@ -586,7 +488,7 @@ export class CallRoomPanelComponent {
     this.rtc.stopMedia();
   };
 
-  private syncStatus(status: AppointmentStatus, endRoomAfter = false): void {
+  private syncStatus(status: AppointmentStatus): void {
     const appointment = this.appointment();
     if (!appointment || this.syncedStatus() === status || appointment.status === status) {
       return;
@@ -597,14 +499,10 @@ export class CallRoomPanelComponent {
       .updateAppointmentStatus(appointment.id, status)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => {
-          if (status === 'COMPLETED' && endRoomAfter) {
-            this.leaveRoom();
-          }
-        },
+        next: () => undefined,
         error: () => {
           this.syncedStatus.set(null);
-          this.toast.error('Falha ao atualizar consulta', `Nao foi possivel mover a consulta para ${status}.`);
+          this.toast.error('Falha ao atualizar consulta', `Não foi possível mover a consulta para ${status}.`);
         }
       });
   }
@@ -635,7 +533,7 @@ export class CallRoomPanelComponent {
         next: () => this.leaveRoom(),
         error: () => {
           this.syncedStatus.set(null);
-          this.toast.error('Falha ao atualizar consulta', 'Nao foi possivel encerrar a consulta.');
+          this.toast.error('Falha ao atualizar consulta', 'Não foi possível encerrar a consulta.');
         }
       });
   }
@@ -672,55 +570,5 @@ export class CallRoomPanelComponent {
     } catch {
       return null;
     }
-  }
-
-  private loadMedicalRecordDraft(appointmentId: number): void {
-    this.api
-      .getMedicalRecords()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (records) => {
-          const record = records.find((item) => item.appointmentId === appointmentId) ?? null;
-          this.currentMedicalRecord.set(record);
-          this.medicalNotesDraft = this.extractDoctorNotes(record?.clinicalNotes ?? null);
-        },
-        error: () => undefined
-      });
-  }
-
-  private composeClinicalNotes(): string {
-    const notes = this.medicalNotesDraft.trim();
-    const chatTranscript = this.buildChatTranscript();
-    if (notes && chatTranscript) {
-      return `Prontuário clínico:\n${notes}\n\nChat da consulta:\n${chatTranscript}`;
-    }
-    if (notes) {
-      return notes;
-    }
-    return chatTranscript;
-  }
-
-  private buildChatTranscript(): string {
-    return [...this.chatMessagesList()]
-      .reverse()
-      .map((message) => {
-        const author = message.mine ? 'Médico' : 'Paciente';
-        const timeLabel = message.sentAt ? new Date(message.sentAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '--:--';
-        return `[${timeLabel}] ${author}: ${message.text}`;
-      })
-      .join('\n');
-  }
-
-  private extractDoctorNotes(clinicalNotes: string | null): string {
-    if (!clinicalNotes) {
-      return '';
-    }
-
-    const divider = '\n\nChat da consulta:\n';
-    if (clinicalNotes.startsWith('Prontuário clínico:\n')) {
-      return clinicalNotes.replace('Prontuário clínico:\n', '').split(divider)[0].trim();
-    }
-
-    return clinicalNotes.split(divider)[0].trim();
   }
 }

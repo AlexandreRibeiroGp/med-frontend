@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '../core/auth.service';
+import { FloatingCallService } from '../core/floating-call.service';
 import { filter, map, startWith } from 'rxjs';
 
 @Component({
@@ -46,6 +48,31 @@ import { filter, map, startWith } from 'rxjs';
       <main class="content" [class.auth-content]="isAuthRoute() || isStartRoute()">
         <router-outlet />
       </main>
+
+      <section
+        *ngIf="auth.isAuthenticated() && floatingCall.isOpen()"
+        class="floating-call"
+        [class.minimized]="floatingCall.minimized()"
+        [style.right.px]="floatingCallRight()"
+        [style.top.px]="floatingCallTop()"
+      >
+        <header class="floating-call__header" (pointerdown)="startFloatingDrag($event)">
+          <strong>Consulta em andamento</strong>
+          <div class="floating-call__actions">
+            <button type="button" (click)="toggleFloatingCall($event)">
+              {{ floatingCall.minimized() ? 'Abrir' : 'Minimizar' }}
+            </button>
+            <button type="button" class="danger" (click)="closeFloatingCall($event)">Fechar</button>
+          </div>
+        </header>
+
+        <iframe
+          *ngIf="!floatingCall.minimized()"
+          class="floating-call__frame"
+          [src]="floatingCallUrl()"
+          title="Sala de atendimento"
+        ></iframe>
+      </section>
 
       <a
         *ngIf="!auth.isAuthenticated() && !isAuthRoute() && !isStartRoute()"
@@ -268,6 +295,73 @@ import { filter, map, startWith } from 'rxjs';
       display: none;
     }
 
+    .floating-call {
+      position: fixed;
+      width: min(420px, calc(100vw - 20px));
+      height: min(760px, calc(100vh - 92px));
+      z-index: 130;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      border-radius: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(17, 32, 39, 0.12);
+      background: rgba(255, 255, 255, 0.98);
+      box-shadow: 0 24px 60px rgba(17, 32, 39, 0.24);
+      backdrop-filter: blur(12px);
+    }
+
+    .floating-call.minimized {
+      width: min(320px, calc(100vw - 20px));
+      height: auto;
+      grid-template-rows: auto;
+    }
+
+    .floating-call__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      background: #112027;
+      color: white;
+      cursor: move;
+      user-select: none;
+    }
+
+    .floating-call__header strong {
+      font-size: 0.95rem;
+    }
+
+    .floating-call__actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .floating-call__actions button {
+      border: 0;
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.12);
+      color: white;
+    }
+
+    .floating-call__actions .danger {
+      background: rgba(255, 233, 227, 0.95);
+      color: #a33b19;
+    }
+
+    .floating-call__frame {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: #f5f2ea;
+    }
+
     @media (max-width: 720px) {
       .topbar,
       .context,
@@ -368,13 +462,29 @@ import { filter, map, startWith } from 'rxjs';
       .cookie-banner {
         bottom: 80px;
       }
+
+      .floating-call {
+        left: 10px;
+        right: 10px;
+        top: 78px !important;
+        width: auto;
+        height: min(72vh, 620px);
+      }
+
+      .floating-call.minimized {
+        height: auto;
+      }
     }
   `
 })
 export class AppShellComponent {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  readonly floatingCall = inject(FloatingCallService);
+  private readonly sanitizer = inject(DomSanitizer);
   readonly showCookieBanner = signal(false);
+  private draggingFloatingCall = false;
+  private dragOffset = { x: 0, y: 0 };
   readonly isAuthRoute = toSignal(
     this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd),
@@ -405,13 +515,50 @@ export class AppShellComponent {
     }
     return 'Visitante';
   });
+  readonly floatingCallUrl = computed<SafeResourceUrl | null>(() => {
+    const appointmentId = this.floatingCall.appointmentId();
+    if (!appointmentId) {
+      return null;
+    }
+
+    return this.sanitizer.bypassSecurityTrustResourceUrl(`/calls/${appointmentId}?embed=1`);
+  });
+  readonly floatingCallRight = computed(() => this.floatingCall.position().x);
+  readonly floatingCallTop = computed(() => this.floatingCall.position().y);
 
   constructor() {
     const cookiePreference = window.localStorage.getItem('medcallon-cookie-preference');
     this.showCookieBanner.set(!cookiePreference);
+    window.addEventListener('message', this.handleFloatingCallMessage);
+    window.addEventListener('pointermove', this.handleFloatingPointerMove);
+    window.addEventListener('pointerup', this.stopFloatingDrag);
+  }
+
+  startFloatingDrag(event: PointerEvent): void {
+    if (window.innerWidth <= 720) {
+      return;
+    }
+
+    this.draggingFloatingCall = true;
+    const { x, y } = this.floatingCall.position();
+    this.dragOffset = {
+      x: window.innerWidth - x - event.clientX,
+      y: event.clientY - y
+    };
+  }
+
+  toggleFloatingCall(event: Event): void {
+    event.stopPropagation();
+    this.floatingCall.toggleMinimized();
+  }
+
+  closeFloatingCall(event?: Event): void {
+    event?.stopPropagation();
+    this.floatingCall.close();
   }
 
   logout(): void {
+    this.floatingCall.close();
     this.auth.logout();
     void this.router.navigateByUrl('/auth');
   }
@@ -420,5 +567,29 @@ export class AppShellComponent {
     window.localStorage.setItem('medcallon-cookie-preference', value);
     this.showCookieBanner.set(false);
   }
+
+  private readonly handleFloatingPointerMove = (event: PointerEvent): void => {
+    if (!this.draggingFloatingCall || window.innerWidth <= 720) {
+      return;
+    }
+
+    const desiredRight = window.innerWidth - event.clientX - this.dragOffset.x;
+    const desiredTop = event.clientY - this.dragOffset.y;
+    this.floatingCall.setPosition(desiredRight, desiredTop);
+  };
+
+  private readonly stopFloatingDrag = (): void => {
+    this.draggingFloatingCall = false;
+  };
+
+  private readonly handleFloatingCallMessage = (event: MessageEvent): void => {
+    if (event.origin !== window.location.origin) {
+      return;
+    }
+
+    if (event.data === 'medcallon-close-floating-call') {
+      this.floatingCall.close();
+    }
+  };
 }
 

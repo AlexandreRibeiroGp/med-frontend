@@ -27,6 +27,7 @@ import { HistoryPanelComponent } from '../features/dashboard/history-panel.compo
 import { PatientCarePanelComponent } from '../features/dashboard/patient-care-panel.component';
 import { ProfilePanelComponent } from '../features/dashboard/profile-panel.component';
 import { AnalyticsService } from '../core/analytics.service';
+import { FloatingCallService } from '../core/floating-call.service';
 
 function toOffsetIso(localDateTime: string): string {
   const [datePart, timePart] = localDateTime.split('T');
@@ -556,6 +557,7 @@ export class DashboardPageComponent {
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(ToastService);
   private readonly analytics = inject(AnalyticsService);
+  private readonly floatingCall = inject(FloatingCallService);
   @ViewChild('careSection') private careSection?: ElementRef<HTMLElement>;
   @ViewChild('agendaSection') private agendaSection?: ElementRef<HTMLElement>;
   @ViewChild('callsSection') private callsSection?: ElementRef<HTMLElement>;
@@ -1433,26 +1435,8 @@ export class DashboardPageComponent {
       return;
     }
 
-    const urlTree = this.router.createUrlTree(['/calls', appointment.id], {
-      queryParams: { popup: '1' }
-    });
-    const relativeUrl = this.router.serializeUrl(urlTree);
-    const absoluteUrl = new URL(relativeUrl, window.location.origin).toString();
-    const popupWindow = window.open(
-      absoluteUrl,
-      'medcallon-call-room',
-      'popup=yes,width=560,height=900,left=80,top=80,resizable=yes,scrollbars=yes'
-    );
-
-    if (popupWindow) {
-      popupWindow.focus();
-      this.toast.success('Sala aberta', 'A consulta foi aberta em uma nova janela para você continuar usando o painel.');
-      return;
-    }
-
-    void this.router.navigate(['/calls', appointment.id], {
-      state: { appointment }
-    });
+    this.floatingCall.open(appointment.id);
+    this.toast.success('Sala aberta', 'A consulta foi aberta em uma janela flutuante dentro do site.');
   }
 
   refreshPixPayment(): void {
