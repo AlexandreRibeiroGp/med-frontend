@@ -4,7 +4,7 @@ import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
 import { filter, startWith } from 'rxjs';
 
-type SeoSchema = 'home' | 'start' | 'legal' | 'none';
+type SeoSchema = 'home' | 'start' | 'legal' | 'content' | 'none';
 
 type SeoData = {
   title: string;
@@ -77,12 +77,14 @@ export class SeoService {
     this.updateProperty('og:type', 'website');
     this.updateProperty('og:url', canonicalUrl);
     this.updateProperty('og:image', DEFAULT_IMAGE);
+    this.updateProperty('og:image:alt', 'MedCallOn consulta medica online');
     this.updateProperty('og:locale', 'pt_BR');
 
     this.updateMeta('twitter:card', 'summary_large_image');
     this.updateMeta('twitter:title', seo.title);
     this.updateMeta('twitter:description', seo.description);
     this.updateMeta('twitter:image', DEFAULT_IMAGE);
+    this.updateMeta('twitter:image:alt', 'MedCallOn consulta medica online');
 
     this.updateCanonical(canonicalUrl);
     this.updateJsonLd(seo.schema ?? 'none', canonicalUrl);
@@ -149,6 +151,32 @@ export class SeoService {
       };
     }
 
+    if (schema === 'content') {
+      return {
+        '@context': 'https://schema.org',
+        '@graph': [
+          organization,
+          {
+            '@type': 'WebSite',
+            '@id': `${SITE_URL}/#website`,
+            name: SITE_NAME,
+            url: SITE_URL,
+            publisher: { '@id': `${SITE_URL}/#organization` },
+            inLanguage: 'pt-BR'
+          },
+          {
+            '@type': 'MedicalWebPage',
+            '@id': `${canonicalUrl}#webpage`,
+            url: canonicalUrl,
+            name: this.title.getTitle(),
+            description: this.document.querySelector('meta[name="description"]')?.getAttribute('content') ?? '',
+            isPartOf: { '@id': `${SITE_URL}/#website` },
+            publisher: { '@id': `${SITE_URL}/#organization` }
+          }
+        ]
+      };
+    }
+
     return {
       '@context': 'https://schema.org',
       '@graph': [
@@ -191,36 +219,40 @@ export class SeoService {
             }
           }
         },
-        {
-          '@type': 'FAQPage',
-          '@id': `${SITE_URL}/#faq`,
-          mainEntity: [
-            {
-              '@type': 'Question',
-              name: 'Qual o valor da consulta online?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'A consulta online custa R$ 49,90.'
+        ...(schema === 'home'
+          ? [
+              {
+                '@type': 'FAQPage',
+                '@id': `${SITE_URL}/#faq`,
+                mainEntity: [
+                  {
+                    '@type': 'Question',
+                    name: 'Qual o valor da consulta online?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'A consulta online custa R$ 49,90.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Como funciona o pagamento?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'O pagamento é feito por Pix para liberar o atendimento pela plataforma.'
+                    }
+                  },
+                  {
+                    '@type': 'Question',
+                    name: 'Como entro na consulta?',
+                    acceptedAnswer: {
+                      '@type': 'Answer',
+                      text: 'Depois do cadastro, horário e pagamento, o paciente acessa a sala de atendimento pela plataforma.'
+                    }
+                  }
+                ]
               }
-            },
-            {
-              '@type': 'Question',
-              name: 'Como funciona o pagamento?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'O pagamento e feito por Pix para liberar o atendimento pela plataforma.'
-              }
-            },
-            {
-              '@type': 'Question',
-              name: 'Como entro na consulta?',
-              acceptedAnswer: {
-                '@type': 'Answer',
-                text: 'Depois do cadastro, horario e pagamento, o paciente acessa a sala de atendimento pela plataforma.'
-              }
-            }
-          ]
-        }
+            ]
+          : [])
       ]
     };
   }

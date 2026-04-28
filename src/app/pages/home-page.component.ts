@@ -149,6 +149,19 @@ import { filter } from 'rxjs';
           </div>
         </section>
 
+      <section class="topics-section">
+        <div class="section-head centered">
+          <p class="section-tag">Conteúdos</p>
+          <h2>Temas que as pessoas mais procuram.</h2>
+        </div>
+
+        <div class="topics-grid">
+          <a routerLink="/medico-online-pix" class="topic-card">Médico online com pagamento por Pix</a>
+          <a routerLink="/consulta-online-atestado" class="topic-card">Consulta online e atestado médico</a>
+          <a routerLink="/clinico-geral-online" class="topic-card">Clínico geral online</a>
+        </div>
+      </section>
+
       <footer class="legal-footer">
         <div class="footer-cta">
           <p class="section-tag">Comece agora</p>
@@ -373,6 +386,7 @@ import { filter } from 'rxjs';
     .steps-section,
     .reviews-section,
     .faq-section,
+    .topics-section,
     .legal-footer {
       display: grid;
       gap: 20px;
@@ -498,12 +512,35 @@ import { filter } from 'rxjs';
       font-weight: 600;
     }
 
+    .topics-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .topic-card {
+      display: flex;
+      align-items: center;
+      min-height: 110px;
+      padding: 22px;
+      border-radius: 24px;
+      background: rgba(255, 253, 249, 0.92);
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      box-shadow: 0 18px 50px rgba(17, 32, 39, 0.08);
+      color: #17313a;
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+
     @media (max-width: 1100px) {
       .hero,
       .info-band,
       .doctors-grid,
       .steps-grid,
       .reviews-grid,
+      .topics-grid,
       .faq-list,
       .doctor-card {
         grid-template-columns: 1fr;
@@ -608,6 +645,7 @@ import { filter } from 'rxjs';
 
       .steps-section,
       .reviews-section,
+      .topics-section,
       .faq-section,
       .legal-footer {
         gap: 16px;

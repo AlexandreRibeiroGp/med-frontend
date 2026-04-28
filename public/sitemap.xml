@@ -19,6 +19,24 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://medcallon.com.br/medico-online-pix</loc>
+    <lastmod>2026-04-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://medcallon.com.br/consulta-online-atestado</loc>
+    <lastmod>2026-04-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://medcallon.com.br/clinico-geral-online</loc>
+    <lastmod>2026-04-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://medcallon.com.br/legal/termos</loc>
     <lastmod>2026-04-22</lastmod>
     <changefreq>monthly</changefreq>
