@@ -311,6 +311,72 @@ interface ChatMessage {
       }
       .videos { grid-template-columns: 1fr; }
     }
+    @media (max-width: 720px) {
+      .card {
+        padding: 16px;
+        border-radius: 22px;
+      }
+      .call-header {
+        margin-bottom: 12px;
+      }
+      h2 {
+        font-size: 1.9rem;
+      }
+      .room-layout,
+      .room-layout.compact-mode {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .media-column {
+        gap: 12px;
+      }
+      .videos {
+        gap: 10px;
+        margin-bottom: 10px;
+      }
+      video,
+      .compact-mode video {
+        min-height: 180px;
+        max-height: 220px;
+        border-radius: 18px;
+      }
+      .control-bar,
+      .compact-mode .control-bar {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+      button,
+      .compact-mode button {
+        width: 100%;
+        min-height: 46px;
+        padding: 12px 14px;
+        font-size: 0.95rem;
+      }
+      .chat-panel,
+      .compact-mode .chat-panel {
+        grid-template-rows: auto minmax(180px, 1fr) auto;
+        min-height: 320px;
+        border-radius: 18px;
+      }
+      .chat-header {
+        padding: 14px 14px 10px;
+      }
+      .chat-messages,
+      .compact-mode .chat-messages {
+        padding: 12px;
+        max-height: none;
+        min-height: 160px;
+      }
+      .chat-form {
+        gap: 10px;
+        padding: 12px;
+      }
+      .chat-form textarea {
+        min-height: 84px;
+        border-radius: 14px;
+      }
+    }
   `
 })
 export class CallRoomPanelComponent {

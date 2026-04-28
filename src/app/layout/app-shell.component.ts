@@ -356,6 +356,7 @@ import { filter, map, startWith } from 'rxjs';
     }
 
     .floating-call__frame {
+      display: block;
       width: 100%;
       height: 100%;
       border: 0;
@@ -464,15 +465,35 @@ import { filter, map, startWith } from 'rxjs';
       }
 
       .floating-call {
-        left: 10px;
-        right: 10px;
+        left: 8px;
+        right: 8px;
         top: 78px !important;
         width: auto;
-        height: min(72vh, 620px);
+        height: calc(100dvh - 88px);
+        max-height: calc(100dvh - 88px);
+        border-radius: 18px;
       }
 
       .floating-call.minimized {
         height: auto;
+        max-height: none;
+      }
+
+      .floating-call__header {
+        padding: 10px 12px;
+      }
+
+      .floating-call__header strong {
+        font-size: 0.88rem;
+      }
+
+      .floating-call__actions {
+        gap: 6px;
+      }
+
+      .floating-call__actions button {
+        padding: 8px 10px;
+        font-size: 0.78rem;
       }
     }
   `
