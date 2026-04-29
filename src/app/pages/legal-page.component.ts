@@ -19,45 +19,53 @@ interface LegalDocument {
 
 const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
   privacidade: {
-    eyebrow: 'LGPD e dados sensiveis',
-    title: 'Politica de Privacidade',
+    eyebrow: 'LGPD e dados sensíveis',
+    title: 'Política de Privacidade',
     summary:
-      'Este documento explica quais dados pessoais a MedCallOn coleta, para quais finalidades eles sao tratados e quais direitos o titular pode exercer.',
-    updatedAt: '03/04/2026',
+      'Este documento explica quais dados pessoais a MedCallOn coleta, como eles são tratados, com quem podem ser compartilhados e quais direitos o titular pode exercer nos termos da LGPD.',
+    updatedAt: '28/04/2026',
     sections: [
       {
-        title: '1. Dados tratados',
+        title: '1. Identificação do responsável pela plataforma',
         paragraphs: [
-          'A plataforma pode tratar dados cadastrais, dados de contato, dados de autenticacao, dados de agendamento, historico de atendimento, prontuario e outros dados pessoais sensiveis relacionados a saude.',
-          'Dados de pagamento sao tratados para viabilizar a cobranca e a conciliacao da consulta, com integracao a prestadores especializados.'
+          'A plataforma MedCallOn é operada por Aleri Desenvolvimento de Software LTDA, inscrita no CNPJ sob o nº 41.418.939/0001-58, responsável pela infraestrutura tecnológica, autenticação, agenda, sala virtual, prontuário eletrônico, armazenamento de registros e fluxos operacionais da plataforma.',
+          'Para os atendimentos disponibilizados por meio da plataforma, a responsável técnica indicada é Carla Paes Manfio, médica regularmente inscrita no CRM, observadas as exigências regulatórias aplicáveis ao serviço de telemedicina.'
         ]
       },
       {
-        title: '2. Finalidades do tratamento',
+        title: '2. Dados pessoais tratados',
         paragraphs: [
-          'Os dados sao tratados para cadastro de conta, autenticacao, agendamento, atendimento por telemedicina, emissao de prontuario, suporte, seguranca da plataforma, prevencao a fraude e cumprimento de obrigacoes legais e regulatorias.',
-          'Quando aplicavel, os dados de saude sao tratados para tutela da saude e execucao de servicos de saude, nos termos da legislacao aplicavel.'
+          'A MedCallOn pode tratar dados cadastrais e de identificação, como nome completo, e-mail, telefone, CPF ou documento informado, data de nascimento, profissão, endereço, dados de autenticação e registros de acesso.',
+          'Também podem ser tratados dados de agendamento, histórico de consultas, comunicações via chat, conteúdo de prontuário, informações clínicas fornecidas durante o atendimento, arquivos de receitas e outros dados pessoais sensíveis relacionados à saúde do paciente.',
+          'Nos casos de pagamento, poderão ser tratados dados necessários à confirmação financeira da consulta, incluindo identificadores de transação, status do pagamento, data, valor e registros de integração com provedores especializados.'
         ]
       },
       {
-        title: '3. Compartilhamento',
+        title: '3. Finalidades do tratamento',
         paragraphs: [
-          'Os dados podem ser compartilhados com profissionais de saude responsaveis pelo atendimento, operadores de infraestrutura, processadores de pagamento, provedores de comunicacao e autoridades competentes quando houver obrigacao legal.',
-          'A MedCallOn nao comercializa dados pessoais sensiveis.'
+          'Os dados são tratados para permitir o cadastro do usuário, autenticação na conta, agendamento de consultas, realização de atendimento por telemedicina, emissão de documentos clínicos, registro em prontuário eletrônico, suporte, segurança da plataforma, prevenção a fraude e cumprimento de obrigações legais e regulatórias.',
+          'Dados de saúde são tratados na medida necessária à tutela da saúde, à execução do serviço de telemedicina e ao cumprimento das obrigações éticas, legais e regulatórias aplicáveis ao atendimento médico.'
         ]
       },
       {
-        title: '4. Seguranca e retencao',
+        title: '4. Compartilhamento de dados',
         paragraphs: [
-          'A plataforma adota controles tecnicos e administrativos para restringir acessos, registrar operacoes criticas e proteger a confidencialidade, a integridade e a disponibilidade das informacoes.',
-          'Os registros e documentos clinicos devem ser mantidos pelos prazos legais e regulatorios aplicaveis ao servico de saude.'
+          'Os dados podem ser compartilhados com médicos e profissionais de saúde responsáveis pelo atendimento, prestadores de infraestrutura em nuvem, provedores de comunicação, sistemas de pagamento, serviços de envio de e-mail, autoridades públicas e órgãos reguladores quando houver obrigação legal, regulatória ou judicial.',
+          'A MedCallOn não comercializa dados pessoais sensíveis. O compartilhamento é realizado de forma limitada à necessidade operacional, contratual ou legal do serviço prestado.'
         ]
       },
       {
-        title: '5. Direitos do titular',
+        title: '5. Base legal, segurança e retenção',
         paragraphs: [
-          'O titular pode solicitar confirmacao de tratamento, acesso, correcao, informacoes sobre compartilhamento e demais direitos previstos na LGPD, observadas as limitacoes legais aplicaveis a registros de saude.',
-          'Para exercicio de direitos e contato do encarregado, substitua este trecho pelos dados reais do responsavel juridico e do canal oficial da operacao.'
+          'O tratamento de dados pessoais e dados pessoais sensíveis ocorre com base nas hipóteses legais previstas na Lei Geral de Proteção de Dados, inclusive execução de contrato, legítimo interesse quando cabível, cumprimento de obrigação legal ou regulatória e tutela da saúde.',
+          'A plataforma adota medidas técnicas e administrativas voltadas à proteção da confidencialidade, integridade e disponibilidade das informações. Registros clínicos e documentos médicos poderão ser mantidos pelos prazos exigidos pela legislação e pelas normas aplicáveis ao prontuário e à telemedicina.'
+        ]
+      },
+      {
+        title: '6. Direitos do titular e contato',
+        paragraphs: [
+          'O titular poderá solicitar, nos limites da lei, confirmação da existência de tratamento, acesso aos dados, correção de dados incompletos ou desatualizados, informações sobre compartilhamento e demais direitos previstos na LGPD.',
+          'Solicitações relacionadas à privacidade e proteção de dados podem ser encaminhadas pelos canais oficiais da plataforma, inclusive pelo e-mail mmedcallon@gmail.com, sem prejuízo de eventuais exigências adicionais para confirmação da identidade do solicitante.'
         ]
       }
     ]
@@ -66,72 +74,93 @@ const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
     eyebrow: 'Regras de uso da plataforma',
     title: 'Termos de Uso e Telemedicina',
     summary:
-      'Estas condicoes regulam o acesso ao portal, o uso do atendimento remoto e as responsabilidades do paciente, do profissional e do operador da plataforma.',
-    updatedAt: '03/04/2026',
+      'Estas condições regulam o acesso ao portal, o uso do atendimento remoto e as responsabilidades do paciente, do profissional e do operador tecnológico da plataforma.',
+    updatedAt: '28/04/2026',
     sections: [
       {
-        title: '1. Natureza do servico',
+        title: '1. Identificação da plataforma',
         paragraphs: [
-          'A MedCallOn oferece infraestrutura digital para cadastro, agendamento, pagamento, atendimento remoto, disponibilizacao de documentos e acompanhamento da jornada clinica.',
-          'O atendimento em saude e realizado por profissional habilitado, identificado na plataforma com nome, CRM e demais informacoes profissionais aplicaveis.'
+          'A MedCallOn é uma plataforma digital operada por Aleri Desenvolvimento de Software LTDA, CNPJ nº 41.418.939/0001-58, destinada ao cadastro de usuários, agendamento, pagamento, atendimento remoto, troca de mensagens, armazenamento de registros e disponibilização de documentos relacionados à consulta.',
+          'A responsável técnica informada para a operação é Carla Paes Manfio, observadas as exigências regulatórias aplicáveis à atividade médica e à telemedicina.'
         ]
       },
       {
-        title: '2. Consentimento para telemedicina',
+        title: '2. Natureza do serviço',
         paragraphs: [
-          'Ao prosseguir com o atendimento remoto, o paciente declara que concorda com a realizacao da consulta por telemedicina, com o registro do atendimento em prontuario eletronico e com o tratamento dos dados necessarios a execucao do servico.',
-          'Casos de urgencia grave ou emergencia devem ser direcionados imediatamente a servicos presenciais ou de emergencia adequados.'
+          'A plataforma fornece infraestrutura tecnológica para viabilizar a jornada digital do paciente. O atendimento em saúde é realizado por profissional habilitado, identificado na plataforma com nome, CRM e demais informações aplicáveis.',
+          'A MedCallOn não substitui serviço hospitalar, pronto-socorro ou atendimento presencial de urgência e emergência.'
         ]
       },
       {
-        title: '3. Receitas, atestados e documentos',
+        title: '3. Consentimento para telemedicina',
         paragraphs: [
-          'Receitas, atestados e demais documentos clinicos somente podem ser emitidos por profissional habilitado e devem observar as exigencias tecnicas e regulatorias aplicaveis, inclusive assinatura digital quando exigida.',
-          'A plataforma nao realiza venda direta de medicamentos e nao promete cura, resultado garantido ou substituicao indevida de avaliacao medica.'
+          'Ao prosseguir com o atendimento remoto, o paciente declara estar ciente de que a consulta ocorrerá por telemedicina, com registro do atendimento em prontuário eletrônico e tratamento dos dados necessários à execução do serviço.',
+          'Casos de urgência grave, emergência, sintomas intensos, piora rápida ou situações que exijam exame físico devem ser direcionados imediatamente para atendimento presencial adequado.'
         ]
       },
       {
-        title: '4. Conta e seguranca',
+        title: '4. Receitas, atestados e documentos',
         paragraphs: [
-          'O usuario deve fornecer informacoes verdadeiras, manter suas credenciais protegidas e comunicar imediatamente uso indevido ou suspeita de acesso nao autorizado.',
-          'A plataforma pode suspender acessos em caso de fraude, uso abusivo, violacao de regras ou exigencia regulatoria.'
+          'Receitas, atestados, relatórios e demais documentos clínicos somente poderão ser emitidos por profissional habilitado, conforme avaliação médica e observadas as exigências técnicas, éticas e regulatórias aplicáveis.',
+          'A plataforma não realiza venda direta de medicamentos, não garante emissão automática de documento médico e não promete resultado clínico específico.'
         ]
       },
       {
-        title: '5. Informacoes obrigatorias da operacao',
+        title: '5. Conta, conduta e segurança',
         paragraphs: [
-          'Antes de publicar este produto em escala comercial, substitua este trecho pelos dados reais da pessoa juridica responsavel, CNPJ, endereco, canais de contato, responsavel tecnico, politicas internas e fluxos oficiais de suporte.',
-          'Tambem e necessario alinhar contratos com medicos, processadores, provedores de infraestrutura e operadores de dados.'
+          'O usuário deve fornecer informações verdadeiras, manter suas credenciais em sigilo, utilizar a plataforma de forma lícita e comunicar imediatamente qualquer suspeita de uso indevido ou acesso não autorizado.',
+          'A MedCallOn poderá suspender acessos em caso de fraude, uso abusivo, violação destes termos, exigência de segurança ou obrigação legal.'
+        ]
+      },
+      {
+        title: '6. Pagamento, cancelamento e responsabilidade',
+        paragraphs: [
+          'A liberação da consulta depende da confirmação do pagamento nos fluxos disponibilizados pela plataforma. Condições de reagendamento, cancelamento e acesso à sala podem variar conforme a operação vigente e o horário da consulta.',
+          'A responsabilidade clínica pelo ato médico é do profissional de saúde responsável pelo atendimento, sem prejuízo das obrigações da plataforma quanto à infraestrutura, segurança e suporte operacional.'
         ]
       }
     ]
   },
   cookies: {
-    eyebrow: 'Preferencias e rastreamento',
-    title: 'Politica de Cookies',
+    eyebrow: 'Preferências e rastreamento',
+    title: 'Política de Cookies',
     summary:
-      'Este documento descreve como a MedCallOn utiliza cookies e tecnologias semelhantes para funcionamento, seguranca, analytics e personalizacao.',
-    updatedAt: '03/04/2026',
+      'Este documento descreve como a MedCallOn utiliza cookies e tecnologias semelhantes para funcionamento, segurança, medição de acesso e aprimoramento da experiência do usuário.',
+    updatedAt: '28/04/2026',
     sections: [
       {
-        title: '1. Cookies essenciais',
+        title: '1. O que são cookies',
         paragraphs: [
-          'Cookies essenciais podem ser utilizados para autenticacao, manutencao de sessao, seguranca, balanceamento e funcionamento basico da aplicacao.',
-          'Sem esses recursos, partes criticas do portal podem nao funcionar corretamente.'
+          'Cookies são pequenos arquivos armazenados no navegador do usuário para permitir reconhecimento de sessão, segurança, preferências e análise de uso da plataforma.',
+          'A MedCallOn utiliza cookies próprios e, quando aplicável, tecnologias de terceiros integradas à operação do site.'
         ]
       },
       {
-        title: '2. Cookies de medicao e personalizacao',
+        title: '2. Cookies essenciais',
         paragraphs: [
-          'Cookies de analytics, desempenho e personalizacao devem ser utilizados com base juridica adequada e configurados conforme a experiencia escolhida pelo usuario no banner de preferencias.',
-          'Se servicos de terceiros forem adicionados, a politica deve listar os fornecedores, finalidades e mecanismos de opt-out correspondentes.'
+          'Cookies essenciais podem ser utilizados para autenticação, manutenção de sessão, segurança da navegação, estabilidade da aplicação e funcionamento básico de áreas restritas da plataforma.',
+          'Sem esses recursos, partes relevantes do portal, como login, navegação protegida, atendimento e preferências mínimas de uso, podem não funcionar corretamente.'
         ]
       },
       {
-        title: '3. Gestao de preferencias',
+        title: '3. Cookies de medição e desempenho',
         paragraphs: [
-          'O banner de cookies permite aceitar, rejeitar ou personalizar preferencias. A opcao selecionada deve ser registrada e respeitada pela aplicacao.',
-          'Se houver scripts de marketing, analytics ou remarketing, eles devem ser bloqueados ate a definicao da preferencia do usuario, quando juridicamente exigido.'
+          'A plataforma pode utilizar cookies e tecnologias equivalentes para medir acesso, analisar desempenho, compreender comportamento de navegação e aprimorar a experiência do usuário.',
+          'Esses recursos podem incluir integrações com ferramentas de analytics e medição, observadas as preferências manifestadas pelo usuário e a base legal aplicável.'
+        ]
+      },
+      {
+        title: '4. Gestão de preferências',
+        paragraphs: [
+          'O banner de cookies da MedCallOn permite aceitar, rejeitar ou personalizar preferências, conforme a implementação disponível no site. A escolha realizada pelo usuário deve ser registrada e respeitada pela plataforma.',
+          'O usuário também poderá, a qualquer tempo, excluir cookies diretamente nas configurações do navegador, ciente de que essa ação pode afetar parte da experiência ou o funcionamento de recursos da plataforma.'
+        ]
+      },
+      {
+        title: '5. Informações de contato',
+        paragraphs: [
+          'A plataforma é operada por Aleri Desenvolvimento de Software LTDA, CNPJ nº 41.418.939/0001-58. Dúvidas sobre esta Política de Cookies podem ser encaminhadas pelos canais oficiais da MedCallOn, inclusive pelo e-mail mmedcallon@gmail.com.',
+          'Quando houver atualização relevante desta política, a nova versão passará a valer a partir da data de publicação nesta página.'
         ]
       }
     ]

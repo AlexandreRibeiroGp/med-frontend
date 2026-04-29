@@ -9,6 +9,7 @@ import { ContentPageComponent } from './pages/content-page.component';
 import { DashboardPageComponent } from './pages/dashboard-page.component';
 import { HomePageComponent } from './pages/home-page.component';
 import { LegalPageComponent } from './pages/legal-page.component';
+import { LgpdRequestPageComponent } from './pages/lgpd-request-page.component';
 
 export const routes: Routes = [
   { path: 'calls/:appointmentId', component: CallRoomPageComponent, canActivate: [authGuard] },
@@ -227,6 +228,19 @@ export const routes: Routes = [
             canonicalPath: '/comece',
             index: true,
             schema: 'start'
+          }
+        }
+      },
+      {
+        path: 'lgpd/solicitacoes',
+        component: LgpdRequestPageComponent,
+        data: {
+          seo: {
+            title: 'Solicitação LGPD | MedCallOn',
+            description: 'Canal de atendimento para solicitações do titular de dados na plataforma MedCallOn.',
+            canonicalPath: '/lgpd/solicitacoes',
+            index: true,
+            schema: 'legal'
           }
         }
       },

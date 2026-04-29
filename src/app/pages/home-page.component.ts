@@ -177,6 +177,7 @@ import { filter } from 'rxjs';
         <a routerLink="/legal/privacidade">Política de Privacidade</a>
         <a routerLink="/legal/termos">Termos de Uso</a>
         <a routerLink="/legal/cookies">Política de Cookies</a>
+        <a routerLink="/lgpd/solicitacoes">Solicitação LGPD</a>
       </footer>
     </div>
   `,

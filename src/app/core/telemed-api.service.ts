@@ -209,6 +209,15 @@ export class TelemedApiService {
     return this.http.get<DoctorResponse>(`${API_URL}/doctors/me`);
   }
 
+  createPrivacyRequest(payload: {
+    name: string;
+    email: string;
+    requestType: 'ACCESS' | 'CORRECTION' | 'DELETION' | 'PORTABILITY' | 'SHARING_INFO' | 'OTHER';
+    message: string;
+  }) {
+    return this.http.post(`${API_URL}/privacy-requests`, payload);
+  }
+
   updateCurrentDoctorProfile(payload: {
     fullName: string;
     phoneNumber?: string | null;

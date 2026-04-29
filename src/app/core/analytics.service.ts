@@ -1,7 +1,8 @@
-import { DestroyRef, Injectable, inject } from '@angular/core';
+import { DestroyRef, Injectable, effect, inject } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { CookieConsentService } from './cookie-consent.service';
 import { resolveClarityProjectId } from './runtime-config';
 
 declare global {
@@ -15,22 +16,33 @@ declare global {
 export class AnalyticsService {
   private readonly router = inject(Router);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cookieConsent = inject(CookieConsentService);
   private readonly trackedEvents = new Set<string>();
   private clarityInitialized = false;
+  private currentPageViewKey: string | null = null;
 
   constructor() {
-    this.initClarity();
+    effect(() => {
+      if (!this.cookieConsent.allowsAnalytics()) {
+        return;
+      }
+
+      this.initClarity();
+      this.trackCurrentPageView();
+    });
+
     this.router.events
       .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
       .subscribe((event) => {
-        this.track('page_view', {
-          page_path: event.urlAfterRedirects,
-          page_title: document.title
-        });
+        this.currentPageViewKey = event.urlAfterRedirects;
+        this.trackCurrentPageView();
       });
   }
 
   track(eventName: string, params?: Record<string, unknown>): void {
+    if (!this.cookieConsent.allowsAnalytics()) {
+      return;
+    }
     window.gtag?.('event', eventName, params ?? {});
   }
 
@@ -65,5 +77,17 @@ export class AnalyticsService {
       y = l.getElementsByTagName(r)[0] as HTMLScriptElement;
       y.parentNode?.insertBefore(t, y);
     })(window, document, 'clarity', 'script', projectId);
+  }
+
+  private trackCurrentPageView(): void {
+    if (!this.cookieConsent.allowsAnalytics()) {
+      return;
+    }
+
+    const pagePath = this.currentPageViewKey ?? this.router.url;
+    this.track('page_view', {
+      page_path: pagePath,
+      page_title: document.title
+    });
   }
 }

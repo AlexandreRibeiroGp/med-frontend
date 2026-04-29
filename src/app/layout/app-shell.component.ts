@@ -1,9 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { AuthService } from '../core/auth.service';
+import { CookieConsentService } from '../core/cookie-consent.service';
 import { FloatingCallService } from '../core/floating-call.service';
 import { filter, map, startWith } from 'rxjs';
 
@@ -501,9 +502,10 @@ import { filter, map, startWith } from 'rxjs';
 export class AppShellComponent {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly cookieConsent = inject(CookieConsentService);
   readonly floatingCall = inject(FloatingCallService);
   private readonly sanitizer = inject(DomSanitizer);
-  readonly showCookieBanner = signal(false);
+  readonly showCookieBanner = this.cookieConsent.showBanner;
   private draggingFloatingCall = false;
   private dragOffset = { x: 0, y: 0 };
   readonly isAuthRoute = toSignal(
@@ -548,8 +550,6 @@ export class AppShellComponent {
   readonly floatingCallTop = computed(() => this.floatingCall.position().y);
 
   constructor() {
-    const cookiePreference = window.localStorage.getItem('medcallon-cookie-preference');
-    this.showCookieBanner.set(!cookiePreference);
     window.addEventListener('message', this.handleFloatingCallMessage);
     window.addEventListener('pointermove', this.handleFloatingPointerMove);
     window.addEventListener('pointerup', this.stopFloatingDrag);
@@ -585,8 +585,7 @@ export class AppShellComponent {
   }
 
   setCookiePreference(value: 'accepted' | 'rejected' | 'custom'): void {
-    window.localStorage.setItem('medcallon-cookie-preference', value);
-    this.showCookieBanner.set(false);
+    this.cookieConsent.setPreference(value);
   }
 
   private readonly handleFloatingPointerMove = (event: PointerEvent): void => {
