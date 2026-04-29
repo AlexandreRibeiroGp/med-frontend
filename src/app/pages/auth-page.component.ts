@@ -3,7 +3,7 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, finalize } from 'rxjs';
+import { Observable, finalize, switchMap, tap } from 'rxjs';
 import { composeAddress } from '../core/address-form';
 import { AuthService } from '../core/auth.service';
 import { LegalDocumentResponse } from '../core/models';
@@ -755,23 +755,54 @@ export class AuthPageComponent {
 
     const raw = this.patientForm.getRawValue();
     this.analytics.track('signup_submit');
-    this.runRequest(
-      this.api.registerPatient({
-        fullName: raw.fullName,
-        email: raw.email,
-        password: raw.password,
-        phoneNumber: raw.phoneNumber || null,
-        documentNumber: raw.documentNumber || null,
-        birthDate: raw.birthDate || null,
-        profession: raw.profession || null,
-        address: composeAddress(raw),
-        acceptedDocumentIds,
-        acceptedTelemedicine: true
-      }),
-      'Paciente cadastrado com sucesso.',
-      false,
-      'patient-signup'
-    );
+    const email = raw.email;
+    const password = raw.password;
+
+    this.loading.set(true);
+    this.error.set('');
+    this.message.set('');
+
+    this.api.registerPatient({
+      fullName: raw.fullName,
+      email,
+      password,
+      phoneNumber: raw.phoneNumber || null,
+      documentNumber: raw.documentNumber || null,
+      birthDate: raw.birthDate || null,
+      profession: raw.profession || null,
+      address: composeAddress(raw),
+      acceptedDocumentIds,
+      acceptedTelemedicine: true
+    })
+      .pipe(
+        tap(() => this.trackPatientSignupConversion()),
+        switchMap(() => this.authService.login({ email, password })),
+        finalize(() => this.loading.set(false)),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe({
+        next: () => {
+          this.patientForm.reset();
+          this.termsConsentControl.reset(false);
+          this.telemedicineConsentControl.reset(false);
+          this.message.set('');
+          void this.router.navigate(['/dashboard'], { queryParams: this.dashboardQueryParams() });
+        },
+        error: (error: { error?: { message?: string } }) => {
+          const apiMessage = error.error?.message?.trim();
+          if (apiMessage && /bad credentials/i.test(apiMessage)) {
+            this.setError('Cadastro concluído, mas não foi possível entrar automaticamente. Faça login para continuar.');
+            this.mode.set('login');
+            this.loginForm.reset({
+              email,
+              password: ''
+            });
+            return;
+          }
+
+          this.setError(apiMessage ?? 'Não foi possível concluir o cadastro agora.');
+        }
+      });
   }
 
   submitForgotPassword(): void {
