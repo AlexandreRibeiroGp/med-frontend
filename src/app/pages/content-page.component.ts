@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -176,3 +176,4 @@ export class ContentPageComponent {
     return this.route.snapshot.data['content'];
   }
 }
+

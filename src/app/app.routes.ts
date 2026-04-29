@@ -1,31 +1,25 @@
-import { Routes } from '@angular/router';
+﻿import { Routes } from '@angular/router';
 import { authGuard, guestGuard, ownerGuard } from './core/auth.guard';
-import { AppShellComponent } from './layout/app-shell.component';
-import { AuthPageComponent } from './pages/auth-page.component';
-import { AdminPageComponent } from './pages/admin-page.component';
-import { CallRoomPageComponent } from './pages/call-room-page.component';
-import { ConsultationStartPageComponent } from './pages/consultation-start-page.component';
-import { ContentPageComponent } from './pages/content-page.component';
-import { DashboardPageComponent } from './pages/dashboard-page.component';
-import { HomePageComponent } from './pages/home-page.component';
-import { LegalPageComponent } from './pages/legal-page.component';
-import { LgpdRequestPageComponent } from './pages/lgpd-request-page.component';
 
 export const routes: Routes = [
-  { path: 'calls/:appointmentId', component: CallRoomPageComponent, canActivate: [authGuard] },
+  {
+    path: 'calls/:appointmentId',
+    canActivate: [authGuard],
+    loadComponent: () => import('./pages/call-room-page.component').then((m) => m.CallRoomPageComponent)
+  },
   {
     path: '',
-    component: AppShellComponent,
+    loadComponent: () => import('./layout/app-shell.component').then((m) => m.AppShellComponent),
     children: [
       {
         path: '',
         pathMatch: 'full',
-        component: HomePageComponent,
+        loadComponent: () => import('./pages/home-page.component').then((m) => m.HomePageComponent),
         data: {
           seo: {
-            title: 'MedCallOn | Consulta medica online por R$ 49,90',
+            title: 'MedCallOn | Consulta médica online por R$ 49,90',
             description:
-              'Consulta medica online com cadastro simples, pagamento por Pix e atendimento pela plataforma MedCallOn.',
+              'Consulta médica online com cadastro simples, pagamento por Pix e atendimento pela plataforma MedCallOn.',
             canonicalPath: '/',
             index: true,
             schema: 'home'
@@ -34,12 +28,12 @@ export const routes: Routes = [
       },
       {
         path: 'consulta-online',
-        component: HomePageComponent,
+        loadComponent: () => import('./pages/home-page.component').then((m) => m.HomePageComponent),
         data: {
           seo: {
-            title: 'Consulta medica online | MedCallOn',
+            title: 'Consulta médica online | MedCallOn',
             description:
-              'Atendimento medico online com fluxo simples: cadastro, pagamento por Pix e sala de consulta pela plataforma.',
+              'Atendimento médico online com fluxo simples: cadastro, pagamento por Pix e sala de consulta pela plataforma.',
             canonicalPath: '/consulta-online',
             index: true,
             schema: 'home'
@@ -48,7 +42,7 @@ export const routes: Routes = [
       },
       {
         path: 'medico-online-pix',
-        component: ContentPageComponent,
+        loadComponent: () => import('./pages/content-page.component').then((m) => m.ContentPageComponent),
         data: {
           seo: {
             title: 'Médico online com pagamento por Pix | MedCallOn',
@@ -105,7 +99,7 @@ export const routes: Routes = [
       },
       {
         path: 'consulta-online-atestado',
-        component: ContentPageComponent,
+        loadComponent: () => import('./pages/content-page.component').then((m) => m.ContentPageComponent),
         data: {
           seo: {
             title: 'Consulta online e atestado médico | MedCallOn',
@@ -162,7 +156,7 @@ export const routes: Routes = [
       },
       {
         path: 'clinico-geral-online',
-        component: ContentPageComponent,
+        loadComponent: () => import('./pages/content-page.component').then((m) => m.ContentPageComponent),
         data: {
           seo: {
             title: 'Clínico geral online | MedCallOn',
@@ -219,12 +213,12 @@ export const routes: Routes = [
       },
       {
         path: 'comece',
-        component: ConsultationStartPageComponent,
+        loadComponent: () => import('./pages/consultation-start-page.component').then((m) => m.ConsultationStartPageComponent),
         data: {
           seo: {
-            title: 'Medicos disponiveis para consulta online | MedCallOn',
+            title: 'Médicos disponíveis para consulta online | MedCallOn',
             description:
-              'Veja medicos disponiveis, crie sua conta ou entre para continuar sua consulta online na MedCallOn.',
+              'Veja médicos disponíveis, crie sua conta ou entre para continuar sua consulta online na MedCallOn.',
             canonicalPath: '/comece',
             index: true,
             schema: 'start'
@@ -233,7 +227,7 @@ export const routes: Routes = [
       },
       {
         path: 'lgpd/solicitacoes',
-        component: LgpdRequestPageComponent,
+        loadComponent: () => import('./pages/lgpd-request-page.component').then((m) => m.LgpdRequestPageComponent),
         data: {
           seo: {
             title: 'Solicitação LGPD | MedCallOn',
@@ -246,11 +240,11 @@ export const routes: Routes = [
       },
       {
         path: 'legal/:document',
-        component: LegalPageComponent,
+        loadComponent: () => import('./pages/legal-page.component').then((m) => m.LegalPageComponent),
         data: {
           seo: {
             title: 'Documentos legais | MedCallOn',
-            description: 'Politicas, termos de uso e documentos legais da plataforma MedCallOn.',
+            description: 'Políticas, termos de uso e documentos legais da plataforma MedCallOn.',
             canonicalPath: 'current',
             index: true,
             schema: 'legal'
@@ -259,8 +253,8 @@ export const routes: Routes = [
       },
       {
         path: 'auth',
-        component: AuthPageComponent,
         canActivate: [guestGuard],
+        loadComponent: () => import('./pages/auth-page.component').then((m) => m.AuthPageComponent),
         data: {
           seo: {
             title: 'Entrar ou criar conta | MedCallOn',
@@ -273,8 +267,8 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        component: DashboardPageComponent,
         canActivate: [authGuard],
+        loadComponent: () => import('./pages/dashboard-page.component').then((m) => m.DashboardPageComponent),
         data: {
           seo: {
             title: 'Painel | MedCallOn',
@@ -287,12 +281,12 @@ export const routes: Routes = [
       },
       {
         path: 'admin',
-        component: AdminPageComponent,
         canActivate: [authGuard, ownerGuard],
+        loadComponent: () => import('./pages/admin-page.component').then((m) => m.AdminPageComponent),
         data: {
           seo: {
-            title: 'Administracao | MedCallOn',
-            description: 'Area administrativa da plataforma MedCallOn.',
+            title: 'Administração | MedCallOn',
+            description: 'Área administrativa da plataforma MedCallOn.',
             canonicalPath: '/admin',
             index: false,
             schema: 'none'
