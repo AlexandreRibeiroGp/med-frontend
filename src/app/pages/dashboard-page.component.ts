@@ -132,7 +132,6 @@ function monthKeyInSaoPaulo(date: Date): string {
             [selectedSlotId]="pendingBookingSlot()?.id ?? null"
             [specialtyFilter]="specialtyFilter"
             [consultationReason]="consultationReason"
-            [patientOccupation]="patientOccupation"
             (doctorSelected)="selectDoctor($event)"
             (slotBooked)="bookSlot($event)"
           />
@@ -159,11 +158,7 @@ function monthKeyInSaoPaulo(date: Date): string {
               Nome do paciente:
               <strong>{{ auth.user()?.fullName }}</strong>
             </p>
-            <p>
-              Profissão:
-              <strong>{{ patientOccupation.value }}</strong>
-            </p>
-            <p>
+            <p *ngIf="consultationReason.value">
               Motivo informado:
               <strong>{{ consultationReason.value }}</strong>
             </p>
@@ -628,8 +623,8 @@ export class DashboardPageComponent {
   );
 
   readonly specialtyFilter = this.fb.nonNullable.control('');
-  readonly patientOccupation = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(2)]);
-  readonly consultationReason = this.fb.nonNullable.control('', [Validators.required, Validators.minLength(5)]);
+  readonly patientOccupation = this.fb.nonNullable.control('');
+  readonly consultationReason = this.fb.nonNullable.control('');
   readonly checkoutConsentControl = this.fb.nonNullable.control(false, Validators.requiredTrue);
   readonly availabilityForm = this.fb.nonNullable.group({
     date: ['', Validators.required],
@@ -925,12 +920,6 @@ export class DashboardPageComponent {
     if (!this.selectedDoctor()) {
       return;
     }
-    if (this.patientOccupation.invalid || this.consultationReason.invalid) {
-      this.patientOccupation.markAsTouched();
-      this.consultationReason.markAsTouched();
-      this.handleError('Informe sua profissao e o motivo da consulta antes de selecionar um horario.');
-      return;
-    }
     this.analytics.track('booking_slot_select', {
       slot_id: slot.id,
       doctor_id: this.selectedDoctor()?.id ?? null
@@ -954,7 +943,6 @@ export class DashboardPageComponent {
   submitCheckout(paymentMethod: PaymentMethod): void {
     const doctor = this.selectedDoctor();
     const slot = this.pendingBookingSlot();
-    const occupation = this.patientOccupation.getRawValue().trim();
     const reason = this.consultationReason.getRawValue().trim();
     const acceptedDocumentIds = this.requiredLegalDocumentIds();
     if (!doctor || !slot) {
@@ -967,10 +955,6 @@ export class DashboardPageComponent {
     }
     if (acceptedDocumentIds.length < 2) {
       this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
-      return;
-    }
-    if (!occupation || !reason) {
-      this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
       return;
     }
     this.analytics.track('checkout_submit', {
@@ -978,63 +962,60 @@ export class DashboardPageComponent {
       doctor_id: doctor.id,
       slot_id: slot.id
     });
-    this.savePatientOccupationIfNeeded(occupation, () => {
-      this.api
-        .checkoutAppointment({
-          doctorProfileId: doctor.id,
-          availabilitySlotId: slot.id,
-          appointmentType: 'VIDEO',
-          notes: reason,
-          paymentMethod,
-          acceptedDocumentIds,
-          acceptedTelemedicine: true
-        })
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (checkout) => {
-              if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
-                this.activePixPayment.set(checkout.payment);
-                this.analytics.track('pix_generated', {
-                  payment_id: checkout.payment.id,
-                  payment_method: checkout.payment.paymentMethod,
-                  doctor_id: doctor.id
-                });
-                this.startPixPaymentPolling(checkout.payment.id, doctor);
-              this.setFeedback('Pix gerado com sucesso. Pague pelo QR Code ou pelo codigo copia e cola abaixo.');
-              this.toast.success('Pix gerado', 'Conclua o pagamento para liberar automaticamente a consulta.');
-              window.setTimeout(() => {
-                this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }, 80);
-              return;
-            }
-
-            this.pendingBookingSlot.set(null);
-            this.activePixPayment.set(null);
-            this.stopPixPaymentPolling();
-            this.consultationReason.reset('');
-            this.checkoutConsentControl.reset(false);
-            this.selectDoctor(doctor);
-            this.loadBaseData();
-            if (checkout.payment.checkoutUrl) {
-              this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
-              this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
-              window.location.href = checkout.payment.checkoutUrl;
-              return;
-            }
-
-            this.handleError('O checkout foi criado sem URL de pagamento.');
-          },
-          error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
+    this.api
+      .checkoutAppointment({
+        doctorProfileId: doctor.id,
+        availabilitySlotId: slot.id,
+        appointmentType: 'VIDEO',
+        notes: reason || null,
+        paymentMethod,
+        acceptedDocumentIds,
+        acceptedTelemedicine: true
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (checkout) => {
+            if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
+              this.activePixPayment.set(checkout.payment);
+              this.analytics.track('pix_generated', {
+                payment_id: checkout.payment.id,
+                payment_method: checkout.payment.paymentMethod,
+                doctor_id: doctor.id
+              });
+              this.startPixPaymentPolling(checkout.payment.id, doctor);
+            this.setFeedback('Pix gerado com sucesso. Pague pelo QR Code ou pelo codigo copia e cola abaixo.');
+            this.toast.success('Pix gerado', 'Conclua o pagamento para liberar automaticamente a consulta.');
+            window.setTimeout(() => {
+              this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 80);
+            return;
           }
-        });
-    });
+
+          this.pendingBookingSlot.set(null);
+          this.activePixPayment.set(null);
+          this.stopPixPaymentPolling();
+          this.consultationReason.reset('');
+          this.checkoutConsentControl.reset(false);
+          this.selectDoctor(doctor);
+          this.loadBaseData();
+          if (checkout.payment.checkoutUrl) {
+            this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
+            this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
+            window.location.href = checkout.payment.checkoutUrl;
+            return;
+          }
+
+          this.handleError('O checkout foi criado sem URL de pagamento.');
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
+        }
+      });
   }
 
   simulateCheckout(): void {
     const doctor = this.selectedDoctor();
     const slot = this.pendingBookingSlot();
-    const occupation = this.patientOccupation.getRawValue().trim();
     const reason = this.consultationReason.getRawValue().trim();
     const acceptedDocumentIds = this.requiredLegalDocumentIds();
     if (!doctor || !slot) {
@@ -1049,54 +1030,48 @@ export class DashboardPageComponent {
       this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
       return;
     }
-    if (!occupation || !reason) {
-      this.handleError('Informe profissao e motivo da consulta antes de concluir o agendamento.');
-      return;
-    }
     this.analytics.track('checkout_submit', {
       payment_method: 'MOCK',
       doctor_id: doctor.id,
       slot_id: slot.id
     });
-    this.savePatientOccupationIfNeeded(occupation, () => {
-      this.api
-        .checkoutAppointment({
-          doctorProfileId: doctor.id,
-          availabilitySlotId: slot.id,
-          appointmentType: 'VIDEO',
-          notes: reason,
-          paymentMethod: 'PIX',
-          acceptedDocumentIds,
-          acceptedTelemedicine: true
-        })
-        .pipe(takeUntilDestroyed(this.destroyRef))
-        .subscribe({
-          next: (checkout) => {
-            this.api
-              .confirmPayment(checkout.payment.id)
-              .pipe(takeUntilDestroyed(this.destroyRef))
-              .subscribe({
-                next: () => {
-                  this.pendingBookingSlot.set(null);
-                  this.activePixPayment.set(null);
-                  this.stopPixPaymentPolling();
-                  this.consultationReason.reset('');
-                  this.checkoutConsentControl.reset(false);
-                  this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
-                  this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
-                  this.selectDoctor(doctor);
-                  this.loadBaseData();
-                },
-                error: (error: { error?: { message?: string } }) => {
-                  this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
-                }
-              });
-          },
-          error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
-          }
-        });
-    });
+    this.api
+      .checkoutAppointment({
+        doctorProfileId: doctor.id,
+        availabilitySlotId: slot.id,
+        appointmentType: 'VIDEO',
+        notes: reason || null,
+        paymentMethod: 'PIX',
+        acceptedDocumentIds,
+        acceptedTelemedicine: true
+      })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (checkout) => {
+          this.api
+            .confirmPayment(checkout.payment.id)
+            .pipe(takeUntilDestroyed(this.destroyRef))
+            .subscribe({
+              next: () => {
+                this.pendingBookingSlot.set(null);
+                this.activePixPayment.set(null);
+                this.stopPixPaymentPolling();
+                this.consultationReason.reset('');
+                this.checkoutConsentControl.reset(false);
+                this.setFeedback('Pagamento simulado com sucesso. A consulta foi liberada para teste.');
+                this.toast.success('Pagamento confirmado', 'Consulta liberada em modo de teste.');
+                this.selectDoctor(doctor);
+                this.loadBaseData();
+              },
+              error: (error: { error?: { message?: string } }) => {
+                this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
+              }
+            });
+        },
+        error: (error: { error?: { message?: string } }) => {
+          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
+        }
+      });
   }
 
   createAvailability(): void {
@@ -1675,34 +1650,6 @@ export class DashboardPageComponent {
       this.selectedRecordPatientProfile.set(null);
     }
     this.loadBaseData();
-  }
-
-  private savePatientOccupationIfNeeded(occupation: string, onSaved: () => void): void {
-    const normalizedOccupation = occupation.trim();
-    if (!normalizedOccupation) {
-      this.handleError('Informe sua profissao antes de concluir o agendamento.');
-      return;
-    }
-
-    const currentProfession = this.patientProfile()?.profession?.trim() ?? '';
-    if (currentProfession === normalizedOccupation) {
-      onSaved();
-      return;
-    }
-
-    this.api
-      .updateCurrentPatientProfession({ profession: normalizedOccupation })
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (profile) => {
-          this.patientProfile.set(profile);
-          this.patientOccupation.setValue(profile.profession ?? normalizedOccupation);
-          onSaved();
-        },
-        error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel salvar a profissao do paciente.');
-        }
-      });
   }
 
   private startPixPaymentPolling(paymentId: number, doctor: DoctorResponse): void {

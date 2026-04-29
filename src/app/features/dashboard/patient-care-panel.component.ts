@@ -37,14 +37,8 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         </section>
 
         <section class="consultation-fields">
-          <label class="notes-field compact-field">
-            <span>Profissao</span>
-            <input [formControl]="patientOccupation()" placeholder="Informe sua profissao" />
-            <small>Esse dado sera enviado para o medico junto com o agendamento.</small>
-          </label>
-
           <label class="notes-field">
-            <span>Motivo da consulta</span>
+            <span>Motivo da consulta (opcional)</span>
             <textarea
               [formControl]="consultationReason()"
               placeholder="Descreva o problema, sintomas ou o motivo da consulta"
@@ -76,10 +70,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
             <span>{{ slot.endAt | date: 'HH:mm' }}</span>
           </button>
         </div>
-
-        <p class="helper-text" *ngIf="!canBookSlot()">
-          Informe sua profissao e o motivo da consulta para liberar a escolha do horario.
-        </p>
       </article>
 
       <article class="card doctor-card" *ngIf="!selectedDoctor() || showDoctorPicker()">
@@ -163,14 +153,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       font: inherit;
       cursor: pointer;
     }
-    input {
-      width: 100%;
-      border: 1px solid #d8dfdf;
-      border-radius: 16px;
-      padding: 14px 16px;
-      background: white;
-      font: inherit;
-    }
     .selected-doctor-banner {
       display: flex;
       align-items: center;
@@ -244,7 +226,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     }
     .consultation-fields {
       display: grid;
-      grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr);
       gap: 14px;
       align-items: start;
     }
@@ -287,9 +268,6 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       color: #112027;
       font-weight: 700;
     }
-    .compact-field input {
-      min-height: 52px;
-    }
     textarea {
       width: 100%;
       min-height: 88px;
@@ -301,8 +279,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       resize: vertical;
       box-sizing: border-box;
     }
-    .notes-field small,
-    .helper-text {
+    .notes-field small {
       color: #5b6a70;
       font-size: 0.9rem;
       font-weight: 500;
@@ -410,7 +387,6 @@ export class PatientCarePanelComponent {
   readonly selectedSlotId = input<number | null>(null);
   readonly specialtyFilter = input.required<FormControl<string>>();
   readonly consultationReason = input.required<FormControl<string>>();
-  readonly patientOccupation = input.required<FormControl<string>>();
   readonly selectedDate = signal('');
   readonly showDoctorPicker = signal(false);
   private readonly localDateKeyFormatter = new Intl.DateTimeFormat('sv-SE', {
@@ -461,22 +437,11 @@ export class PatientCarePanelComponent {
   }
 
   handleSlotSelection(slot: AvailabilitySlotResponse): void {
-    if (!this.canBookSlot()) {
-      this.patientOccupation().markAsTouched();
-      this.consultationReason().markAsTouched();
-      window.alert('Preencha sua profissao e o motivo da consulta antes de selecionar um horario.');
-      return;
-    }
-
     this.slotBooked.emit(slot);
   }
 
   specialtyLabel(value: string): string {
     return value === 'GERAL' || value === 'GENERALISTA' ? 'Generalista' : value;
-  }
-
-  canBookSlot(): boolean {
-    return !this.patientOccupation().invalid && !this.consultationReason().invalid;
   }
 
   constructor() {
