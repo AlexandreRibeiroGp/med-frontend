@@ -1143,6 +1143,9 @@ export class DashboardPageComponent {
     if (!this.selectedDoctor()) {
       return;
     }
+    this.stopPixPaymentPolling();
+    this.activePixPayment.set(null);
+    this.showPixModal.set(false);
     this.analytics.track('booking_slot_select', {
       slot_id: slot.id,
       doctor_id: this.selectedDoctor()?.id ?? null
@@ -1953,34 +1956,69 @@ export class DashboardPageComponent {
       return;
     }
 
+    const slot = this.pendingBookingSlot();
     this.handledConfirmedPixPayments.add(payment.id);
     this.trackPixApprovedConversion(payment);
-    this.applyConfirmedPaymentLocally(payment);
+    this.applyConfirmedPaymentLocally(payment, doctor, slot);
     this.bookingFlow.clearIntent();
     this.bookingIntent.set(null);
+    this.pendingIntentSlotId.set(null);
+    this.pendingDoctorId.set(null);
+    this.pendingDoctorName.set('');
     this.pendingBookingSlot.set(null);
     this.showPixModal.set(false);
     this.consultationReason.reset('');
+    this.checkoutConsentControl.reset(false);
     this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
     this.toast.success('Pagamento confirmado', 'A consulta já está liberada para atendimento.');
-    this.selectDoctor(doctor);
     this.section.set('calls');
     this.loadBaseData();
+    const unlockedAppointment = this.appointments().find((appointment) => appointment.id === payment.appointmentId);
+    if (unlockedAppointment && this.canJoinAppointment(unlockedAppointment)) {
+      window.setTimeout(() => this.openCallRoom(unlockedAppointment), 180);
+    }
   }
 
-  private applyConfirmedPaymentLocally(payment: PaymentResponse): void {
+  private applyConfirmedPaymentLocally(
+    payment: PaymentResponse,
+    doctor: DoctorResponse,
+    slot: AvailabilitySlotResponse | null
+  ): void {
     this.patientSectionsUnlocked.set(true);
-    this.appointments.update((appointments) =>
-      appointments.map((appointment) =>
+    this.appointments.update((appointments) => {
+      const nextAppointments = appointments.map((appointment) =>
         appointment.id === payment.appointmentId
           ? {
               ...appointment,
-              paymentStatus: 'CONFIRMED',
+              paymentStatus: 'CONFIRMED' as const,
               status: payment.appointmentStatus
             }
           : appointment
-      )
-    );
+      );
+
+      if (nextAppointments.some((appointment) => appointment.id === payment.appointmentId)) {
+        return nextAppointments;
+      }
+
+      const scheduledAt = slot?.startAt ?? payment.confirmedAt ?? new Date().toISOString();
+      return [
+        ...nextAppointments,
+        {
+          id: payment.appointmentId,
+          doctorProfileId: doctor.id,
+          doctorName: doctor.user.fullName,
+          patientProfileId: this.patientProfile()?.id ?? 0,
+          patientName: this.auth.user()?.fullName ?? '',
+          availabilitySlotId: slot?.id ?? null,
+          scheduledAt,
+          status: payment.appointmentStatus,
+          appointmentType: 'VIDEO',
+          meetingRoomCode: null,
+          notes: this.consultationReason.getRawValue().trim() || null,
+          paymentStatus: 'CONFIRMED' as const
+        }
+      ];
+    });
   }
 
   private trackPixApprovedConversion(payment: PaymentResponse): void {
