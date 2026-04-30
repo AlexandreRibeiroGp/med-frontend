@@ -836,7 +836,7 @@ export class AuthPageComponent {
 
     const token = this.resetToken();
     if (!token) {
-      this.setError('Token de redefinição invalido.');
+      this.setError('Token de redefinição inválido.');
       return;
     }
 
@@ -906,8 +906,8 @@ export class AuthPageComponent {
 
   signupDescription(): string {
     return this.contextDoctorName()
-      ? `Crie sua conta para seguir com ${this.contextDoctorName()} e liberar o proximo passo da consulta.`
-      : 'Preencha seus dados para seguir com mais confianca para o pagamento e para a consulta.';
+      ? `Crie sua conta para seguir com ${this.contextDoctorName()} e liberar o próximo passo da consulta.`
+      : 'Preencha seus dados para seguir com mais confiança para o pagamento e para a consulta.';
   }
 
   passwordConfirmationError(): string {
@@ -959,7 +959,7 @@ export class AuthPageComponent {
       return 'Este campo é obrigatório.';
     }
     if (control.errors['email']) {
-      return 'Informe um e-mail valido.';
+      return 'Informe um e-mail válido.';
     }
     if (control.errors['minlength']) {
       const requiredLength = control.errors['minlength'].requiredLength as number;
@@ -1002,7 +1002,7 @@ export class AuthPageComponent {
           this.patientForm.reset();
           this.termsConsentControl.reset(false);
           this.telemedicineConsentControl.reset(false);
-          this.setMessage('Cadastro concluido. Entre para continuar sua consulta.');
+          this.setMessage('Cadastro concluído. Entre para continuar sua consulta.');
           void this.router.navigate([], { queryParams: this.authQueryParams(), replaceUrl: true });
         },
         error: (error: { error?: { message?: string } }) => {

@@ -760,6 +760,7 @@ export class DashboardPageComponent {
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
   readonly showPixModal = signal(false);
+  readonly patientSectionsUnlocked = signal(false);
   private readonly trackedPurchaseConversions = new Set<number>();
   private readonly handledConfirmedPixPayments = new Set<number>();
   readonly currentTime = signal(Date.now());
@@ -777,6 +778,8 @@ export class DashboardPageComponent {
   );
   readonly canAccessLockedPatientSections = computed(() =>
     this.auth.role() !== 'PATIENT' ||
+    this.patientSectionsUnlocked() ||
+    this.activePixPayment()?.paymentStatus === 'CONFIRMED' ||
     this.appointments().some(
       (appointment) => appointment.paymentStatus === 'CONFIRMED' && appointment.status !== 'CANCELLED'
     )
@@ -906,7 +909,7 @@ export class DashboardPageComponent {
       if (paymentStatus === 'success') {
         this.setFeedback('Pagamento confirmado. A consulta será liberada assim que o backend receber a notificação do Mercado Pago.');
       } else if (paymentStatus === 'pending') {
-        this.setFeedback('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
+        this.setFeedback('Pagamento pendente. Aguarde a confirmação para liberar a consulta.');
       } else if (paymentStatus === 'failure') {
         this.handleError('O pagamento não foi concluído. Tente novamente.');
       }
@@ -1679,7 +1682,7 @@ export class DashboardPageComponent {
       case 'EXPIRED':
         return 'Pagamento expirado';
       default:
-        return 'Aguardando confirmacao';
+        return 'Aguardando confirmação';
     }
   }
 
@@ -1713,6 +1716,12 @@ export class DashboardPageComponent {
             this.error.set('');
             this.specialties.set(specialties);
             this.appointments.set(appointments);
+            this.patientSectionsUnlocked.set(
+              this.patientSectionsUnlocked() ||
+                appointments.some(
+                  (appointment) => appointment.paymentStatus === 'CONFIRMED' && appointment.status !== 'CANCELLED'
+                )
+            );
             this.medicalRecords.set([]);
             this.loadRoleSpecificData();
           },
@@ -1753,6 +1762,12 @@ export class DashboardPageComponent {
         next: ({ appointments, medicalRecords, specialties }) => {
           this.error.set('');
           this.appointments.set(appointments);
+          this.patientSectionsUnlocked.set(
+            this.patientSectionsUnlocked() ||
+              appointments.some(
+                (appointment) => appointment.paymentStatus === 'CONFIRMED' && appointment.status !== 'CANCELLED'
+              )
+          );
           this.medicalRecords.set(medicalRecords);
           this.specialties.set(specialties);
           this.loadRoleSpecificData();
@@ -1940,6 +1955,7 @@ export class DashboardPageComponent {
 
     this.handledConfirmedPixPayments.add(payment.id);
     this.trackPixApprovedConversion(payment);
+    this.applyConfirmedPaymentLocally(payment);
     this.bookingFlow.clearIntent();
     this.bookingIntent.set(null);
     this.pendingBookingSlot.set(null);
@@ -1948,7 +1964,23 @@ export class DashboardPageComponent {
     this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
     this.toast.success('Pagamento confirmado', 'A consulta já está liberada para atendimento.');
     this.selectDoctor(doctor);
+    this.section.set('calls');
     this.loadBaseData();
+  }
+
+  private applyConfirmedPaymentLocally(payment: PaymentResponse): void {
+    this.patientSectionsUnlocked.set(true);
+    this.appointments.update((appointments) =>
+      appointments.map((appointment) =>
+        appointment.id === payment.appointmentId
+          ? {
+              ...appointment,
+              paymentStatus: 'CONFIRMED',
+              status: payment.appointmentStatus
+            }
+          : appointment
+      )
+    );
   }
 
   private trackPixApprovedConversion(payment: PaymentResponse): void {
