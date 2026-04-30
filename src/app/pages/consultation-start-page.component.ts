@@ -8,6 +8,15 @@ import { BookingFlowService } from '../core/booking-flow.service';
 import { AvailabilitySlotResponse, DoctorResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 
+const START_PAGE_CACHE_KEY = 'med_start_page_cache';
+const START_PAGE_CACHE_TTL_MS = 5 * 60 * 1000;
+
+interface StartPageCache {
+  savedAt: number;
+  doctors: DoctorResponse[];
+  availabilityByDoctor: Record<number, AvailabilitySlotResponse[]>;
+}
+
 @Component({
   selector: 'app-consultation-start-page',
   imports: [CommonModule, RouterLink],
@@ -523,6 +532,8 @@ export class ConsultationStartPageComponent {
   });
 
   constructor() {
+    this.hydrateCache();
+
     this.api
       .getDoctors()
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -531,6 +542,7 @@ export class ConsultationStartPageComponent {
           const enabledDoctors = doctors.filter((doctor) => doctor.telemedicineEnabled);
           this.doctors.set(enabledDoctors);
           this.loadingDoctors.set(false);
+          this.persistCache();
           if (!enabledDoctors.length) {
             return;
           }
@@ -634,7 +646,42 @@ export class ConsultationStartPageComponent {
       .subscribe((slots) => {
         this.availabilityByDoctor.update((current) => ({ ...current, [doctorId]: slots }));
         this.loadingDoctorIds.update((ids) => ids.filter((id) => id !== doctorId));
+        this.persistCache();
       });
+  }
+
+  private hydrateCache(): void {
+    try {
+      const raw = sessionStorage.getItem(START_PAGE_CACHE_KEY);
+      if (!raw) {
+        return;
+      }
+
+      const cached = JSON.parse(raw) as StartPageCache;
+      if (!cached.savedAt || Date.now() - cached.savedAt > START_PAGE_CACHE_TTL_MS) {
+        sessionStorage.removeItem(START_PAGE_CACHE_KEY);
+        return;
+      }
+
+      this.doctors.set(cached.doctors ?? []);
+      this.availabilityByDoctor.set(cached.availabilityByDoctor ?? {});
+      this.loadingDoctors.set(false);
+    } catch {
+      sessionStorage.removeItem(START_PAGE_CACHE_KEY);
+    }
+  }
+
+  private persistCache(): void {
+    try {
+      const payload: StartPageCache = {
+        savedAt: Date.now(),
+        doctors: this.doctors(),
+        availabilityByDoctor: this.availabilityByDoctor()
+      };
+      sessionStorage.setItem(START_PAGE_CACHE_KEY, JSON.stringify(payload));
+    } catch {
+      // Ignore cache persistence errors.
+    }
   }
 }
 
