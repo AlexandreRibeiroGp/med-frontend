@@ -14,10 +14,9 @@ import { filter } from 'rxjs';
         <div class="hero-copy">
           <p class="eyebrow">Consulta online com preço acessível</p>
           <p class="brand-kicker">MedCallOn</p>
-          <h1>Consulta médica online com atendimento simples e seguro.</h1>
-            <p class="hero-note">Consulta médica online de forma simples e segura.</p>
+          <h1>Consulta médica online de forma simples e segura.</h1>
           <div class="hero-actions">
-            <a href="#como-funciona" class="secondary-action">Como funciona</a>
+            <a routerLink="/comece" class="secondary-action">Agendar consulta</a>
           </div>
         </div>
 
@@ -27,12 +26,12 @@ import { filter } from 'rxjs';
             class="summary-card"
             (click)="trackCta('summary_card_click')"
           >
-            <p class="summary-label">Atendimento online</p>
+            <p class="summary-label">Atendimento online por apenas:</p>
             <strong>R$ 49,90</strong>
             <ul>
-              <li>Profissional habilitado</li>
+              <li>Médicos habilitados</li>
               <li>Pagamento por Pix</li>
-              <li>Acesso pela plataforma</li>
+              <li>Atendimento pela plataforma</li>
             </ul>
           </a>
         </div>
@@ -55,25 +54,25 @@ import { filter } from 'rxjs';
 
       <section class="steps-section" id="como-funciona">
         <div class="section-head">
-          <p class="section-tag">Como funciona</p>
-          <h2>Da entrada ao atendimento.</h2>
+          <p class="section-tag">Passo a passo</p>
+          <h2>Da escolha do horário ao pagamento.</h2>
         </div>
 
         <div class="steps-grid">
           <article class="step-card">
             <span>1</span>
-            <h3>Cadastro</h3>
-            <p>Preencha seus dados para iniciar a consulta.</p>
+            <h3>Escolha do horário</h3>
+            <p>Verifique os médicos disponíveis e selecione o melhor dia e horário para sua consulta.</p>
           </article>
           <article class="step-card">
             <span>2</span>
-            <h3>Pagamento</h3>
-            <p>Conclua o Pix para liberar o atendimento.</p>
+            <h3>Cadastro ou login</h3>
+            <p>Faça seu cadastro ou login na plataforma.</p>
           </article>
           <article class="step-card">
             <span>3</span>
-            <h3>Consulta</h3>
-            <p>Entre na sala e fale com o médico pela plataforma.</p>
+            <h3>Pagamento via Pix</h3>
+            <p>Realize o pagamento via Pix.</p>
           </article>
         </div>
       </section>
