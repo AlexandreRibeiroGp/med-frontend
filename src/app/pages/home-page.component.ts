@@ -148,19 +148,6 @@ import { filter } from 'rxjs';
           </div>
         </section>
 
-      <section class="topics-section">
-        <div class="section-head centered">
-          <p class="section-tag">Conteúdos</p>
-          <h2>Temas que as pessoas mais procuram.</h2>
-        </div>
-
-        <div class="topics-grid">
-          <a routerLink="/medico-online-pix" class="topic-card">Médico online com pagamento por Pix</a>
-          <a routerLink="/consulta-online-atestado" class="topic-card">Consulta online e atestado médico</a>
-          <a routerLink="/clinico-geral-online" class="topic-card">Clínico geral online</a>
-        </div>
-      </section>
-
       <footer class="legal-footer">
         <div class="footer-cta">
           <p class="section-tag">Comece agora</p>
