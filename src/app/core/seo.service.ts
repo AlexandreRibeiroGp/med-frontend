@@ -1,4 +1,4 @@
-import { DOCUMENT } from '@angular/common';
+﻿import { DOCUMENT } from '@angular/common';
 import { inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 import { ActivatedRouteSnapshot, NavigationEnd, Router } from '@angular/router';
@@ -44,8 +44,8 @@ export class SeoService {
     const routeData = this.deepestRoute(this.router.routerState.snapshot.root).data['seo'] as SeoData | undefined;
 
     return routeData ?? {
-      title: 'MedCallOn | Consulta medica online',
-      description: 'Consulta medica online com pagamento por Pix e atendimento pela plataforma MedCallOn.',
+      title: 'MedCallOn | Consulta médica online',
+      description: 'Consulta médica online com pagamento por Pix e atendimento pela plataforma MedCallOn.',
       canonicalPath: '/',
       index: true,
       schema: 'home'
@@ -193,16 +193,16 @@ export class SeoService {
           '@type': 'MedicalWebPage',
           '@id': `${canonicalUrl}#webpage`,
           url: canonicalUrl,
-          name: schema === 'start' ? 'Medicos disponiveis para consulta online' : 'Consulta medica online',
+          name: schema === 'start' ? 'Médicos disponíveis para consulta online' : 'Consulta médica online',
           description:
             schema === 'start'
-              ? 'Pagina para ver medicos disponiveis, criar conta ou entrar na MedCallOn.'
-              : 'Consulta medica online com cadastro, pagamento por Pix e atendimento pela plataforma.',
+              ? 'Página para ver médicos disponíveis, criar conta ou entrar na MedCallOn.'
+              : 'Consulta médica online com cadastro, pagamento por Pix e atendimento pela plataforma.',
           isPartOf: { '@id': `${SITE_URL}/#website` },
           publisher: { '@id': `${SITE_URL}/#organization` },
           mainEntity: {
             '@type': 'MedicalService',
-            name: 'Consulta medica online',
+            name: 'Consulta médica online',
             provider: { '@id': `${SITE_URL}/#organization` },
             areaServed: 'BR',
             availableChannel: {
@@ -269,3 +269,6 @@ export class SeoService {
     return this.router.url.split('?')[0].split('#')[0] || '/';
   }
 }
+
+
+

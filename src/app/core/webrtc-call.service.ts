@@ -600,10 +600,10 @@ export class WebRtcCallService {
 
     if (!newTrack) {
       this.toast.error(
-        'Dispositivo indisponivel',
+        'Dispositivo indisponível',
         kind === 'audio'
-          ? 'Nao foi possivel ativar o microfone neste dispositivo.'
-          : 'Nao foi possivel ativar a camera neste dispositivo.'
+          ? 'Não foi possível ativar o microfone neste dispositivo.'
+          : 'Não foi possível ativar a câmera neste dispositivo.'
       );
       return;
     }
@@ -691,22 +691,22 @@ export class WebRtcCallService {
       switch (error.name) {
         case 'NotAllowedError':
         case 'PermissionDeniedError':
-          return new Error('O navegador bloqueou o acesso. Libere camera e microfone no cadeado ao lado da URL.');
+          return new Error('O navegador bloqueou o acesso. Libere câmera e microfone no cadeado ao lado da URL.');
         case 'NotFoundError':
         case 'DevicesNotFoundError':
-          return new Error('Nenhuma camera ou microfone compativel foi encontrado neste dispositivo.');
+          return new Error('Nenhuma câmera ou microfone compatível foi encontrado neste dispositivo.');
         case 'NotReadableError':
         case 'TrackStartError':
-          return new Error('A camera ou o microfone ja esta sendo usado por outro aplicativo.');
+          return new Error('A câmera ou o microfone já está sendo usado por outro aplicativo.');
         case 'OverconstrainedError':
         case 'ConstraintNotSatisfiedError':
-          return new Error('Nao foi possivel iniciar a camera ou o microfone com as configuracoes atuais.');
+          return new Error('Não foi possível iniciar a câmera ou o microfone com as configurações atuais.');
         case 'SecurityError':
-          return new Error('O navegador bloqueou o acesso por seguranca.');
+          return new Error('O navegador bloqueou o acesso por segurança.');
       }
     }
 
-    return new Error('Nao foi possivel acessar camera e microfone.');
+    return new Error('Não foi possível acessar câmera e microfone.');
   }
 
   private resetRoomState(): void {
@@ -725,3 +725,6 @@ export class WebRtcCallService {
     }
   }
 }
+
+
+

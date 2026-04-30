@@ -128,9 +128,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
                 </button>
               </div>
               <form [formGroup]="cookiesForm">
-                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="title" placeholder="Título" />
                 <input formControlName="summary" placeholder="Resumo" />
-                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+                <textarea formControlName="content" placeholder="Conteúdo completo"></textarea>
               </form>
             </section>
           </div>
@@ -462,7 +462,7 @@ export class AdminPageComponent {
   readonly operationalChecklist = [
     {
       priority: 'Alta',
-      title: 'Completar identificacao juridica nas politicas',
+      title: 'Completar identificacao jurídica nas politicas',
       description: 'Preencha razão social, CNPJ, endereço, canal de contato e encarregado de dados nos textos publicados.',
       action: 'Ajuste os tres documentos legais antes de anunciar ou captar pacientes em escala.'
     },
@@ -475,7 +475,7 @@ export class AdminPageComponent {
     {
       priority: 'Alta',
       title: 'Assinatura digital para documentos clinicos',
-      description: 'Receitas, atestados e outros documentos válidos exigem fluxo de assinatura apropriado quando emitidos ao paciente.',
+      description: 'Receitas, atestados e outros documentos válidos exigem fluxo de assinatura aprópriado quando emitidos ao paciente.',
       action: 'Feche o provedor e a política operacional antes de liberar emissão ampla em produção.'
     },
     {
@@ -494,7 +494,7 @@ export class AdminPageComponent {
       priority: 'Media',
       title: 'Plano de resposta a incidentes e suporte LGPD',
       description: 'Prepare fluxo para incidente de segurança, atendimento ao titular e revisão periódica das permissões internas.',
-      action: 'Nomeie responsaveis e crie procedimento pratico para producao.'
+      action: 'Nomeie responsáveis e crie procedimento pratico para produção.'
     }
   ] as const;
   private selectedDoctorPhoto: File | null = null;
@@ -557,7 +557,7 @@ export class AdminPageComponent {
       .subscribe({
         next: () => {
           this.loading.set(false);
-          this.setMessage('Medico cadastrado com sucesso.');
+          this.setMessage('Médico cadastrado com sucesso.');
           this.selectedDoctorPhoto = null;
           this.doctorPhotoName.set('');
           this.doctorForm.reset({
@@ -623,7 +623,7 @@ export class AdminPageComponent {
   submitLegalDocument(documentType: LegalDocumentType, form: FormGroup): void {
     if (form.invalid) {
       form.markAllAsTouched();
-      this.setError('Revise os campos do documento legal antes de publicar.');
+      this.setError('Revise os campos do documento legal antes de públicar.');
       return;
     }
 
@@ -640,12 +640,12 @@ export class AdminPageComponent {
       .subscribe({
         next: () => {
           this.loading.set(false);
-          this.setMessage('Documento legal publicado com sucesso.');
+          this.setMessage('Documento legal públicado com sucesso.');
           this.loadData();
         },
         error: (error: { error?: { message?: string } }) => {
           this.loading.set(false);
-          this.setError(error.error?.message ?? 'Não foi possível publicar o documento legal.');
+          this.setError(error.error?.message ?? 'Não foi possível públicar o documento legal.');
         }
       });
   }
@@ -711,4 +711,6 @@ export class AdminPageComponent {
     this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }
+
+
 

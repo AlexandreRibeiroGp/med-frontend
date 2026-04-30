@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
@@ -147,7 +147,7 @@ export class CallRoomPageComponent {
     this.route.paramMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const appointmentId = Number(params.get('appointmentId'));
       if (!appointmentId) {
-        this.setError('Consulta invalida.');
+        this.setError('Consulta inválida.');
         void this.router.navigateByUrl('/dashboard');
         return;
       }
@@ -165,7 +165,7 @@ export class CallRoomPageComponent {
           next: (appointments) => {
             const appointment = appointments.find((item) => item.id === appointmentId) ?? null;
             if (!appointment) {
-              this.setError('Nao foi possivel localizar a consulta informada.');
+              this.setError('Não foi possível localizar a consulta informada.');
               void this.router.navigateByUrl('/dashboard');
               return;
             }
@@ -174,7 +174,7 @@ export class CallRoomPageComponent {
             this.appointment.set(appointment);
           },
           error: () => {
-            this.setError('Nao foi possivel carregar os dados da consulta. Volte ao painel e tente novamente.');
+            this.setError('Não foi possível carregar os dados da consulta. Volte ao painel e tente novamente.');
           }
         });
     });
@@ -188,3 +188,5 @@ export class CallRoomPageComponent {
     this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
   }
 }
+
+

@@ -650,3 +650,5 @@ export class ConsultationStartPageComponent {
       .sort((left, right) => new Date(left.startAt).getTime() - new Date(right.startAt).getTime());
   }
 }
+
+

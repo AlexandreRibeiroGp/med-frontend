@@ -76,7 +76,7 @@ function monthKeyInSaoPaulo(date: Date): string {
         </div>
 
         <div class="sidebar-block">
-          <p class="label">Navegacao</p>
+          <p class="label">Navegação</p>
           <button
             type="button"
             [class.active]="section() === primarySection()"
@@ -317,7 +317,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             alt="QR Code Pix"
           />
 
-          <label class="pix-panel__label" for="pix-modal-code">Codigo copia e cola</label>
+          <label class="pix-panel__label" for="pix-modal-code">Código copia e cola</label>
           <textarea id="pix-modal-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
 
           <div class="pix-modal__actions">
@@ -904,7 +904,7 @@ export class DashboardPageComponent {
       }
 
       if (paymentStatus === 'success') {
-        this.setFeedback('Pagamento confirmado. A consulta sera liberada assim que o backend receber a notificacao do Mercado Pago.');
+        this.setFeedback('Pagamento confirmado. A consulta será liberada assim que o backend receber a notificação do Mercado Pago.');
       } else if (paymentStatus === 'pending') {
         this.setFeedback('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
       } else if (paymentStatus === 'failure') {
@@ -1211,7 +1211,7 @@ export class DashboardPageComponent {
                 doctor_id: doctor.id
               });
               this.startPixPaymentPolling(checkout.payment.id, doctor);
-            this.setFeedback('Pix gerado com sucesso. O QR Code abriu em destaque para voce finalizar o pagamento.');
+            this.setFeedback('Pix gerado com sucesso. O QR Code abriu em destaque para você finalizar o pagamento.');
             this.toast.success('Pix gerado', 'O QR Code e o código Pix já estão abertos para pagamento.');
             window.setTimeout(() => {
               this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -1229,7 +1229,7 @@ export class DashboardPageComponent {
           this.loadBaseData();
           if (checkout.payment.checkoutUrl) {
             this.setFeedback('Redirecionando para o pagamento no Mercado Pago...');
-            this.toast.info('Pagamento iniciado', 'Voce sera redirecionado para concluir o pagamento.');
+            this.toast.info('Pagamento iniciado', 'Você será redirecionado para concluir o pagamento.');
             window.location.href = checkout.payment.checkoutUrl;
             return;
           }
@@ -1321,7 +1321,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.setFeedback('Horarios gerados com sucesso em blocos de 15 minutos.');
+          this.setFeedback('Horários gerados com sucesso em blocos de 15 minutos.');
           this.toast.success('Agenda atualizada', 'Os horários do intervalo já estão disponíveis para agendamento.');
           this.availabilityForm.reset({
             date: '',
@@ -1378,7 +1378,7 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: () => {
-          this.setFeedback('Horario removido com sucesso.');
+          this.setFeedback('Horário removido com sucesso.');
           this.toast.success('Agenda atualizada', 'O horário foi excluído da sua agenda.');
           this.loadBaseData();
         },
@@ -1691,18 +1691,29 @@ export class DashboardPageComponent {
 
   private loadBaseData(): void {
     if (this.auth.role() === 'PATIENT' && this.section() === 'care') {
-      this.api
-        .getSpecialties()
-        .pipe(
-          catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error))),
-          takeUntilDestroyed(this.destroyRef)
+      forkJoin({
+        appointments: this.appointmentsUnavailable()
+          ? of([])
+          : this.api.getAppointments().pipe(
+              catchError((error: HttpErrorResponse) => {
+                if (error.status === 404) {
+                  this.appointmentsUnavailable.set(true);
+                  return of([]);
+                }
+                return throwError(() => error);
+              })
+            ),
+        specialties: this.api.getSpecialties().pipe(
+          catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error)))
         )
+      })
+        .pipe(takeUntilDestroyed(this.destroyRef))
         .subscribe({
-          next: (specialties) => {
+          next: ({ appointments, specialties }) => {
             this.error.set('');
             this.specialties.set(specialties);
+            this.appointments.set(appointments);
             this.medicalRecords.set([]);
-            this.appointments.set([]);
             this.loadRoleSpecificData();
           },
           error: () => this.handleError('Não foi possível carregar o painel com os dados atuais.')
@@ -1960,5 +1971,8 @@ export class DashboardPageComponent {
     });
   }
 }
+
+
+
 
 

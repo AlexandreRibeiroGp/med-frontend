@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+﻿import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, input, output, signal } from '@angular/core';
 import { ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { AvailabilitySlotResponse } from '../../core/models';
@@ -17,7 +17,7 @@ interface CalendarCell {
   template: `
     <section class="board">
       <article class="card">
-        <h3>Gerar horarios do dia</h3>
+        <h3>Gerar horários do dia</h3>
         <form [formGroup]="availabilityForm()" (ngSubmit)="createAvailability.emit()">
           <div class="availability-grid">
             <div class="full">
@@ -72,12 +72,12 @@ interface CalendarCell {
             </label>
           </div>
           <p class="helper">Os minutos seguem blocos de 15 em 15 para os pacientes.</p>
-          <button type="submit">Gerar horarios</button>
+          <button type="submit">Gerar horários</button>
         </form>
       </article>
 
       <article class="card">
-        <h3>Fechar horarios por intervalo</h3>
+        <h3>Fechar horários por intervalo</h3>
         <form [formGroup]="deleteRangeForm()" (ngSubmit)="removeAvailabilityRange.emit()">
           <div class="availability-grid">
             <div class="full">
@@ -141,7 +141,7 @@ interface CalendarCell {
           <div *ngFor="let slot of availability()" class="timeline-item">
             <div class="timeline-main">
               <strong>{{ slot.startAt | date: 'dd/MM HH:mm' }}</strong>
-              <span>ate {{ slot.endAt | date: 'HH:mm' }}</span>
+              <span>até {{ slot.endAt | date: 'HH:mm' }}</span>
             </div>
             <button type="button" class="danger" (click)="removeAvailability.emit(slot.id)">Excluir</button>
           </div>
@@ -370,4 +370,6 @@ export class DoctorAgendaPanelComponent {
     return `${year}-${month}-${day}`;
   }
 }
+
+
 

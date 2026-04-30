@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models';
@@ -113,7 +113,7 @@ import { DoctorResponse, PatientProfileResponse, Role } from '../../core/models'
                 <span>Foto do perfil</span>
                 <div class="photo-row">
                   <div class="doctor-photo-preview">
-                    <img *ngIf="doctorProfile()?.profilePhotoUrl; else doctorPhotoFallback" [src]="doctorProfile()?.profilePhotoUrl!" [alt]="doctorProfile()?.user?.fullName ?? 'Foto do medico'" />
+                    <img *ngIf="doctorProfile()?.profilePhotoUrl; else doctorPhotoFallback" [src]="doctorProfile()?.profilePhotoUrl!" [alt]="doctorProfile()?.user?.fullName ?? 'Foto do médico'" />
                     <ng-template #doctorPhotoFallback>
                       {{ doctorProfile()?.user?.fullName?.charAt(0) ?? 'M' }}
                     </ng-template>
@@ -295,3 +295,5 @@ export class ProfilePanelComponent {
     }
   }
 }
+
+

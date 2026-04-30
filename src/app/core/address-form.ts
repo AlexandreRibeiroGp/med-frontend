@@ -1,4 +1,4 @@
-export interface AddressFormValue {
+﻿export interface AddressFormValue {
   postalCode: string;
   street: string;
   number: string;
@@ -94,3 +94,4 @@ export function composeAddress(address: AddressFormValue): string | null {
 
   return parts.length ? parts.join(' | ') : null;
 }
+

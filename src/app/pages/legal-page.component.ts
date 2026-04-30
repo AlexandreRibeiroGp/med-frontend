@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, computed, inject } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -178,7 +178,7 @@ const LEGAL_DOCUMENTS: Record<LegalDocumentKey, LegalDocument> = {
         <p class="eyebrow">{{ document().eyebrow }}</p>
         <h1>{{ document().title }}</h1>
         <p class="summary">{{ document().summary }}</p>
-        <p class="updated-at">Ultima atualizacao: {{ document().updatedAt }}</p>
+        <p class="updated-at">Última atualização: {{ document().updatedAt }}</p>
       </header>
 
       <section class="content-card" *ngFor="let section of document().sections">
@@ -282,3 +282,4 @@ export class LegalPageComponent {
     return LEGAL_DOCUMENTS[key] ?? LEGAL_DOCUMENTS.privacidade;
   });
 }
+

@@ -33,7 +33,7 @@ import { AnalyticsService } from '../core/analytics.service';
         <div class="assurance-strip">
           <span>MedCallOn</span>
           <span>Profissionais com CRM</span>
-          <span>Atendimento por plataforma própria</span>
+          <span>Aténdimento por plataforma própria</span>
         </div>
 
         <div class="switcher">
@@ -1045,6 +1045,8 @@ export class AuthPageComponent {
     this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }
+
+
 
 
 
