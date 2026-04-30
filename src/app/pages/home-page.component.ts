@@ -55,7 +55,6 @@ import { filter } from 'rxjs';
       <section class="steps-section" id="como-funciona">
         <div class="section-head">
           <p class="section-tag">Passo a passo</p>
-          <h2>Da escolha do horário ao pagamento.</h2>
         </div>
 
         <div class="steps-grid">
