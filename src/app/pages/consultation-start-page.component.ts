@@ -2,7 +2,7 @@
 import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { catchError, forkJoin, of } from 'rxjs';
+import { catchError, of } from 'rxjs';
 import { AuthService } from '../core/auth.service';
 import { BookingFlowService } from '../core/booking-flow.service';
 import { AvailabilitySlotResponse, DoctorResponse } from '../core/models';
@@ -53,6 +53,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
             </button>
           </div>
         </section>
+
+        <article class="empty-doctors" *ngIf="loadingDoctors()">
+          <strong>Carregando médicos e horários</strong>
+          <p>Estamos buscando os profissionais online com horários publicados.</p>
+        </article>
 
         <section class="doctor-card-list" *ngIf="doctorsForSelectedDate().length; else emptyDoctorsForDate">
           <div class="section-head">
@@ -114,7 +119,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <button type="button" class="close-button" (click)="closeDoctorSlots()">Fechar</button>
         </div>
 
-        <div class="slot-grid" *ngIf="slotsForModalDoctor().length; else emptySlots">
+        <p class="empty-text" *ngIf="isLoadingDoctorSlots(doctor.id)">Carregando horários desse médico...</p>
+
+        <div class="slot-grid" *ngIf="!isLoadingDoctorSlots(doctor.id) && slotsForModalDoctor().length; else emptySlots">
           <button type="button" *ngFor="let slot of slotsForModalDoctor()" (click)="chooseSlot(doctor, slot)">
             <strong>{{ slot.startAt | date: 'HH:mm' }}</strong>
             <span>Selecionar horário</span>
@@ -475,6 +482,8 @@ export class ConsultationStartPageComponent {
 
   readonly doctors = signal<DoctorResponse[]>([]);
   readonly availabilityByDoctor = signal<Record<number, AvailabilitySlotResponse[]>>({});
+  readonly loadingDoctors = signal(true);
+  readonly loadingDoctorIds = signal<number[]>([]);
   readonly selectedDate = signal('');
   readonly selectedDoctorForModal = signal<DoctorResponse | null>(null);
   readonly selectedSlotDoctor = signal<DoctorResponse | null>(null);
@@ -561,28 +570,17 @@ export class ConsultationStartPageComponent {
         next: (doctors) => {
           const enabledDoctors = doctors.filter((doctor) => doctor.telemedicineEnabled);
           this.doctors.set(enabledDoctors);
+          this.loadingDoctors.set(false);
           if (!enabledDoctors.length) {
             return;
           }
 
-          forkJoin(
-            enabledDoctors.map((doctor) =>
-              this.api.getDoctorAvailability(doctor.id).pipe(catchError(() => of([] as AvailabilitySlotResponse[])))
-            )
-          )
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: (slotsByDoctor) => {
-                const mapped: Record<number, AvailabilitySlotResponse[]> = {};
-                enabledDoctors.forEach((doctor, index) => {
-                  mapped[doctor.id] = slotsByDoctor[index] ?? [];
-                });
-                this.availabilityByDoctor.set(mapped);
-              },
-              error: () => this.availabilityByDoctor.set({})
-            });
+          enabledDoctors.forEach((doctor) => this.loadDoctorAvailability(doctor.id));
         },
-        error: () => this.doctors.set([])
+        error: () => {
+          this.loadingDoctors.set(false);
+          this.doctors.set([]);
+        }
       });
 
     effect(() => {
@@ -603,6 +601,9 @@ export class ConsultationStartPageComponent {
 
   openDoctorSlots(doctor: DoctorResponse): void {
     this.selectedDoctorForModal.set(doctor);
+    if (!(doctor.id in this.availabilityByDoctor())) {
+      this.loadDoctorAvailability(doctor.id);
+    }
   }
 
   closeDoctorSlots(): void {
@@ -648,6 +649,28 @@ export class ConsultationStartPageComponent {
     return (this.availabilityByDoctor()[doctorId] ?? [])
       .filter((slot) => slot.available && new Date(slot.endAt).getTime() > Date.now())
       .sort((left, right) => new Date(left.startAt).getTime() - new Date(right.startAt).getTime());
+  }
+
+  isLoadingDoctorSlots(doctorId: number): boolean {
+    return this.loadingDoctorIds().includes(doctorId) && !(doctorId in this.availabilityByDoctor());
+  }
+
+  private loadDoctorAvailability(doctorId: number): void {
+    if (this.loadingDoctorIds().includes(doctorId)) {
+      return;
+    }
+
+    this.loadingDoctorIds.update((ids) => [...ids, doctorId]);
+    this.api
+      .getDoctorAvailability(doctorId)
+      .pipe(
+        catchError(() => of([] as AvailabilitySlotResponse[])),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe((slots) => {
+        this.availabilityByDoctor.update((current) => ({ ...current, [doctorId]: slots }));
+        this.loadingDoctorIds.update((ids) => ids.filter((id) => id !== doctorId));
+      });
   }
 }
 

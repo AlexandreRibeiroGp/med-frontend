@@ -1025,38 +1025,22 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (doctors) => {
-          if (!doctors.length) {
+          const telemedicineDoctors = doctors.filter((doctor) => doctor.telemedicineEnabled !== false);
+          if (!telemedicineDoctors.length) {
             this.doctors.set([]);
             return;
           }
 
-          forkJoin(
-            doctors.map((doctor) =>
-              this.api.getDoctorAvailability(doctor.id).pipe(
-                catchError((error: HttpErrorResponse) => (error.status === 404 ? of([]) : throwError(() => error)))
-              )
-            )
-          )
-            .pipe(takeUntilDestroyed(this.destroyRef))
-            .subscribe({
-              next: (availabilityByDoctor) => {
-                const now = this.currentTime();
-                const availableDoctors = doctors.filter((doctor, index) =>
-                  availabilityByDoctor[index].some((slot) => slot.available && new Date(slot.endAt).getTime() > now)
-                );
+          this.doctors.set(telemedicineDoctors);
+          this.applyPendingDoctorSelection(telemedicineDoctors);
 
-                this.doctors.set(availableDoctors);
-                this.applyPendingDoctorSelection(availableDoctors);
-                if (this.selectedDoctor() && !availableDoctors.some((doctor) => doctor.id === this.selectedDoctor()?.id)) {
-                  this.selectedDoctor.set(null);
-                  this.selectedDoctorSlots.set([]);
-                  this.pendingBookingSlot.set(null);
-                }
-              },
-                error: () => this.handleError('Não foi possível carregar os médicos disponíveis.')
-            });
+          if (this.selectedDoctor() && !telemedicineDoctors.some((doctor) => doctor.id === this.selectedDoctor()?.id)) {
+            this.selectedDoctor.set(null);
+            this.selectedDoctorSlots.set([]);
+            this.pendingBookingSlot.set(null);
+          }
         },
-          error: () => this.handleError('Não foi possível carregar os médicos.')
+        error: () => this.handleError('Não foi possível carregar os médicos.')
       });
   }
 
