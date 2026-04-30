@@ -16,10 +16,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="hero-card">
         <a routerLink="/" class="back-link">Voltar</a>
         <p class="eyebrow">Agenda online</p>
-        <h1>Escolha o dia, veja os médicos online e reserve sua consulta.</h1>
-        <p class="lead">
-          Escolha o dia no calendário, toque no médico, selecione o horário e siga para login ou cadastro e pagamento.
-        </p>
 
         <section class="date-card" *ngIf="dateOptions().length; else emptyDoctors">
           <div class="section-head">
@@ -184,20 +180,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       text-transform: uppercase;
       letter-spacing: 0.18em;
       font-size: 0.76rem;
-    }
-    h1 {
-      max-width: 13ch;
-      margin: 0;
-      font-size: clamp(2.3rem, 5vw, 4.2rem);
-      line-height: 0.98;
-      letter-spacing: -0.05em;
-    }
-    .lead {
-      margin: 0;
-      color: #617b82;
-      line-height: 1.65;
-      font-size: 1.06rem;
-      max-width: 720px;
     }
     .date-card,
     .doctor-card-list,
@@ -428,13 +410,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       .hero-card {
         border-radius: 24px;
         padding: 20px 16px;
-      }
-      h1 {
-        max-width: 12ch;
-        font-size: 2rem;
-      }
-      .lead {
-        font-size: 0.96rem;
       }
       .doctor-list {
         grid-template-columns: 1fr;
