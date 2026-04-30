@@ -20,7 +20,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <p class="lead">
           Escolha o dia no calendário, toque no médico, selecione o horário e siga para login ou cadastro e pagamento.
         </p>
-        <p class="journey-copy">Passos: escolha o dia, abra o médico, selecione o horário e pague no Pix para liberar a consulta.</p>
 
         <section class="date-card" *ngIf="dateOptions().length; else emptyDoctors">
           <div class="section-head">
@@ -200,7 +199,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       font-size: 1.06rem;
       max-width: 720px;
     }
-    .journey-copy,
     .date-card,
     .doctor-card-list,
     .empty-doctors {
@@ -208,12 +206,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       border-radius: 24px;
       background: #fbfdfd;
       border: 1px solid rgba(23, 49, 58, 0.07);
-    }
-    .journey-copy {
-      margin: 0;
-      color: #35545d;
-      line-height: 1.6;
-      font-weight: 700;
     }
     .section-head strong,
     .empty-doctors strong {
