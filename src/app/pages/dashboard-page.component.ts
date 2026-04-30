@@ -85,7 +85,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             {{ primarySectionLabel() }}
           </button>
           <button
-            *ngIf="canAccessLockedPatientSections()"
+            *ngIf="showPatientSecondaryNavigation()"
             type="button"
             [class.active]="section() === 'calls'"
             (click)="navigateToSection('calls')"
@@ -93,7 +93,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             Sala de atendimento
           </button>
           <button
-            *ngIf="canAccessLockedPatientSections()"
+            *ngIf="showPatientSecondaryNavigation()"
             type="button"
             [class.active]="section() === 'history'"
             (click)="navigateToSection('history')"
@@ -101,7 +101,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             Documentos
           </button>
           <button
-            *ngIf="canAccessLockedPatientSections()"
+            *ngIf="showPatientSecondaryNavigation()"
             type="button"
             [class.active]="section() === 'profile'"
             (click)="navigateToSection('profile')"
@@ -783,6 +783,15 @@ export class DashboardPageComponent {
     this.appointments().some(
       (appointment) => appointment.paymentStatus === 'CONFIRMED' && appointment.status !== 'CANCELLED'
     )
+  );
+  readonly hasPendingPatientCheckout = computed(() =>
+    this.auth.role() === 'PATIENT' &&
+    (!!this.bookingIntent() || !!this.pendingBookingSlot() || !!this.pendingIntentSlotId()) &&
+    this.activePixPayment()?.paymentStatus !== 'CONFIRMED'
+  );
+  readonly showPatientSecondaryNavigation = computed(() =>
+    this.auth.role() !== 'PATIENT' ||
+    (!this.hasPendingPatientCheckout() && this.canAccessLockedPatientSections())
   );
   readonly currentMonthKey = computed(() => monthKeyInSaoPaulo(new Date(this.currentTime())));
   readonly completedAppointmentsCount = computed(() =>

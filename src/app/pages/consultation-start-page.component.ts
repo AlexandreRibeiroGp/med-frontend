@@ -18,40 +18,27 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <p class="eyebrow">Agenda online</p>
         <h1>Escolha o dia, veja os médicos online e reserve sua consulta.</h1>
         <p class="lead">
-          Selecione a data, clique no médico com horário aberto e siga para cadastro, login e pagamento.
+          Escolha o dia no calendário, toque no médico, selecione o horário e siga para login ou cadastro e pagamento.
         </p>
-
-        <div class="journey-strip">
-          <article>
-            <strong>1. Escolha o dia</strong>
-            <span>Veja as datas com horários publicados.</span>
-          </article>
-          <article>
-            <strong>2. Clique no médico</strong>
-            <span>Os horários desse dia abrem em um popup.</span>
-          </article>
-          <article>
-            <strong>3. Pague e libere a sala</strong>
-            <span>Depois do Pix confirmado, a sala fica disponível.</span>
-          </article>
-        </div>
+        <p class="journey-copy">Passos: escolha o dia, abra o médico, selecione o horário e pague no Pix para liberar a consulta.</p>
 
         <section class="date-card" *ngIf="dateOptions().length; else emptyDoctors">
           <div class="section-head">
             <strong>Escolha o dia</strong>
-            <span>Mostramos abaixo apenas médicos com horário aberto na data selecionada.</span>
+            <span>Escolha a data no calendário para ver os médicos com horário aberto.</span>
           </div>
-          <div class="date-strip">
-            <button
-              type="button"
-              *ngFor="let option of dateOptions()"
-              [class.active]="selectedDate() === option.value"
-              (click)="selectedDate.set(option.value)"
-            >
-              <strong>{{ option.day }}</strong>
-              <span>{{ option.label }}</span>
-            </button>
-          </div>
+          <label class="calendar-picker" for="booking-date">
+            <span>Data da consulta</span>
+            <input
+              id="booking-date"
+              type="date"
+              [value]="selectedDate()"
+              [min]="firstAvailableDate()"
+              [max]="lastAvailableDate()"
+              (change)="onSelectedDateChange(($any($event.target).value || '').trim())"
+            />
+          </label>
+          <p class="calendar-hint" *ngIf="selectedDateLabel()">Data selecionada: <strong>{{ selectedDateLabel() }}</strong></p>
         </section>
 
         <article class="empty-doctors" *ngIf="loadingDoctors()">
@@ -213,12 +200,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       font-size: 1.06rem;
       max-width: 720px;
     }
-    .journey-strip {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 12px;
-    }
-    .journey-strip article,
+    .journey-copy,
     .date-card,
     .doctor-card-list,
     .empty-doctors {
@@ -227,13 +209,17 @@ import { TelemedApiService } from '../core/telemed-api.service';
       background: #fbfdfd;
       border: 1px solid rgba(23, 49, 58, 0.07);
     }
-    .journey-strip strong,
+    .journey-copy {
+      margin: 0;
+      color: #35545d;
+      line-height: 1.6;
+      font-weight: 700;
+    }
     .section-head strong,
     .empty-doctors strong {
       display: block;
       margin-bottom: 4px;
     }
-    .journey-strip span,
     .section-head span,
     .empty-doctors p,
     .section-head p {
@@ -245,36 +231,36 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 4px;
       margin-bottom: 14px;
     }
-    .date-strip {
-      display: flex;
-      gap: 10px;
-      overflow-x: auto;
-      padding-bottom: 2px;
-    }
-    .date-strip button,
+    .calendar-picker,
+    .calendar-picker input,
     .slot-grid button,
     .doctor-card,
     .close-button,
     .auth-actions a {
-      border: 0;
       border-radius: 18px;
       font: inherit;
       text-decoration: none;
+    }
+    .calendar-picker {
+      display: grid;
+      gap: 8px;
+    }
+    .calendar-picker span {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: #35545d;
+    }
+    .calendar-picker input {
+      border: 1px solid rgba(23, 49, 58, 0.12);
+      padding: 14px 16px;
+      background: #ffffff;
+      color: #17313a;
       cursor: pointer;
     }
-    .date-strip button {
-      min-width: 96px;
-      padding: 12px 10px;
-      display: grid;
-      gap: 3px;
-      background: #f6f1e8;
-      color: #17313a;
-      font-weight: 800;
-      text-align: center;
-    }
-    .date-strip button.active {
-      background: linear-gradient(135deg, #112027, #183742);
-      color: #fff;
+    .calendar-hint {
+      margin: 10px 0 0;
+      color: #617b82;
+      line-height: 1.5;
     }
     .doctor-list {
       display: grid;
@@ -282,6 +268,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 12px;
     }
     .doctor-card {
+      border: 0;
+      cursor: pointer;
       width: 100%;
       display: grid;
       grid-template-columns: auto 1fr;
@@ -379,6 +367,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
       color: #617b82;
     }
     .close-button {
+      border: 0;
+      cursor: pointer;
       padding: 10px 14px;
       background: #f6f1e8;
       color: #17313a;
@@ -390,6 +380,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
       gap: 10px;
     }
     .slot-grid button {
+      border: 0;
+      cursor: pointer;
       padding: 14px 12px;
       display: grid;
       gap: 4px;
@@ -452,7 +444,6 @@ import { TelemedApiService } from '../core/telemed-api.service';
       .lead {
         font-size: 0.96rem;
       }
-      .journey-strip,
       .doctor-list {
         grid-template-columns: 1fr;
       }
@@ -550,6 +541,8 @@ export class ConsultationStartPageComponent {
     const option = this.dateOptions().find((item) => item.value === this.selectedDate());
     return option ? `${option.day} ${option.label}` : '';
   });
+  readonly firstAvailableDate = computed(() => this.dateOptions()[0]?.value ?? '');
+  readonly lastAvailableDate = computed(() => this.dateOptions()[this.dateOptions().length - 1]?.value ?? '');
 
   readonly selectedSlotLabel = computed(() => {
     const slot = this.selectedSlot();
@@ -612,6 +605,10 @@ export class ConsultationStartPageComponent {
 
   closeAuthPrompt(): void {
     this.showAuthPrompt.set(false);
+  }
+
+  onSelectedDateChange(value: string): void {
+    this.selectedDate.set(value);
   }
 
   chooseSlot(doctor: DoctorResponse, slot: AvailabilitySlotResponse): void {
