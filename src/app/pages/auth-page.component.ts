@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Observable, finalize, switchMap, tap } from 'rxjs';
 import { composeAddress } from '../core/address-form';
 import { AuthService } from '../core/auth.service';
+import { BookingFlowService } from '../core/booking-flow.service';
 import { LegalDocumentResponse } from '../core/models';
 import { TelemedApiService } from '../core/telemed-api.service';
 import { AnalyticsService } from '../core/analytics.service';
@@ -637,6 +638,7 @@ export class AuthPageComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly destroyRef = inject(DestroyRef);
   private readonly authService = inject(AuthService);
+  private readonly bookingFlow = inject(BookingFlowService);
   private readonly api = inject(TelemedApiService);
   private readonly analytics = inject(AnalyticsService);
 
@@ -696,10 +698,11 @@ export class AuthPageComponent {
     });
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const bookingIntent = this.bookingFlow.getIntent();
       const token = params.get('token')?.trim() ?? '';
       const doctorId = Number(params.get('doctorId'));
-      const doctorName = params.get('doctorName')?.trim() ?? '';
-      const source = params.get('source')?.trim() ?? '';
+      const doctorName = params.get('doctorName')?.trim() ?? bookingIntent?.doctorName ?? '';
+      const source = params.get('source')?.trim() ?? (bookingIntent ? 'start' : '');
       const intent = params.get('intent')?.trim() ?? '';
       const mode = params.get('mode')?.trim() ?? '';
 
@@ -939,6 +942,10 @@ export class AuthPageComponent {
   }
 
   private dashboardQueryParams(): Record<string, string> {
+    if (this.bookingFlow.getIntent()) {
+      return { ...this.authQueryParams(), flow: 'checkout' };
+    }
+
     return this.authQueryParams();
   }
 

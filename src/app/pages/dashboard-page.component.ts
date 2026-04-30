@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, ViewChild, computed, effect, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -6,6 +6,7 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { catchError, forkJoin, of, throwError, timer } from 'rxjs';
 import { AuthService } from '../core/auth.service';
+import { BookingFlowService } from '../core/booking-flow.service';
 import { CallSignalingService } from '../core/call-signaling.service';
 import {
   AppointmentResponse,
@@ -24,7 +25,6 @@ import { ToastService } from '../core/toast.service';
 import { CallQueuePanelComponent } from '../features/dashboard/call-queue-panel.component';
 import { DoctorAgendaPanelComponent } from '../features/dashboard/doctor-agenda-panel.component';
 import { HistoryPanelComponent } from '../features/dashboard/history-panel.component';
-import { PatientCarePanelComponent } from '../features/dashboard/patient-care-panel.component';
 import { ProfilePanelComponent } from '../features/dashboard/profile-panel.component';
 import { AnalyticsService } from '../core/analytics.service';
 import { FloatingCallService } from '../core/floating-call.service';
@@ -64,7 +64,6 @@ function monthKeyInSaoPaulo(date: Date): string {
     CallQueuePanelComponent,
     DoctorAgendaPanelComponent,
     HistoryPanelComponent,
-    PatientCarePanelComponent,
     ProfilePanelComponent
   ],
   template: `
@@ -109,7 +108,7 @@ function monthKeyInSaoPaulo(date: Date): string {
           >
             Meu perfil
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administraÃ§Ã£o</a>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -118,7 +117,7 @@ function monthKeyInSaoPaulo(date: Date): string {
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">Operação assistida</p>
+            <p class="eyebrow">OperaÃ§Ã£o assistida</p>
             <h1>{{ headline() }}</h1>
             <p *ngIf="subheadline()">{{ subheadline() }}</p>
           </div>
@@ -141,18 +140,25 @@ function monthKeyInSaoPaulo(date: Date): string {
         </p>
 
         <section *ngIf="section() === primarySection() && auth.role() === 'PATIENT'" #careSection class="panel-anchor">
-          <app-patient-care-panel
-            [patientProfile]="patientProfile()"
-            [specialties]="specialties()"
-            [doctors]="doctors()"
-            [selectedDoctor]="selectedDoctor()"
-            [selectedDoctorSlots]="visibleSelectedDoctorSlots()"
-            [selectedSlotId]="pendingBookingSlot()?.id ?? null"
-            [specialtyFilter]="specialtyFilter"
-            [consultationReason]="consultationReason"
-            (doctorSelected)="selectDoctor($event)"
-            (slotBooked)="bookSlot($event)"
-          />
+          <article class="checkout-card booking-entry-card" *ngIf="!pendingBookingSlot() || !selectedDoctor()">
+            <div>
+              <p class="eyebrow">Nova consulta</p>
+              <h3>{{ bookingIntent() ? 'Continue sua reserva' : 'Escolha seu horario na agenda publica' }}</h3>
+              <p class="muted" *ngIf="bookingIntent(); else noIntentCopy">
+                Sua selecao com <strong>{{ bookingIntent()?.doctorName }}</strong> foi carregada. Se o horario ainda estiver
+                disponivel, o pagamento abrira logo abaixo.
+              </p>
+              <ng-template #noIntentCopy>
+                <p class="muted">
+                  Agora a escolha de data, medico e horario acontece na pagina publica para deixar o fluxo mais simples.
+                </p>
+              </ng-template>
+            </div>
+
+            <div class="checkout-actions">
+              <a routerLink="/comece" class="pix">Escolher dia e horario</a>
+            </div>
+          </article>
         </section>
 
         <section
@@ -169,7 +175,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             <p class="eyebrow">Pagamento</p>
             <h3>Concluir reserva com {{ checkoutDoctor.user.fullName }}</h3>
             <p>
-              Horário selecionado:
+              HorÃ¡rio selecionado:
               <strong>{{ pendingBookingSlot()?.startAt | date: 'dd/MM HH:mm' }}</strong>
             </p>
             <p>
@@ -184,19 +190,19 @@ function monthKeyInSaoPaulo(date: Date): string {
                 Valor da consulta:
                 <strong>{{ checkoutAmountLabel() }}</strong>
               </p>
-            <p class="muted">A consulta só será liberada depois da confirmação do pagamento.</p>
+            <p class="muted">A consulta sÃ³ serÃ¡ liberada depois da confirmaÃ§Ã£o do pagamento.</p>
             <label class="consent-line">
               <input type="checkbox" [formControl]="checkoutConsentControl" />
               <span>
-                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuário
-                eletrônico e com os
+                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuÃ¡rio
+                eletrÃ´nico e com os
                 <a routerLink="/legal/termos">Termos de Uso</a>
                 e a
-                <a routerLink="/legal/privacidade">Política de Privacidade</a>.
+                <a routerLink="/legal/privacidade">PolÃ­tica de Privacidade</a>.
               </span>
             </label>
             <p *ngIf="checkoutConsentControl.touched && checkoutConsentControl.invalid" class="field-error">
-              O consentimento para telemedicina é obrigatório antes do pagamento.
+              O consentimento para telemedicina Ã© obrigatÃ³rio antes do pagamento.
             </p>
           </div>
 
@@ -212,7 +218,7 @@ function monthKeyInSaoPaulo(date: Date): string {
                 <p class="eyebrow">Pix gerado</p>
                 <h4>Finalize o pagamento sem sair da MedCallOn</h4>
                 <p class="muted">
-                  O QR Code e o código copia e cola ficam ativos até
+                  O QR Code e o cÃ³digo copia e cola ficam ativos atÃ©
                   <strong>{{ pixPayment.expiresAt | date: 'dd/MM HH:mm' }}</strong>.
                 </p>
               </div>
@@ -224,11 +230,11 @@ function monthKeyInSaoPaulo(date: Date): string {
                 alt="QR Code Pix"
               />
 
-              <label class="pix-panel__label" for="pix-code">Código copia e cola</label>
+              <label class="pix-panel__label" for="pix-code">CÃ³digo copia e cola</label>
               <textarea id="pix-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
 
               <div class="pix-panel__actions">
-                <button type="button" class="copy" (click)="copyPixCode()">Copiar código Pix</button>
+                <button type="button" class="copy" (click)="copyPixCode()">Copiar cÃ³digo Pix</button>
               </div>
 
               <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
@@ -483,6 +489,16 @@ function monthKeyInSaoPaulo(date: Date): string {
       font-weight: 700;
       cursor: pointer;
     }
+    .checkout-actions a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      text-decoration: none;
+    }
     .checkout-actions .pix {
       color: white;
       background: linear-gradient(135deg, #0e7b83, #0a5d65);
@@ -702,6 +718,7 @@ function monthKeyInSaoPaulo(date: Date): string {
 })
 export class DashboardPageComponent {
   readonly auth = inject(AuthService);
+  private readonly bookingFlow = inject(BookingFlowService);
   readonly callService = inject(CallSignalingService);
   private readonly api = inject(TelemedApiService);
   private readonly router = inject(Router);
@@ -738,6 +755,8 @@ export class DashboardPageComponent {
   readonly doctorProfile = signal<DoctorResponse | null>(null);
   readonly pendingDoctorId = signal<number | null>(null);
   readonly pendingDoctorName = signal('');
+  readonly bookingIntent = signal(this.bookingFlow.getIntent());
+  readonly pendingIntentSlotId = signal<number | null>(this.bookingFlow.getIntent()?.slotId ?? null);
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
   readonly showPixModal = signal(false);
@@ -836,7 +855,7 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-        return 'Médico';
+        return 'MÃ©dico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
@@ -844,16 +863,18 @@ export class DashboardPageComponent {
     return 'Paciente';
   });
     readonly headline = computed(() =>
-      this.auth.role() === 'DOCTOR' ? 'Painel de atendimento médico' : 'Painel do paciente'
+      this.auth.role() === 'DOCTOR' ? 'Painel de atendimento mÃ©dico' : 'Painel do paciente'
     );
     readonly subheadline = computed(() =>
       this.auth.role() === 'DOCTOR'
-        ? 'Cadastre horários, acompanhe consultas e publique prontuários.'
-        : ''
+        ? 'Cadastre horÃ¡rios, acompanhe consultas e publique prontuÃ¡rios.'
+        : this.bookingIntent()
+          ? 'Sua reserva escolhida na agenda publica ja esta pronta para seguir ao pagamento.'
+          : 'Use a agenda publica para escolher data, medico e horario antes de entrar no pagamento.'
     );
     readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
     readonly primarySectionLabel = computed(() =>
-      this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : 'Descobrir médicos'
+      this.auth.role() === 'DOCTOR' ? 'Agenda do mÃ©dico' : (this.bookingIntent() ? 'Pagamento' : 'Nova consulta')
     );
   readonly allowMockPayment = false;
   constructor() {
@@ -867,14 +888,18 @@ export class DashboardPageComponent {
       this.stopPixPaymentPolling();
     });
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
+      const bookingIntent = this.bookingFlow.getIntent();
       const paymentStatus = params.get('paymentStatus');
       const doctorId = Number(params.get('doctorId'));
       const doctorName = params.get('doctorName')?.trim() ?? '';
+      const flow = params.get('flow')?.trim() ?? '';
 
-      this.pendingDoctorId.set(Number.isFinite(doctorId) ? doctorId : null);
-      this.pendingDoctorName.set(doctorName);
+      this.bookingIntent.set(bookingIntent);
+      this.pendingIntentSlotId.set(bookingIntent?.slotId ?? null);
+      this.pendingDoctorId.set(Number.isFinite(doctorId) ? doctorId : (bookingIntent?.doctorId ?? null));
+      this.pendingDoctorName.set(doctorName || bookingIntent?.doctorName || '');
 
-      if (this.auth.role() === 'PATIENT' && Number.isFinite(doctorId)) {
+      if (this.auth.role() === 'PATIENT' && (Number.isFinite(doctorId) || flow === 'checkout' || !!bookingIntent)) {
         this.section.set('care');
       }
 
@@ -1024,10 +1049,10 @@ export class DashboardPageComponent {
                   this.pendingBookingSlot.set(null);
                 }
               },
-                error: () => this.handleError('Não foi possível carregar os médicos disponíveis.')
+                error: () => this.handleError('NÃ£o foi possÃ­vel carregar os mÃ©dicos disponÃ­veis.')
             });
         },
-          error: () => this.handleError('Não foi possível carregar os médicos.')
+          error: () => this.handleError('NÃ£o foi possÃ­vel carregar os mÃ©dicos.')
       });
   }
 
@@ -1063,6 +1088,16 @@ export class DashboardPageComponent {
       .subscribe({
         next: (slots) => {
           this.selectedDoctorSlots.set(slots);
+          const pendingSlotId = this.pendingIntentSlotId();
+          if (pendingSlotId !== null) {
+            const matchingSlot = slots.find((slot) => slot.id === pendingSlotId && slot.available);
+            if (matchingSlot) {
+              this.pendingBookingSlot.set(matchingSlot);
+            } else if (this.bookingIntent()) {
+              this.setFeedback('O horario selecionado nao esta mais disponivel. Escolha outro na agenda publica.');
+            }
+            this.pendingIntentSlotId.set(null);
+          }
           window.setTimeout(() => {
             this.careSection?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 80);
@@ -1072,7 +1107,7 @@ export class DashboardPageComponent {
           }
           this.toast.info('Sem horarios no momento', 'Esse medico esta sem horarios abertos agora.');
         },
-        error: () => this.handleError('Não foi possível carregar os horários deste médico.')
+        error: () => this.handleError('NÃ£o foi possÃ­vel carregar os horÃ¡rios deste mÃ©dico.')
       });
   }
 
@@ -1119,6 +1154,8 @@ export class DashboardPageComponent {
 
   cancelCheckout(): void {
     this.analytics.track('checkout_cancel');
+    this.bookingFlow.clearIntent();
+    this.bookingIntent.set(null);
     this.pendingBookingSlot.set(null);
     this.activePixPayment.set(null);
     this.showPixModal.set(false);
@@ -1402,7 +1439,7 @@ export class DashboardPageComponent {
           this.toast.success('Perfil atualizado', 'Seus dados profissionais foram salvos.');
         },
         error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'Não foi possível atualizar o perfil do médico.');
+            this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel atualizar o perfil do mÃ©dico.');
         }
       });
   }
@@ -1410,7 +1447,7 @@ export class DashboardPageComponent {
   uploadDoctorPhoto(file: File): void {
     const profile = this.doctorProfile();
     if (!profile) {
-        this.handleError('Não foi possível identificar o médico para enviar a foto.');
+        this.handleError('NÃ£o foi possÃ­vel identificar o mÃ©dico para enviar a foto.');
       return;
     }
 
@@ -1421,10 +1458,10 @@ export class DashboardPageComponent {
         next: (updatedProfile) => {
           this.doctorProfile.set(updatedProfile);
           this.setFeedback('Foto do perfil atualizada com sucesso.');
-            this.toast.success('Foto atualizada', 'A nova foto do médico já está disponível.');
+            this.toast.success('Foto atualizada', 'A nova foto do mÃ©dico jÃ¡ estÃ¡ disponÃ­vel.');
         },
         error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'Não foi possível enviar a foto do médico.');
+            this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel enviar a foto do mÃ©dico.');
         }
       });
   }
@@ -1459,7 +1496,7 @@ export class DashboardPageComponent {
         next: (profile) => this.selectedRecordPatientProfile.set(profile),
         error: () => {
           this.selectedRecordPatientProfile.set(null);
-          this.handleError('Não foi possível carregar os dados completos do paciente.');
+          this.handleError('NÃ£o foi possÃ­vel carregar os dados completos do paciente.');
         }
       });
   }
@@ -1481,7 +1518,7 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => this.finishRecordCreation('Link da receita enviado com sucesso.', false),
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível enviar o link da receita.');
+          this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel enviar o link da receita.');
         }
       });
   }
@@ -1496,9 +1533,9 @@ export class DashboardPageComponent {
       .saveDraftMedicalRecord(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.finishRecordCreation('Prontuário salvo com sucesso.', false),
+        next: () => this.finishRecordCreation('ProntuÃ¡rio salvo com sucesso.', false),
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Não foi possível salvar o prontuário.');
+          this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel salvar o prontuÃ¡rio.');
         }
       });
   }
@@ -1528,7 +1565,7 @@ export class DashboardPageComponent {
           } else if (response.medicalRecord.preferredCertificateType === 'A3') {
             this.toast.info(
               'Assinador local pendente',
-                'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do médico.'
+                'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do mÃ©dico.'
             );
           }
           this.setFeedback(response.message || 'Assinatura iniciada.');
@@ -1563,14 +1600,14 @@ export class DashboardPageComponent {
       this.toast.info(
         'Assinador aberto',
         response.medicalRecord.preferredCertificateType === 'A3'
-            ? 'O assinador local foi acionado para o médico selecionar o certificado A3.'
+            ? 'O assinador local foi acionado para o mÃ©dico selecionar o certificado A3.'
           : 'O assinador local foi acionado para o fluxo A1.'
       );
     } catch {
       this.toast.info(
         'Bridge local nao encontrado',
         response.medicalRecord.preferredCertificateType === 'A3'
-            ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do médico.'
+            ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do mÃ©dico.'
           : 'Nenhum assinador local A1 respondeu em 127.0.0.1:18999.'
       );
     }
@@ -1775,7 +1812,7 @@ export class DashboardPageComponent {
                 error: () => this.handleError('Nao foi possivel carregar sua agenda.')
               });
           },
-          error: () => this.handleError('Não foi possível localizar os dados do médico.')
+          error: () => this.handleError('NÃ£o foi possÃ­vel localizar os dados do mÃ©dico.')
         });
     }
   }
@@ -1892,6 +1929,8 @@ export class DashboardPageComponent {
 
     this.handledConfirmedPixPayments.add(payment.id);
     this.trackPixApprovedConversion(payment);
+    this.bookingFlow.clearIntent();
+    this.bookingIntent.set(null);
     this.pendingBookingSlot.set(null);
     this.showPixModal.set(false);
     this.consultationReason.reset('');
@@ -1921,3 +1960,4 @@ export class DashboardPageComponent {
     });
   }
 }
+
