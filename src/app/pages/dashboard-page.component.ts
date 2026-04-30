@@ -893,16 +893,17 @@ export class DashboardPageComponent {
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
       const bookingIntent = this.bookingFlow.getIntent();
       const paymentStatus = params.get('paymentStatus');
-      const doctorId = Number(params.get('doctorId'));
+      const doctorIdParam = params.get('doctorId');
+      const doctorId = doctorIdParam === null || doctorIdParam.trim() === '' ? null : Number(doctorIdParam);
       const doctorName = params.get('doctorName')?.trim() ?? '';
       const flow = params.get('flow')?.trim() ?? '';
 
       this.bookingIntent.set(bookingIntent);
       this.pendingIntentSlotId.set(bookingIntent?.slotId ?? null);
-      this.pendingDoctorId.set(Number.isFinite(doctorId) ? doctorId : (bookingIntent?.doctorId ?? null));
+      this.pendingDoctorId.set(doctorId !== null && Number.isFinite(doctorId) ? doctorId : (bookingIntent?.doctorId ?? null));
       this.pendingDoctorName.set(doctorName || bookingIntent?.doctorName || '');
 
-      if (this.auth.role() === 'PATIENT' && (Number.isFinite(doctorId) || flow === 'checkout' || !!bookingIntent)) {
+      if (this.auth.role() === 'PATIENT' && ((doctorId !== null && Number.isFinite(doctorId)) || flow === 'checkout' || !!bookingIntent)) {
         this.section.set('care');
       }
 
