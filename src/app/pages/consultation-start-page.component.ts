@@ -16,30 +16,30 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="hero-card">
         <a routerLink="/" class="back-link">Voltar</a>
         <p class="eyebrow">Agenda online</p>
-        <h1>Escolha o dia, veja os medicos online e reserve sua consulta.</h1>
+        <h1>Escolha o dia, veja os médicos online e reserve sua consulta.</h1>
         <p class="lead">
-          Selecione a data, clique no medico com horario aberto e siga para cadastro, login e pagamento.
+          Selecione a data, clique no médico com horário aberto e siga para cadastro, login e pagamento.
         </p>
 
         <div class="journey-strip">
           <article>
             <strong>1. Escolha o dia</strong>
-            <span>Veja as datas com horarios publicados.</span>
+            <span>Veja as datas com horários publicados.</span>
           </article>
           <article>
-            <strong>2. Clique no medico</strong>
-            <span>Os horarios desse dia abrem em um popup.</span>
+            <strong>2. Clique no médico</strong>
+            <span>Os horários desse dia abrem em um popup.</span>
           </article>
           <article>
             <strong>3. Pague e libere a sala</strong>
-            <span>Depois do Pix confirmado, a sala fica disponivel.</span>
+            <span>Depois do Pix confirmado, a sala fica disponível.</span>
           </article>
         </div>
 
         <section class="date-card" *ngIf="dateOptions().length; else emptyDoctors">
           <div class="section-head">
             <strong>Escolha o dia</strong>
-            <span>Mostramos abaixo apenas medicos com horario aberto na data selecionada.</span>
+            <span>Mostramos abaixo apenas médicos com horário aberto na data selecionada.</span>
           </div>
           <div class="date-strip">
             <button
@@ -56,8 +56,8 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
         <section class="doctor-card-list" *ngIf="doctorsForSelectedDate().length; else emptyDoctorsForDate">
           <div class="section-head">
-            <strong>Medicos online no dia selecionado</strong>
-            <span>Clique no medico para abrir os horarios disponiveis.</span>
+            <strong>Médicos online no dia selecionado</strong>
+            <span>Clique no médico para abrir os horários disponíveis.</span>
           </div>
 
           <div class="doctor-list">
@@ -75,7 +75,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
                 <strong>{{ doctor.user.fullName }}</strong>
                 <span>{{ specialtyLabel(doctor.specialty) }}</span>
                 <small>CRM {{ doctor.crm }}</small>
-                <em>Toque para ver horarios</em>
+                <em>Toque para ver horários</em>
               </div>
             </button>
           </div>
@@ -83,15 +83,15 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
         <ng-template #emptyDoctorsForDate>
           <article class="empty-doctors" *ngIf="dateOptions().length">
-            <strong>Sem horarios nesse dia</strong>
-            <p>Escolha outra data para ver medicos com horarios abertos.</p>
+            <strong>Sem horários nesse dia</strong>
+            <p>Escolha outra data para ver médicos com horários abertos.</p>
           </article>
         </ng-template>
 
         <ng-template #emptyDoctors>
           <article class="empty-doctors">
-            <strong>Medicos em atualizacao</strong>
-            <p>Nenhum horario aberto foi encontrado agora. Tente novamente em instantes.</p>
+            <strong>Médicos em atualização</strong>
+            <p>Nenhum horário aberto foi encontrado agora. Tente novamente em instantes.</p>
           </article>
         </ng-template>
       </section>
@@ -99,7 +99,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <aside class="summary-card">
         <span>Consulta online</span>
         <strong>R$ 49,90</strong>
-        <p>Fluxo simples: escolha do horario, cadastro ou login, Pix e sala de atendimento.</p>
+        <p>Fluxo simples: escolha do horário, cadastro ou login, Pix e sala de atendimento.</p>
       </aside>
     </main>
 
@@ -107,7 +107,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <section class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Horarios disponiveis</p>
+            <p class="eyebrow">Horários disponíveis</p>
             <h2>{{ doctor.user.fullName }}</h2>
             <p>{{ selectedDateLabel() }}</p>
           </div>
@@ -117,12 +117,12 @@ import { TelemedApiService } from '../core/telemed-api.service';
         <div class="slot-grid" *ngIf="slotsForModalDoctor().length; else emptySlots">
           <button type="button" *ngFor="let slot of slotsForModalDoctor()" (click)="chooseSlot(doctor, slot)">
             <strong>{{ slot.startAt | date: 'HH:mm' }}</strong>
-            <span>Selecionar horario</span>
+            <span>Selecionar horário</span>
           </button>
         </div>
 
         <ng-template #emptySlots>
-          <p class="empty-text">Esse medico nao tem mais horarios abertos nessa data.</p>
+          <p class="empty-text">Esse médico não tem mais horários abertos nessa data.</p>
         </ng-template>
       </section>
     </div>
@@ -138,11 +138,11 @@ import { TelemedApiService } from '../core/telemed-api.service';
           <button type="button" class="close-button" (click)="closeAuthPrompt()">Fechar</button>
         </div>
 
-        <p class="auth-copy">Para seguir ao pagamento, crie sua conta ou entre caso ja tenha cadastro.</p>
+        <p class="auth-copy">Para seguir ao pagamento, crie sua conta ou entre caso já tenha cadastro.</p>
 
         <div class="auth-actions">
           <a [routerLink]="'/auth'" [queryParams]="authQueryParams('patient')" class="primary">Criar conta</a>
-          <a [routerLink]="'/auth'" [queryParams]="authQueryParams('login')" class="secondary">Ja tenho conta</a>
+          <a [routerLink]="'/auth'" [queryParams]="authQueryParams('login')" class="secondary">Já tenho conta</a>
         </div>
       </section>
     </div>

@@ -70,7 +70,7 @@ function monthKeyInSaoPaulo(date: Date): string {
     <div class="dashboard">
       <aside class="sidebar">
         <div class="sidebar-summary">
-          <p class="label">Sessao ativa</p>
+          <p class="label">Sessão ativa</p>
           <h2>{{ auth.user()?.fullName }}</h2>
           <p class="muted">{{ roleLabel() }}</p>
         </div>
@@ -108,7 +108,7 @@ function monthKeyInSaoPaulo(date: Date): string {
           >
             Meu perfil
           </button>
-          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administraÃ§Ã£o</a>
+          <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
         </div>
 
         <button class="logout" type="button" (click)="logout()">Sair</button>
@@ -117,7 +117,7 @@ function monthKeyInSaoPaulo(date: Date): string {
       <main class="content">
         <header class="hero-card">
           <div>
-            <p class="eyebrow">OperaÃ§Ã£o assistida</p>
+            <p class="eyebrow">Operação assistida</p>
             <h1>{{ headline() }}</h1>
             <p *ngIf="subheadline()">{{ subheadline() }}</p>
           </div>
@@ -136,27 +136,27 @@ function monthKeyInSaoPaulo(date: Date): string {
         <p *ngIf="feedback()" class="feedback">{{ feedback() }}</p>
         <p *ngIf="error()" class="error">{{ error() }}</p>
         <p *ngIf="auth.role() === 'PATIENT' && !canAccessLockedPatientSections()" class="feedback">
-          Depois que o pagamento for confirmado, a sala de atendimento, documentos e meu perfil serao liberados automaticamente.
+          Depois que o pagamento for confirmado, a sala de atendimento, documentos e meu perfil serão liberados automaticamente.
         </p>
 
         <section *ngIf="section() === primarySection() && auth.role() === 'PATIENT'" #careSection class="panel-anchor">
           <article class="checkout-card booking-entry-card" *ngIf="!pendingBookingSlot() || !selectedDoctor()">
             <div>
               <p class="eyebrow">Nova consulta</p>
-              <h3>{{ bookingIntent() ? 'Continue sua reserva' : 'Escolha seu horario na agenda publica' }}</h3>
+              <h3>{{ bookingIntent() ? 'Continue sua reserva' : 'Escolha seu horário na agenda pública' }}</h3>
               <p class="muted" *ngIf="bookingIntent(); else noIntentCopy">
-                Sua selecao com <strong>{{ bookingIntent()?.doctorName }}</strong> foi carregada. Se o horario ainda estiver
-                disponivel, o pagamento abrira logo abaixo.
+                Sua seleção com <strong>{{ bookingIntent()?.doctorName }}</strong> foi carregada. Se o horário ainda estiver
+                disponível, o pagamento abrirá logo abaixo.
               </p>
               <ng-template #noIntentCopy>
                 <p class="muted">
-                  Agora a escolha de data, medico e horario acontece na pagina publica para deixar o fluxo mais simples.
+                  Agora a escolha de data, médico e horário acontece na página pública para deixar o fluxo mais simples.
                 </p>
               </ng-template>
             </div>
 
             <div class="checkout-actions">
-              <a routerLink="/comece" class="pix">Escolher dia e horario</a>
+              <a routerLink="/comece" class="pix">Escolher dia e horário</a>
             </div>
           </article>
         </section>
@@ -175,7 +175,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             <p class="eyebrow">Pagamento</p>
             <h3>Concluir reserva com {{ checkoutDoctor.user.fullName }}</h3>
             <p>
-              HorÃ¡rio selecionado:
+              Horário selecionado:
               <strong>{{ pendingBookingSlot()?.startAt | date: 'dd/MM HH:mm' }}</strong>
             </p>
             <p>
@@ -190,19 +190,19 @@ function monthKeyInSaoPaulo(date: Date): string {
                 Valor da consulta:
                 <strong>{{ checkoutAmountLabel() }}</strong>
               </p>
-            <p class="muted">A consulta sÃ³ serÃ¡ liberada depois da confirmaÃ§Ã£o do pagamento.</p>
+            <p class="muted">A consulta só será liberada depois da confirmação do pagamento.</p>
             <label class="consent-line">
               <input type="checkbox" [formControl]="checkoutConsentControl" />
               <span>
-                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuÃ¡rio
-                eletrÃ´nico e com os
+                Declaro que concordo com o atendimento por telemedicina, com o registro em prontuário
+                eletrônico e com os
                 <a routerLink="/legal/termos">Termos de Uso</a>
                 e a
-                <a routerLink="/legal/privacidade">PolÃ­tica de Privacidade</a>.
+                <a routerLink="/legal/privacidade">Política de Privacidade</a>.
               </span>
             </label>
             <p *ngIf="checkoutConsentControl.touched && checkoutConsentControl.invalid" class="field-error">
-              O consentimento para telemedicina Ã© obrigatÃ³rio antes do pagamento.
+              O consentimento para telemedicina é obrigatório antes do pagamento.
             </p>
           </div>
 
@@ -218,7 +218,7 @@ function monthKeyInSaoPaulo(date: Date): string {
                 <p class="eyebrow">Pix gerado</p>
                 <h4>Finalize o pagamento sem sair da MedCallOn</h4>
                 <p class="muted">
-                  O QR Code e o cÃ³digo copia e cola ficam ativos atÃ©
+                  O QR Code e o código copia e cola ficam ativos até
                   <strong>{{ pixPayment.expiresAt | date: 'dd/MM HH:mm' }}</strong>.
                 </p>
               </div>
@@ -230,11 +230,11 @@ function monthKeyInSaoPaulo(date: Date): string {
                 alt="QR Code Pix"
               />
 
-              <label class="pix-panel__label" for="pix-code">CÃ³digo copia e cola</label>
+              <label class="pix-panel__label" for="pix-code">Código copia e cola</label>
               <textarea id="pix-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
 
               <div class="pix-panel__actions">
-                <button type="button" class="copy" (click)="copyPixCode()">Copiar cÃ³digo Pix</button>
+                <button type="button" class="copy" (click)="copyPixCode()">Copiar código Pix</button>
               </div>
 
               <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
@@ -307,7 +307,7 @@ function monthKeyInSaoPaulo(date: Date): string {
           </div>
 
           <p class="pix-modal__subtitle">
-            Escaneie o QR Code ou copie o codigo Pix. Assim que o pagamento confirmar, a consulta sera liberada.
+            Escaneie o QR Code ou copie o código Pix. Assim que o pagamento confirmar, a consulta será liberada.
           </p>
 
           <img
@@ -321,8 +321,8 @@ function monthKeyInSaoPaulo(date: Date): string {
           <textarea id="pix-modal-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
 
           <div class="pix-modal__actions">
-            <button type="button" class="copy" (click)="copyPixCode()">Copiar codigo Pix</button>
-            <button type="button" class="ghost" (click)="refreshPixPayment()">Ja paguei, atualizar status</button>
+            <button type="button" class="copy" (click)="copyPixCode()">Copiar código Pix</button>
+            <button type="button" class="ghost" (click)="refreshPixPayment()">Já paguei, atualizar status</button>
           </div>
 
           <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
@@ -855,7 +855,7 @@ export class DashboardPageComponent {
   readonly roleLabel = computed(() => {
     const role = this.auth.role();
     if (role === 'DOCTOR') {
-        return 'MÃ©dico';
+        return 'Médico';
     }
     if (role === 'ADMIN') {
       return 'Administrador';
@@ -863,25 +863,25 @@ export class DashboardPageComponent {
     return 'Paciente';
   });
     readonly headline = computed(() =>
-      this.auth.role() === 'DOCTOR' ? 'Painel de atendimento mÃ©dico' : 'Painel do paciente'
+      this.auth.role() === 'DOCTOR' ? 'Painel de atendimento médico' : 'Painel do paciente'
     );
     readonly subheadline = computed(() =>
       this.auth.role() === 'DOCTOR'
-        ? 'Cadastre horÃ¡rios, acompanhe consultas e publique prontuÃ¡rios.'
+        ? 'Cadastre horários, acompanhe consultas e publique prontuários.'
         : this.bookingIntent()
-          ? 'Sua reserva escolhida na agenda publica ja esta pronta para seguir ao pagamento.'
-          : 'Use a agenda publica para escolher data, medico e horario antes de entrar no pagamento.'
+          ? 'Sua reserva escolhida na agenda pública já está pronta para seguir ao pagamento.'
+          : 'Use a agenda pública para escolher data, médico e horário antes de entrar no pagamento.'
     );
     readonly primarySection = computed<'care' | 'agenda'>(() => (this.auth.role() === 'DOCTOR' ? 'agenda' : 'care'));
     readonly primarySectionLabel = computed(() =>
-      this.auth.role() === 'DOCTOR' ? 'Agenda do mÃ©dico' : (this.bookingIntent() ? 'Pagamento' : 'Nova consulta')
+      this.auth.role() === 'DOCTOR' ? 'Agenda do médico' : (this.bookingIntent() ? 'Pagamento' : 'Nova consulta')
     );
   readonly allowMockPayment = false;
   constructor() {
     this.section.set(this.primarySection());
     this.api.getPublicLegalDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (documents) => this.legalDocuments.set(documents),
-      error: () => this.handleError('Nao foi possivel carregar os documentos legais atuais.')
+      error: () => this.handleError('Não foi possível carregar os documentos legais atuais.')
     });
     this.destroyRef.onDestroy(() => {
       this.callService.disconnect();
@@ -908,7 +908,7 @@ export class DashboardPageComponent {
       } else if (paymentStatus === 'pending') {
         this.setFeedback('Pagamento pendente. Aguarde a confirmacao para liberar a consulta.');
       } else if (paymentStatus === 'failure') {
-        this.handleError('O pagamento nao foi concluido. Tente novamente.');
+        this.handleError('O pagamento não foi concluído. Tente novamente.');
       }
     });
     effect(() => {
@@ -1000,7 +1000,7 @@ export class DashboardPageComponent {
 
   navigateToSection(target: 'care' | 'agenda' | 'calls' | 'history' | 'profile'): void {
     if (this.auth.role() === 'PATIENT' && target !== 'care' && !this.canAccessLockedPatientSections()) {
-      this.handleError('Essas opcoes sao liberadas depois da confirmacao do pagamento da consulta.');
+      this.handleError('Essas opções são liberadas depois da confirmação do pagamento da consulta.');
       return;
     }
     this.section.set(target);
@@ -1049,10 +1049,10 @@ export class DashboardPageComponent {
                   this.pendingBookingSlot.set(null);
                 }
               },
-                error: () => this.handleError('NÃ£o foi possÃ­vel carregar os mÃ©dicos disponÃ­veis.')
+                error: () => this.handleError('Não foi possível carregar os médicos disponíveis.')
             });
         },
-          error: () => this.handleError('NÃ£o foi possÃ­vel carregar os mÃ©dicos.')
+          error: () => this.handleError('Não foi possível carregar os médicos.')
       });
   }
 
@@ -1081,7 +1081,7 @@ export class DashboardPageComponent {
   selectDoctor(doctor: DoctorResponse): void {
     this.selectedDoctor.set(doctor);
     this.pendingBookingSlot.set(null);
-    this.setFeedback(`Medico selecionado: ${doctor.user.fullName}. Agora escolha um horario para seguir ao pagamento.`);
+    this.setFeedback(`Médico selecionado: ${doctor.user.fullName}. Agora escolha um horário para seguir ao pagamento.`);
     this.api
       .getDoctorAvailability(doctor.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -1094,7 +1094,7 @@ export class DashboardPageComponent {
             if (matchingSlot) {
               this.pendingBookingSlot.set(matchingSlot);
             } else if (this.bookingIntent()) {
-              this.setFeedback('O horario selecionado nao esta mais disponivel. Escolha outro na agenda publica.');
+              this.setFeedback('O horário selecionado não está mais disponível. Escolha outro na agenda pública.');
             }
             this.pendingIntentSlotId.set(null);
           }
@@ -1102,12 +1102,12 @@ export class DashboardPageComponent {
             this.careSection?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }, 80);
           if (slots.some((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())) {
-            this.toast.info('Horarios abertos', 'Escolha o dia e toque no horario desejado.');
+            this.toast.info('Horários abertos', 'Escolha o dia e toque no horário desejado.');
             return;
           }
-          this.toast.info('Sem horarios no momento', 'Esse medico esta sem horarios abertos agora.');
+          this.toast.info('Sem horários no momento', 'Esse médico está sem horários abertos agora.');
         },
-        error: () => this.handleError('NÃ£o foi possÃ­vel carregar os horÃ¡rios deste mÃ©dico.')
+        error: () => this.handleError('Não foi possível carregar os horários deste médico.')
       });
   }
 
@@ -1181,7 +1181,7 @@ export class DashboardPageComponent {
       return;
     }
     if (acceptedDocumentIds.length < 2) {
-      this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
+      this.handleError('Os documentos legais ativos ainda não foram carregados. Tente novamente em instantes.');
       return;
     }
     this.analytics.track('checkout_submit', {
@@ -1212,7 +1212,7 @@ export class DashboardPageComponent {
               });
               this.startPixPaymentPolling(checkout.payment.id, doctor);
             this.setFeedback('Pix gerado com sucesso. O QR Code abriu em destaque para voce finalizar o pagamento.');
-            this.toast.success('Pix gerado', 'O QR Code e o codigo Pix ja estao abertos para pagamento.');
+            this.toast.success('Pix gerado', 'O QR Code e o código Pix já estão abertos para pagamento.');
             window.setTimeout(() => {
               this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
@@ -1237,7 +1237,7 @@ export class DashboardPageComponent {
           this.handleError('O checkout foi criado sem URL de pagamento.');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento da consulta.');
+          this.handleError(error.error?.message ?? 'Não foi possível iniciar o pagamento da consulta.');
         }
       });
   }
@@ -1256,7 +1256,7 @@ export class DashboardPageComponent {
       return;
     }
     if (acceptedDocumentIds.length < 2) {
-      this.handleError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
+      this.handleError('Os documentos legais ativos ainda não foram carregados. Tente novamente em instantes.');
       return;
     }
     this.analytics.track('checkout_submit', {
@@ -1294,12 +1294,12 @@ export class DashboardPageComponent {
                 this.loadBaseData();
               },
               error: (error: { error?: { message?: string } }) => {
-                this.handleError(error.error?.message ?? 'Nao foi possivel confirmar o pagamento simulado.');
+                this.handleError(error.error?.message ?? 'Não foi possível confirmar o pagamento simulado.');
               }
             });
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar o pagamento simulado.');
+          this.handleError(error.error?.message ?? 'Não foi possível iniciar o pagamento simulado.');
         }
       });
   }
@@ -1322,7 +1322,7 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.setFeedback('Horarios gerados com sucesso em blocos de 15 minutos.');
-          this.toast.success('Agenda atualizada', 'Os horarios do intervalo ja estao disponiveis para agendamento.');
+          this.toast.success('Agenda atualizada', 'Os horários do intervalo já estão disponíveis para agendamento.');
           this.availabilityForm.reset({
             date: '',
             startHour: '07',
@@ -1333,7 +1333,7 @@ export class DashboardPageComponent {
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel gerar os horarios.');
+          this.handleError(error.error?.message ?? 'Não foi possível gerar os horários.');
         }
       });
   }
@@ -1356,7 +1356,7 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.setFeedback('Intervalo removido com sucesso.');
-          this.toast.success('Agenda atualizada', 'Os horarios do intervalo foram excluidos.');
+          this.toast.success('Agenda atualizada', 'Os horários do intervalo foram excluídos.');
           this.deleteRangeForm.reset({
             date: '',
             startHour: '07',
@@ -1367,7 +1367,7 @@ export class DashboardPageComponent {
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel excluir o intervalo.');
+          this.handleError(error.error?.message ?? 'Não foi possível excluir o intervalo.');
         }
       });
   }
@@ -1379,11 +1379,11 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.setFeedback('Horario removido com sucesso.');
-          this.toast.success('Agenda atualizada', 'O horario foi excluido da sua agenda.');
+          this.toast.success('Agenda atualizada', 'O horário foi excluído da sua agenda.');
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel excluir o horario.');
+          this.handleError(error.error?.message ?? 'Não foi possível excluir o horário.');
         }
       });
   }
@@ -1411,7 +1411,7 @@ export class DashboardPageComponent {
           this.toast.success('Perfil atualizado', 'Seus dados foram salvos.');
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel atualizar o perfil do paciente.');
+          this.handleError(error.error?.message ?? 'Não foi possível atualizar o perfil do paciente.');
         }
       });
   }
@@ -1439,7 +1439,7 @@ export class DashboardPageComponent {
           this.toast.success('Perfil atualizado', 'Seus dados profissionais foram salvos.');
         },
         error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel atualizar o perfil do mÃ©dico.');
+            this.handleError(error.error?.message ?? 'Não foi possível atualizar o perfil do médico.');
         }
       });
   }
@@ -1447,7 +1447,7 @@ export class DashboardPageComponent {
   uploadDoctorPhoto(file: File): void {
     const profile = this.doctorProfile();
     if (!profile) {
-        this.handleError('NÃ£o foi possÃ­vel identificar o mÃ©dico para enviar a foto.');
+        this.handleError('Não foi possível identificar o médico para enviar a foto.');
       return;
     }
 
@@ -1458,10 +1458,10 @@ export class DashboardPageComponent {
         next: (updatedProfile) => {
           this.doctorProfile.set(updatedProfile);
           this.setFeedback('Foto do perfil atualizada com sucesso.');
-            this.toast.success('Foto atualizada', 'A nova foto do mÃ©dico jÃ¡ estÃ¡ disponÃ­vel.');
+            this.toast.success('Foto atualizada', 'A nova foto do médico já está disponível.');
         },
         error: (error: { error?: { message?: string } }) => {
-            this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel enviar a foto do mÃ©dico.');
+            this.handleError(error.error?.message ?? 'Não foi possível enviar a foto do médico.');
         }
       });
   }
@@ -1496,7 +1496,7 @@ export class DashboardPageComponent {
         next: (profile) => this.selectedRecordPatientProfile.set(profile),
         error: () => {
           this.selectedRecordPatientProfile.set(null);
-          this.handleError('NÃ£o foi possÃ­vel carregar os dados completos do paciente.');
+          this.handleError('Não foi possível carregar os dados completos do paciente.');
         }
       });
   }
@@ -1518,7 +1518,7 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => this.finishRecordCreation('Link da receita enviado com sucesso.', false),
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel enviar o link da receita.');
+          this.handleError(error.error?.message ?? 'Não foi possível enviar o link da receita.');
         }
       });
   }
@@ -1533,9 +1533,9 @@ export class DashboardPageComponent {
       .saveDraftMedicalRecord(payload)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: () => this.finishRecordCreation('ProntuÃ¡rio salvo com sucesso.', false),
+        next: () => this.finishRecordCreation('Prontuário salvo com sucesso.', false),
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'NÃ£o foi possÃ­vel salvar o prontuÃ¡rio.');
+          this.handleError(error.error?.message ?? 'Não foi possível salvar o prontuário.');
         }
       });
   }
@@ -1546,11 +1546,11 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.setFeedback('PDF da receita gerado com sucesso.');
-          this.toast.success('PDF gerado', 'A receita ja pode ser baixada ou enviada para assinatura.');
+          this.toast.success('PDF gerado', 'A receita já pode ser baixada ou enviada para assinatura.');
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel gerar o PDF da receita.');
+          this.handleError(error.error?.message ?? 'Não foi possível gerar o PDF da receita.');
         }
       });
   }
@@ -1565,7 +1565,7 @@ export class DashboardPageComponent {
           } else if (response.medicalRecord.preferredCertificateType === 'A3') {
             this.toast.info(
               'Assinador local pendente',
-                'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do mÃ©dico.'
+                'Configure um bridge local de assinatura A3 para abrir o seletor do certificado no computador do médico.'
             );
           }
           this.setFeedback(response.message || 'Assinatura iniciada.');
@@ -1573,7 +1573,7 @@ export class DashboardPageComponent {
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel iniciar a assinatura digital.');
+          this.handleError(error.error?.message ?? 'Não foi possível iniciar a assinatura digital.');
         }
       });
   }
@@ -1594,20 +1594,20 @@ export class DashboardPageComponent {
       });
 
       if (!bridgeResponse.ok) {
-        throw new Error('Bridge local indisponivel');
+        throw new Error('Bridge local indisponível');
       }
 
       this.toast.info(
         'Assinador aberto',
         response.medicalRecord.preferredCertificateType === 'A3'
-            ? 'O assinador local foi acionado para o mÃ©dico selecionar o certificado A3.'
+            ? 'O assinador local foi acionado para o médico selecionar o certificado A3.'
           : 'O assinador local foi acionado para o fluxo A1.'
       );
     } catch {
       this.toast.info(
-        'Bridge local nao encontrado',
+        'Bridge local não encontrado',
         response.medicalRecord.preferredCertificateType === 'A3'
-            ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do mÃ©dico.'
+            ? 'Nenhum assinador local A3 respondeu em 127.0.0.1:18999. Instale ou inicie o bridge no computador do médico.'
           : 'Nenhum assinador local A1 respondeu em 127.0.0.1:18999.'
       );
     }
@@ -1623,20 +1623,20 @@ export class DashboardPageComponent {
       .subscribe({
         next: () => {
           this.setFeedback('PDF assinado enviado com sucesso.');
-          this.toast.success('Receita assinada', 'O documento assinado foi salvo no prontuario.');
+          this.toast.success('Receita assinada', 'O documento assinado foi salvo no prontuário.');
           this.loadBaseData();
         },
         error: (error: { error?: { message?: string } }) => {
-          this.handleError(error.error?.message ?? 'Nao foi possivel enviar o PDF assinado.');
+          this.handleError(error.error?.message ?? 'Não foi possível enviar o PDF assinado.');
         }
       });
   }
 
   openCallRoom(appointment: AppointmentResponse): void {
     if (!this.canJoinAppointment(appointment)) {
-      const message = 'A sala sera liberada 15 minutos antes da consulta e segue disponivel ate 2 horas depois.';
+      const message = 'A sala será liberada 15 minutos antes da consulta e segue disponível até 2 horas depois.';
       this.setFeedback(message);
-      this.toast.info('Sala indisponivel', message);
+      this.toast.info('Sala indisponível', message);
       return;
     }
 
@@ -1662,9 +1662,9 @@ export class DashboardPageComponent {
     try {
       await navigator.clipboard.writeText(pixCode);
       this.analytics.track('pix_code_copy');
-      this.toast.success('Codigo copiado', 'O codigo Pix foi copiado para a area de transferencia.');
+      this.toast.success('Código copiado', 'O código Pix foi copiado para a área de transferência.');
     } catch {
-      this.toast.error('Falha ao copiar', 'Nao foi possivel copiar o codigo Pix automaticamente.');
+      this.toast.error('Falha ao copiar', 'Não foi possível copiar o código Pix automaticamente.');
     }
   }
 
@@ -1705,7 +1705,7 @@ export class DashboardPageComponent {
             this.appointments.set([]);
             this.loadRoleSpecificData();
           },
-          error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
+          error: () => this.handleError('Não foi possível carregar o painel com os dados atuais.')
         });
       return;
     }
@@ -1746,7 +1746,7 @@ export class DashboardPageComponent {
           this.specialties.set(specialties);
           this.loadRoleSpecificData();
         },
-        error: () => this.handleError('Nao foi possivel carregar o painel com os dados atuais.')
+        error: () => this.handleError('Não foi possível carregar o painel com os dados atuais.')
       });
   }
 
@@ -1768,7 +1768,7 @@ export class DashboardPageComponent {
         )
         .subscribe({
           next: (profile) => this.patientProfile.set(profile),
-          error: () => this.handleError('Nao foi possivel carregar o perfil do paciente.')
+          error: () => this.handleError('Não foi possível carregar o perfil do paciente.')
         });
     }
 
@@ -1809,10 +1809,10 @@ export class DashboardPageComponent {
               )
               .subscribe({
                 next: (slots) => this.availability.set(slots),
-                error: () => this.handleError('Nao foi possivel carregar sua agenda.')
+                error: () => this.handleError('Não foi possível carregar sua agenda.')
               });
           },
-          error: () => this.handleError('NÃ£o foi possÃ­vel localizar os dados do mÃ©dico.')
+          error: () => this.handleError('Não foi possível localizar os dados do médico.')
         });
     }
   }
@@ -1823,7 +1823,7 @@ export class DashboardPageComponent {
       window.clearTimeout(this.errorTimer);
     }
     this.errorTimer = window.setTimeout(() => this.error.set(''), 3000);
-    this.toast.error('Falha na operacao', message);
+    this.toast.error('Falha na operação', message);
   }
 
   private setFeedback(message: string): void {
@@ -1916,7 +1916,7 @@ export class DashboardPageComponent {
         },
         error: () => {
           this.stopPixPaymentPolling();
-          this.handleError('Nao foi possivel atualizar o status do pagamento Pix.');
+          this.handleError('Não foi possível atualizar o status do pagamento Pix.');
         }
         });
   }
@@ -1935,7 +1935,7 @@ export class DashboardPageComponent {
     this.showPixModal.set(false);
     this.consultationReason.reset('');
     this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
-    this.toast.success('Pagamento confirmado', 'A consulta ja esta liberada para atendimento.');
+    this.toast.success('Pagamento confirmado', 'A consulta já está liberada para atendimento.');
     this.selectDoctor(doctor);
     this.loadBaseData();
   }
@@ -1960,4 +1960,5 @@ export class DashboardPageComponent {
     });
   }
 }
+
 

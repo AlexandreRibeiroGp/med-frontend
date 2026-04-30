@@ -11,7 +11,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
       <article class="card schedule-card" *ngIf="selectedDoctor() as doctor">
         <div class="section-head">
           <p class="eyebrow">Agendamento</p>
-          <h3>Escolha o horario e siga para o pagamento</h3>
+          <h3>Escolha o horário e siga para o pagamento</h3>
           <p class="price-note">Valor da consulta: <strong>R$ 49,90</strong></p>
         </div>
 
@@ -32,14 +32,14 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
             class="swap-button"
             (click)="showDoctorPicker.set(!showDoctorPicker())"
           >
-            {{ showDoctorPicker() ? 'Fechar lista de medicos' : 'Trocar medico' }}
+            {{ showDoctorPicker() ? 'Fechar lista de médicos' : 'Trocar médico' }}
           </button>
         </section>
 
         <section class="consultation-fields">
           <div class="flow-tip success-tip">
             <strong>Passo 2</strong>
-            <span>Os horarios deste medico ja estao abertos abaixo. Escolha o dia e toque no horario desejado.</span>
+            <span>Os horários deste médico já estão abertos abaixo. Escolha o dia e toque no horário desejado.</span>
           </div>
 
           <label class="notes-field">
@@ -48,7 +48,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
               [formControl]="consultationReason()"
               placeholder="Descreva o problema, sintomas ou o motivo da consulta"
             ></textarea>
-            <small>Esse texto sera enviado junto com o agendamento para o medico.</small>
+            <small>Esse texto será enviado junto com o agendamento para o médico.</small>
           </label>
         </section>
 
@@ -79,14 +79,14 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
 
       <article class="card doctor-card" *ngIf="!selectedDoctor() || showDoctorPicker()">
         <div class="section-head">
-          <p class="eyebrow">Medicos disponiveis</p>
-          <h3>{{ selectedDoctor() ? 'Escolha outro medico' : 'Escolha um medico com horario aberto' }}</h3>
+          <p class="eyebrow">Médicos disponíveis</p>
+          <h3>{{ selectedDoctor() ? 'Escolha outro médico' : 'Escolha um médico com horário aberto' }}</h3>
           <p class="price-note">Consulta por Pix: <strong>R$ 49,90</strong></p>
         </div>
 
         <div class="flow-tip">
           <strong>Passo 1</strong>
-          <span>Clique em um medico para abrir imediatamente os horarios disponiveis.</span>
+          <span>Clique em um médico para abrir imediatamente os horários disponíveis.</span>
         </div>
 
         <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
@@ -106,7 +106,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
                 <strong>{{ doctor.user.fullName }}</strong>
                 <span>{{ specialtyLabel(doctor.specialty) }}</span>
                 <small>CRM {{ doctor.crm }}</small>
-                <em>Toque para ver horarios</em>
+                <em>Toque para ver horários</em>
               </div>
             </div>
           </button>
@@ -115,11 +115,11 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     </section>
 
     <ng-template #emptyDoctors>
-      <p class="empty-state">Nenhum medico com horario aberto no momento.</p>
+      <p class="empty-state">Nenhum médico com horário aberto no momento.</p>
     </ng-template>
 
     <ng-template #emptySlots>
-      <p class="empty-state">Esse medico ainda nao publicou horarios disponiveis.</p>
+      <p class="empty-state">Esse médico ainda não publicou horários disponíveis.</p>
     </ng-template>
   `,
   styles: `

@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -15,9 +15,9 @@ import { TelemedApiService } from '../core/telemed-api.service';
     <div class="page" *ngIf="auth.isOwner(); else denied">
       <header>
         <div>
-          <p class="eyebrow">Gestao interna</p>
+          <p class="eyebrow">Gestão interna</p>
           <h1>Cadastros internos</h1>
-          <p>Somente o seu usuario pode cadastrar medicos e administradores.</p>
+          <p>Somente o seu usuário pode cadastrar médicos e administradores.</p>
         </div>
         <a routerLink="/dashboard">Voltar ao painel</a>
       </header>
@@ -27,7 +27,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
 
       <section class="grid">
         <article class="card">
-          <h2>Cadastrar medico</h2>
+          <h2>Cadastrar médico</h2>
           <form [formGroup]="doctorForm" (ngSubmit)="submitDoctor()">
             <input formControlName="fullName" placeholder="Nome completo" />
             <input formControlName="email" type="email" placeholder="E-mail" />
@@ -39,7 +39,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
             </select>
             <textarea formControlName="biography" placeholder="Biografia"></textarea>
             <label class="upload-field">
-              <span>Foto do medico</span>
+              <span>Foto do médico</span>
               <input type="file" accept="image/*" (change)="onDoctorPhotoSelected($event)" />
               <small *ngIf="doctorPhotoName()">{{ doctorPhotoName() }}</small>
             </label>
@@ -47,7 +47,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
               <input formControlName="telemedicineEnabled" type="checkbox" />
               Telemedicina habilitada
             </label>
-            <button [disabled]="loading()" type="submit">Salvar medico</button>
+            <button [disabled]="loading()" type="submit">Salvar médico</button>
           </form>
         </article>
 
@@ -63,7 +63,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
         </article>
 
         <article class="card wide">
-          <h2>Medicos cadastrados</h2>
+          <h2>Médicos cadastrados</h2>
           <div class="list">
             <div *ngFor="let doctor of doctors()" class="row">
               <div class="doctor-summary">
@@ -90,41 +90,41 @@ import { TelemedApiService } from '../core/telemed-api.service';
                   <small>{{ legalVersionLabel('TERMS_OF_USE') }}</small>
                 </div>
                 <button type="button" class="secondary-button" (click)="submitLegalDocument('TERMS_OF_USE', termsForm)">
-                  Publicar nova versao
+                  Publicar nova versão
                 </button>
               </div>
               <form [formGroup]="termsForm">
-                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="title" placeholder="Título" />
                 <input formControlName="summary" placeholder="Resumo" />
-                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+                <textarea formControlName="content" placeholder="Conteúdo completo"></textarea>
               </form>
             </section>
 
             <section class="legal-editor">
               <div class="legal-head">
                 <div>
-                  <h3>Politica de privacidade</h3>
+                  <h3>Política de privacidade</h3>
                   <small>{{ legalVersionLabel('PRIVACY_POLICY') }}</small>
                 </div>
                 <button type="button" class="secondary-button" (click)="submitLegalDocument('PRIVACY_POLICY', privacyForm)">
-                  Publicar nova versao
+                  Publicar nova versão
                 </button>
               </div>
               <form [formGroup]="privacyForm">
-                <input formControlName="title" placeholder="Titulo" />
+                <input formControlName="title" placeholder="Título" />
                 <input formControlName="summary" placeholder="Resumo" />
-                <textarea formControlName="content" placeholder="Conteudo completo"></textarea>
+                <textarea formControlName="content" placeholder="Conteúdo completo"></textarea>
               </form>
             </section>
 
             <section class="legal-editor">
               <div class="legal-head">
                 <div>
-                  <h3>Politica de cookies</h3>
+                  <h3>Política de cookies</h3>
                   <small>{{ legalVersionLabel('COOKIE_POLICY') }}</small>
                 </div>
                 <button type="button" class="secondary-button" (click)="submitLegalDocument('COOKIE_POLICY', cookiesForm)">
-                  Publicar nova versao
+                  Publicar nova versão
                 </button>
               </div>
               <form [formGroup]="cookiesForm">
@@ -158,7 +158,7 @@ import { TelemedApiService } from '../core/telemed-api.service';
       <div class="page">
         <article class="card denied">
           <h2>Acesso restrito</h2>
-          <p>Essa area interna esta disponivel somente para o dono do sistema.</p>
+          <p>Essa área interna está disponível somente para o dono do sistema.</p>
           <a routerLink="/dashboard">Voltar ao painel</a>
         </article>
       </div>
@@ -463,37 +463,37 @@ export class AdminPageComponent {
     {
       priority: 'Alta',
       title: 'Completar identificacao juridica nas politicas',
-      description: 'Preencha razao social, CNPJ, endereco, canal de contato e encarregado de dados nos textos publicados.',
+      description: 'Preencha razão social, CNPJ, endereço, canal de contato e encarregado de dados nos textos publicados.',
       action: 'Ajuste os tres documentos legais antes de anunciar ou captar pacientes em escala.'
     },
     {
       priority: 'Alta',
-      title: 'Formalizar estrutura medica da operacao',
-      description: 'Defina responsavel tecnico, vinculo com os medicos e valide o enquadramento da operacao perante CRM e regras locais.',
-      action: 'Isso depende de documentacao externa e nao pode ser resolvido so com codigo.'
+      title: 'Formalizar estrutura médica da operação',
+      description: 'Defina responsável técnico, vínculo com os médicos e valide o enquadramento da operação perante CRM e regras locais.',
+      action: 'Isso depende de documentação externa e não pode ser resolvido só com código.'
     },
     {
       priority: 'Alta',
       title: 'Assinatura digital para documentos clinicos',
-      description: 'Receitas, atestados e outros documentos validos exigem fluxo de assinatura apropriado quando emitidos ao paciente.',
-      action: 'Feche o provedor e a politica operacional antes de liberar emissao ampla em producao.'
+      description: 'Receitas, atestados e outros documentos válidos exigem fluxo de assinatura apropriado quando emitidos ao paciente.',
+      action: 'Feche o provedor e a política operacional antes de liberar emissão ampla em produção.'
     },
     {
       priority: 'Media',
       title: 'Contratos com operadores e prestadores',
-      description: 'Formalize relacoes com medicos, hospedagem, mensageria, pagamentos e quaisquer fornecedores que tratem dados sensiveis.',
+      description: 'Formalize relações com médicos, hospedagem, mensageria, pagamentos e quaisquer fornecedores que tratem dados sensíveis.',
       action: 'Mantenha DPA, clausulas de confidencialidade e matriz de compartilhamento.'
     },
     {
       priority: 'Media',
       title: 'Trilha de auditoria, retencao e backup',
-      description: 'Defina por quanto tempo manter consentimentos, prontuarios, logs de acesso e como recuperar dados em incidente.',
+      description: 'Defina por quanto tempo manter consentimentos, prontuários, logs de acesso e como recuperar dados em incidente.',
       action: 'Documente a politica e verifique se a infraestrutura acompanha esse prazo.'
     },
     {
       priority: 'Media',
       title: 'Plano de resposta a incidentes e suporte LGPD',
-      description: 'Prepare fluxo para incidente de seguranca, atendimento ao titular e revisao periodica das permissoes internas.',
+      description: 'Prepare fluxo para incidente de segurança, atendimento ao titular e revisão periódica das permissões internas.',
       action: 'Nomeie responsaveis e crie procedimento pratico para producao.'
     }
   ] as const;
@@ -532,7 +532,7 @@ export class AdminPageComponent {
 
   legalVersionLabel(documentType: LegalDocumentType): string {
     const document = this.legalDocuments().find((item) => item.documentType === documentType);
-    return document ? `Versao ${document.versionNumber}` : 'Sem versao ativa';
+    return document ? `Versão ${document.versionNumber}` : 'Sem versão ativa';
   }
 
   specialtyLabel(specialty: DoctorSpecialty): string {
@@ -542,7 +542,7 @@ export class AdminPageComponent {
   submitDoctor(): void {
     if (this.doctorForm.invalid) {
       this.doctorForm.markAllAsTouched();
-      this.setError('Revise os campos do medico antes de continuar.');
+      this.setError('Revise os campos do médico antes de continuar.');
       return;
     }
 
@@ -574,7 +574,7 @@ export class AdminPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.loading.set(false);
-          this.setError(error.error?.message ?? 'Nao foi possivel cadastrar o medico.');
+          this.setError(error.error?.message ?? 'Não foi possível cadastrar o médico.');
         }
       });
   }
@@ -615,7 +615,7 @@ export class AdminPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.loading.set(false);
-          this.setError(error.error?.message ?? 'Nao foi possivel cadastrar o administrador.');
+          this.setError(error.error?.message ?? 'Não foi possível cadastrar o administrador.');
         }
       });
   }
@@ -645,7 +645,7 @@ export class AdminPageComponent {
         },
         error: (error: { error?: { message?: string } }) => {
           this.loading.set(false);
-          this.setError(error.error?.message ?? 'Nao foi possivel publicar o documento legal.');
+          this.setError(error.error?.message ?? 'Não foi possível publicar o documento legal.');
         }
       });
   }
@@ -669,7 +669,7 @@ export class AdminPageComponent {
           this.legalDocuments.set(legalDocuments);
           this.patchLegalForms(legalDocuments);
         },
-        error: () => this.setError('Nao foi possivel carregar os dados internos.')
+        error: () => this.setError('Não foi possível carregar os dados internos.')
       });
   }
 
@@ -711,3 +711,4 @@ export class AdminPageComponent {
     this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }
+

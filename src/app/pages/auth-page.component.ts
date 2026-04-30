@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+﻿import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -33,7 +33,7 @@ import { AnalyticsService } from '../core/analytics.service';
         <div class="assurance-strip">
           <span>MedCallOn</span>
           <span>Profissionais com CRM</span>
-          <span>Atendimento por plataforma propria</span>
+          <span>Atendimento por plataforma própria</span>
         </div>
 
         <div class="switcher">
@@ -60,7 +60,7 @@ import { AnalyticsService } from '../core/analytics.service';
         <form *ngIf="mode() === 'forgot'" [formGroup]="forgotPasswordForm" (ngSubmit)="submitForgotPassword()">
           <div class="form-copy">
             <h2>Recuperar senha</h2>
-            <p>Informe seu e-mail para receber o link de redefinicao.</p>
+            <p>Informe seu e-mail para receber o link de redefinição.</p>
           </div>
           <input formControlName="email" placeholder="E-mail" type="email" />
           <p *ngIf="controlError(forgotPasswordForm, 'email') as error" class="field-error">{{ error }}</p>
@@ -97,7 +97,7 @@ import { AnalyticsService } from '../core/analytics.service';
           <section class="form-section">
             <div class="section-copy">
               <h3>Dados de acesso</h3>
-              <p>Esses dados serao usados para entrar na plataforma e acompanhar sua jornada.</p>
+              <p>Esses dados serão usados para entrar na plataforma e acompanhar sua jornada.</p>
             </div>
             <input formControlName="fullName" placeholder="Nome completo" />
             <p *ngIf="controlError(patientForm, 'fullName') as error" class="field-error">{{ error }}</p>
@@ -109,14 +109,14 @@ import { AnalyticsService } from '../core/analytics.service';
 
           <section class="form-section">
             <div class="section-copy">
-              <h3>Informacoes pessoais</h3>
+              <h3>Informações pessoais</h3>
               <p>Esses campos ajudam a identificar corretamente o paciente e deixam o atendimento mais fluido.</p>
             </div>
             <div class="form-grid two-columns">
               <input formControlName="phoneNumber" placeholder="Telefone" />
               <input formControlName="documentNumber" placeholder="CPF" />
               <input formControlName="birthDate" placeholder="Nascimento" type="date" />
-              <input formControlName="profession" placeholder="Profissao" />
+              <input formControlName="profession" placeholder="Profissão" />
             </div>
           </section>
 
@@ -151,27 +151,27 @@ import { AnalyticsService } from '../core/analytics.service';
               Li e aceito os
               <a routerLink="/legal/termos">Termos de Uso</a>
               e a
-              <a routerLink="/legal/privacidade">Politica de Privacidade</a>.
+              <a routerLink="/legal/privacidade">Política de Privacidade</a>.
             </span>
           </label>
           <p *ngIf="termsConsentControl.touched && termsConsentControl.invalid" class="field-error">
-            O aceite dos documentos legais e obrigatorio.
+            O aceite dos documentos legais é obrigatório.
           </p>
           <label class="checkbox-line">
             <input type="checkbox" [formControl]="telemedicineConsentControl" />
-            <span>Concordo com atendimento por telemedicina, quando aplicavel, e com o registro em prontuario eletronico.</span>
+            <span>Concordo com atendimento por telemedicina, quando aplicável, e com o registro em prontuário eletrônico.</span>
           </label>
           <p *ngIf="telemedicineConsentControl.touched && telemedicineConsentControl.invalid" class="field-error">
-            O consentimento para telemedicina e obrigatorio para cadastro e atendimento remoto.
+            O consentimento para telemedicina é obrigatório para cadastro e atendimento remoto.
           </p>
           <button [disabled]="loading()" type="submit">Cadastrar paciente</button>
-          <p class="helper-text">Seus dados ajudam a agilizar o atendimento, manter sua jornada organizada e liberar o Pix com menos friccao.</p>
+          <p class="helper-text">Seus dados ajudam a agilizar o atendimento, manter sua jornada organizada e liberar o Pix com menos fricção.</p>
         </form>
 
         <div class="legal-links">
-          <a routerLink="/legal/privacidade">Politica de Privacidade</a>
+          <a routerLink="/legal/privacidade">Política de Privacidade</a>
           <a routerLink="/legal/termos">Termos de Uso</a>
-          <a routerLink="/legal/cookies">Politica de Cookies</a>
+          <a routerLink="/legal/cookies">Política de Cookies</a>
         </div>
       </section>
 
@@ -694,7 +694,7 @@ export class AuthPageComponent {
 
     this.api.getPublicLegalDocuments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (documents) => this.legalDocuments.set(documents),
-      error: () => this.setError('Nao foi possivel carregar os documentos legais atuais.')
+      error: () => this.setError('Não foi possível carregar os documentos legais atuais.')
     });
 
     this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((params) => {
@@ -752,7 +752,7 @@ export class AuthPageComponent {
 
     const acceptedDocumentIds = this.requiredLegalDocumentIds();
     if (acceptedDocumentIds.length < 2) {
-      this.setError('Os documentos legais ativos ainda nao foram carregados. Tente novamente em instantes.');
+      this.setError('Os documentos legais ativos ainda não foram carregados. Tente novamente em instantes.');
       return;
     }
 
@@ -836,7 +836,7 @@ export class AuthPageComponent {
 
     const token = this.resetToken();
     if (!token) {
-      this.setError('Token de redefinicao invalido.');
+      this.setError('Token de redefinição invalido.');
       return;
     }
 
@@ -896,7 +896,7 @@ export class AuthPageComponent {
 
   authDescription(): string {
     return this.contextDoctorName()
-      ? 'Falta so seu cadastro para continuar para o painel, selecionar o horario e concluir o pagamento.'
+      ? 'Falta só seu cadastro para continuar para o painel, selecionar o horário e concluir o pagamento.'
       : 'Crie sua conta e avance para um atendimento online em um fluxo claro e organizado.';
   }
 
@@ -956,7 +956,7 @@ export class AuthPageComponent {
     }
 
     if (control.errors['required']) {
-      return 'Este campo e obrigatorio.';
+      return 'Este campo é obrigatório.';
     }
     if (control.errors['email']) {
       return 'Informe um e-mail valido.';
@@ -1012,7 +1012,7 @@ export class AuthPageComponent {
             return;
           }
 
-          this.setError(apiMessage ?? 'Nao foi possivel concluir a operacao.');
+          this.setError(apiMessage ?? 'Não foi possível concluir a operação.');
         }
       });
   }
@@ -1045,4 +1045,6 @@ export class AuthPageComponent {
     this.messageTimer = window.setTimeout(() => this.message.set(''), 3000);
   }
 }
+
+
 
