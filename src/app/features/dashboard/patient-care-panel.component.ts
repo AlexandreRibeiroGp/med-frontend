@@ -37,6 +37,11 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
         </section>
 
         <section class="consultation-fields">
+          <div class="flow-tip success-tip">
+            <strong>Passo 2</strong>
+            <span>Os horarios deste medico ja estao abertos abaixo. Escolha o dia e toque no horario desejado.</span>
+          </div>
+
           <label class="notes-field">
             <span>Motivo da consulta (opcional)</span>
             <textarea
@@ -79,6 +84,11 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
           <p class="price-note">Consulta por Pix: <strong>R$ 49,90</strong></p>
         </div>
 
+        <div class="flow-tip">
+          <strong>Passo 1</strong>
+          <span>Clique em um medico para abrir imediatamente os horarios disponiveis.</span>
+        </div>
+
         <div class="doctor-grid" *ngIf="doctors().length; else emptyDoctors">
           <button
             type="button"
@@ -96,6 +106,7 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
                 <strong>{{ doctor.user.fullName }}</strong>
                 <span>{{ specialtyLabel(doctor.specialty) }}</span>
                 <small>CRM {{ doctor.crm }}</small>
+                <em>Toque para ver horarios</em>
               </div>
             </div>
           </button>
@@ -129,6 +140,26 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .section-head h3 {
       margin: 0;
       font-size: 1.5rem;
+    }
+    .flow-tip {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      border-radius: 18px;
+      background: rgba(17, 32, 39, 0.06);
+      color: #31464d;
+    }
+    .flow-tip strong {
+      color: #112027;
+      font-size: 0.9rem;
+    }
+    .flow-tip span {
+      font-size: 0.94rem;
+      line-height: 1.45;
+    }
+    .success-tip {
+      background: rgba(14, 123, 131, 0.1);
     }
     .price-note {
       margin: 10px 0 0;
@@ -216,6 +247,13 @@ import { AvailabilitySlotResponse, DoctorResponse, PatientProfileResponse } from
     .doctor-tile span,
     .doctor-tile small {
       color: #5b6a70;
+    }
+    .doctor-tile em {
+      margin-top: 2px;
+      color: #0e7b83;
+      font-size: 0.78rem;
+      font-style: normal;
+      font-weight: 700;
     }
     .swap-button {
       padding: 10px 14px;

@@ -85,13 +85,28 @@ function monthKeyInSaoPaulo(date: Date): string {
           >
             {{ primarySectionLabel() }}
           </button>
-          <button type="button" [class.active]="section() === 'calls'" (click)="navigateToSection('calls')">
+          <button
+            *ngIf="canAccessLockedPatientSections()"
+            type="button"
+            [class.active]="section() === 'calls'"
+            (click)="navigateToSection('calls')"
+          >
             Sala de atendimento
           </button>
-          <button type="button" [class.active]="section() === 'history'" (click)="navigateToSection('history')">
+          <button
+            *ngIf="canAccessLockedPatientSections()"
+            type="button"
+            [class.active]="section() === 'history'"
+            (click)="navigateToSection('history')"
+          >
             Documentos
           </button>
-          <button type="button" [class.active]="section() === 'profile'" (click)="navigateToSection('profile')">
+          <button
+            *ngIf="canAccessLockedPatientSections()"
+            type="button"
+            [class.active]="section() === 'profile'"
+            (click)="navigateToSection('profile')"
+          >
             Meu perfil
           </button>
           <a *ngIf="auth.role() === 'ADMIN'" routerLink="/admin">Ir para administração</a>
@@ -121,6 +136,9 @@ function monthKeyInSaoPaulo(date: Date): string {
 
         <p *ngIf="feedback()" class="feedback">{{ feedback() }}</p>
         <p *ngIf="error()" class="error">{{ error() }}</p>
+        <p *ngIf="auth.role() === 'PATIENT' && !canAccessLockedPatientSections()" class="feedback">
+          Depois que o pagamento for confirmado, a sala de atendimento, documentos e meu perfil serao liberados automaticamente.
+        </p>
 
         <section *ngIf="section() === primarySection() && auth.role() === 'PATIENT'" #careSection class="panel-anchor">
           <app-patient-care-panel
@@ -188,7 +206,7 @@ function monthKeyInSaoPaulo(date: Date): string {
             <button type="button" class="ghost" (click)="cancelCheckout()">Cancelar</button>
           </div>
 
-          <section *ngIf="activePixPayment() as pixPayment" class="pix-panel">
+          <section *ngIf="activePixPayment() as pixPayment" class="pix-panel pix-panel--hidden">
             <div class="pix-panel__content">
               <div>
                 <p class="eyebrow">Pix gerado</p>
@@ -271,6 +289,42 @@ function monthKeyInSaoPaulo(date: Date): string {
           />
         </section>
       </main>
+
+      <div class="pix-modal-backdrop" *ngIf="showPixModal()" (click)="closePixModal()">
+        <section class="pix-modal" *ngIf="activePixPayment() as pixPayment" (click)="$event.stopPropagation()">
+          <div class="pix-modal__header">
+            <div>
+              <p class="eyebrow">Pix gerado</p>
+              <h3>Finalize o pagamento da consulta</h3>
+            </div>
+            <button type="button" class="pix-modal__close" (click)="closePixModal()">Fechar</button>
+          </div>
+
+          <p class="pix-modal__subtitle">
+            Escaneie o QR Code ou copie o codigo Pix. Assim que o pagamento confirmar, a consulta sera liberada.
+          </p>
+
+          <img
+            *ngIf="pixPayment.pixQrCodeBase64"
+            class="pix-modal__qr"
+            [src]="'data:image/png;base64,' + pixPayment.pixQrCodeBase64"
+            alt="QR Code Pix"
+          />
+
+          <label class="pix-panel__label" for="pix-modal-code">Codigo copia e cola</label>
+          <textarea id="pix-modal-code" readonly [value]="pixPayment.pixCode || ''"></textarea>
+
+          <div class="pix-modal__actions">
+            <button type="button" class="copy" (click)="copyPixCode()">Copiar codigo Pix</button>
+            <button type="button" class="ghost" (click)="refreshPixPayment()">Ja paguei, atualizar status</button>
+          </div>
+
+          <p class="pix-panel__status" [class.confirmed]="pixPayment.paymentStatus === 'CONFIRMED'">
+            Status atual:
+            <strong>{{ paymentStatusLabel(pixPayment) }}</strong>
+          </p>
+        </section>
+      </div>
     </div>
   `,
   styles: `
@@ -445,6 +499,9 @@ function monthKeyInSaoPaulo(date: Date): string {
       border-top: 1px solid rgba(17, 32, 39, 0.08);
       padding-top: 16px;
     }
+    .pix-panel--hidden {
+      display: none;
+    }
     .pix-panel__content {
       display: grid;
       gap: 14px;
@@ -496,6 +553,91 @@ function monthKeyInSaoPaulo(date: Date): string {
     .pix-panel__status.confirmed {
       color: #0f684f;
     }
+    .pix-modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 120;
+      background: rgba(17, 32, 39, 0.62);
+      display: grid;
+      place-items: center;
+      padding: 20px;
+    }
+    .pix-modal {
+      width: min(560px, 100%);
+      max-height: min(90vh, 820px);
+      overflow: auto;
+      border-radius: 28px;
+      background: #fffdf9;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      box-shadow: 0 24px 64px rgba(17, 32, 39, 0.28);
+      padding: 22px;
+      display: grid;
+      gap: 16px;
+    }
+    .pix-modal__header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .pix-modal__header h3 {
+      margin: 4px 0 0;
+    }
+    .pix-modal__close {
+      border: 0;
+      border-radius: 14px;
+      padding: 10px 14px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: #f6f1e8;
+      color: #112027;
+    }
+    .pix-modal__subtitle {
+      margin: 0;
+      color: #51636b;
+      line-height: 1.5;
+    }
+    .pix-modal__qr {
+      width: min(280px, 100%);
+      aspect-ratio: 1;
+      justify-self: center;
+      border-radius: 22px;
+      border: 1px solid rgba(17, 32, 39, 0.08);
+      background: white;
+      padding: 12px;
+    }
+    .pix-modal textarea {
+      min-height: 112px;
+      resize: vertical;
+      border: 1px solid rgba(17, 32, 39, 0.12);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font: inherit;
+      color: #112027;
+      background: #fff;
+    }
+    .pix-modal__actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .pix-modal__actions button {
+      border: 0;
+      border-radius: 16px;
+      padding: 14px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .pix-modal__actions .copy {
+      color: white;
+      background: linear-gradient(135deg, #ff8e54, #d94f04);
+    }
+    .pix-modal__actions .ghost {
+      background: #f6f1e8;
+      color: #112027;
+    }
     @media (max-width: 1100px) {
       .dashboard { grid-template-columns: 1fr; }
       .sidebar {
@@ -539,6 +681,22 @@ function monthKeyInSaoPaulo(date: Date): string {
         padding-bottom: 112px;
       }
       .calls-board { grid-template-columns: 1fr; }
+      .pix-modal-backdrop {
+        padding: 10px;
+      }
+      .pix-modal {
+        width: 100%;
+        max-height: calc(100vh - 20px);
+        border-radius: 22px;
+        padding: 16px;
+      }
+      .pix-modal__header {
+        grid-template-columns: 1fr;
+      }
+      .pix-modal__close,
+      .pix-modal__actions button {
+        width: 100%;
+      }
     }
   `
 })
@@ -582,6 +740,7 @@ export class DashboardPageComponent {
   readonly pendingDoctorName = signal('');
   readonly pendingBookingSlot = signal<AvailabilitySlotResponse | null>(null);
   readonly activePixPayment = signal<PaymentResponse | null>(null);
+  readonly showPixModal = signal(false);
   private readonly trackedPurchaseConversions = new Set<number>();
   private readonly handledConfirmedPixPayments = new Set<number>();
   readonly currentTime = signal(Date.now());
@@ -596,6 +755,12 @@ export class DashboardPageComponent {
     this.appointments()
       .filter((appointment) => this.shouldShowInCallQueue(appointment))
       .sort((left, right) => new Date(left.scheduledAt).getTime() - new Date(right.scheduledAt).getTime())
+  );
+  readonly canAccessLockedPatientSections = computed(() =>
+    this.auth.role() !== 'PATIENT' ||
+    this.appointments().some(
+      (appointment) => appointment.paymentStatus === 'CONFIRMED' && appointment.status !== 'CANCELLED'
+    )
   );
   readonly currentMonthKey = computed(() => monthKeyInSaoPaulo(new Date(this.currentTime())));
   readonly completedAppointmentsCount = computed(() =>
@@ -726,6 +891,11 @@ export class DashboardPageComponent {
       this.loadBaseData();
     });
     effect(() => {
+      if (this.auth.role() === 'PATIENT' && !this.canAccessLockedPatientSections() && this.section() !== 'care') {
+        this.section.set('care');
+      }
+    });
+    effect(() => {
       const profile = this.patientProfile();
       if (!profile) {
         return;
@@ -804,6 +974,10 @@ export class DashboardPageComponent {
   };
 
   navigateToSection(target: 'care' | 'agenda' | 'calls' | 'history' | 'profile'): void {
+    if (this.auth.role() === 'PATIENT' && target !== 'care' && !this.canAccessLockedPatientSections()) {
+      this.handleError('Essas opcoes sao liberadas depois da confirmacao do pagamento da consulta.');
+      return;
+    }
     this.section.set(target);
     window.setTimeout(() => {
       this.scrollToSection(target);
@@ -882,11 +1056,22 @@ export class DashboardPageComponent {
   selectDoctor(doctor: DoctorResponse): void {
     this.selectedDoctor.set(doctor);
     this.pendingBookingSlot.set(null);
+    this.setFeedback(`Medico selecionado: ${doctor.user.fullName}. Agora escolha um horario para seguir ao pagamento.`);
     this.api
       .getDoctorAvailability(doctor.id)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (slots) => this.selectedDoctorSlots.set(slots),
+        next: (slots) => {
+          this.selectedDoctorSlots.set(slots);
+          window.setTimeout(() => {
+            this.careSection?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }, 80);
+          if (slots.some((slot) => slot.available && new Date(slot.endAt).getTime() > this.currentTime())) {
+            this.toast.info('Horarios abertos', 'Escolha o dia e toque no horario desejado.');
+            return;
+          }
+          this.toast.info('Sem horarios no momento', 'Esse medico esta sem horarios abertos agora.');
+        },
         error: () => this.handleError('Não foi possível carregar os horários deste médico.')
       });
   }
@@ -936,8 +1121,13 @@ export class DashboardPageComponent {
     this.analytics.track('checkout_cancel');
     this.pendingBookingSlot.set(null);
     this.activePixPayment.set(null);
+    this.showPixModal.set(false);
     this.stopPixPaymentPolling();
     this.checkoutConsentControl.reset(false);
+  }
+
+  closePixModal(): void {
+    this.showPixModal.set(false);
   }
 
   submitCheckout(paymentMethod: PaymentMethod): void {
@@ -975,16 +1165,17 @@ export class DashboardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (checkout) => {
-            if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
+          if (paymentMethod === 'PIX' && checkout.payment.pixCode) {
               this.activePixPayment.set(checkout.payment);
+              this.showPixModal.set(true);
               this.analytics.track('pix_generated', {
                 payment_id: checkout.payment.id,
                 payment_method: checkout.payment.paymentMethod,
                 doctor_id: doctor.id
               });
               this.startPixPaymentPolling(checkout.payment.id, doctor);
-            this.setFeedback('Pix gerado com sucesso. Pague pelo QR Code ou pelo codigo copia e cola abaixo.');
-            this.toast.success('Pix gerado', 'Conclua o pagamento para liberar automaticamente a consulta.');
+            this.setFeedback('Pix gerado com sucesso. O QR Code abriu em destaque para voce finalizar o pagamento.');
+            this.toast.success('Pix gerado', 'O QR Code e o codigo Pix ja estao abertos para pagamento.');
             window.setTimeout(() => {
               this.checkoutCard?.nativeElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 80);
@@ -993,6 +1184,7 @@ export class DashboardPageComponent {
 
           this.pendingBookingSlot.set(null);
           this.activePixPayment.set(null);
+          this.showPixModal.set(false);
           this.stopPixPaymentPolling();
           this.consultationReason.reset('');
           this.checkoutConsentControl.reset(false);
@@ -1055,6 +1247,7 @@ export class DashboardPageComponent {
               next: () => {
                 this.pendingBookingSlot.set(null);
                 this.activePixPayment.set(null);
+                this.showPixModal.set(false);
                 this.stopPixPaymentPolling();
                 this.consultationReason.reset('');
                 this.checkoutConsentControl.reset(false);
@@ -1680,6 +1873,7 @@ export class DashboardPageComponent {
 
           if (payment.paymentStatus === 'FAILED' || payment.paymentStatus === 'CANCELLED' || payment.paymentStatus === 'EXPIRED') {
             this.stopPixPaymentPolling();
+            this.showPixModal.set(false);
             this.handleError(`O pagamento Pix foi finalizado com status ${payment.paymentStatus.toLowerCase()}. Gere um novo Pix para tentar novamente.`);
           }
         },
@@ -1699,6 +1893,7 @@ export class DashboardPageComponent {
     this.handledConfirmedPixPayments.add(payment.id);
     this.trackPixApprovedConversion(payment);
     this.pendingBookingSlot.set(null);
+    this.showPixModal.set(false);
     this.consultationReason.reset('');
     this.setFeedback('Pagamento confirmado. A consulta foi liberada.');
     this.toast.success('Pagamento confirmado', 'A consulta ja esta liberada para atendimento.');
